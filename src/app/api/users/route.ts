@@ -123,7 +123,7 @@ export async function PATCH(request: Request) {
   const role = body.roleCode ? await lookupRole(auth.user.organizationId, body.roleCode) : null;
   if (body.roleCode && !role) return NextResponse.json({ ok: false, message: "Vai trò không hợp lệ." }, { status: 400 });
 
-  const data: Prisma.UserUpdateInput = {};
+  const data: Prisma.UserUncheckedUpdateInput = {};
   if (body.email !== undefined) data.email = normalizeEmail(body.email);
   if (body.name !== undefined) data.name = body.name.trim();
   if (body.phone !== undefined) data.phone = body.phone.trim() || null;
