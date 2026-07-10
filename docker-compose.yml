@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: licogi-os-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: licogi_os
+      POSTGRES_USER: licogi
+      POSTGRES_PASSWORD: licogi
+    ports:
+      - "5432:5432"
+    volumes:
+      - licogi_postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: licogi-os-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: licogi-minio
+      MINIO_ROOT_PASSWORD: licogi-minio-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - licogi_minio_data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 licogi-minio licogi-minio-secret;
+      mc mb -p local/licogi-os || true;
+      mc anonymous set download local/licogi-os || true;
+      exit 0;
+      "
+volumes:
+  licogi_postgres_data:
+  licogi_minio_data:

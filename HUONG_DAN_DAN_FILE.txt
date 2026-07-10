@@ -1,0 +1,43 @@
+LICOGI 18.3 MVP - CÁCH DÁN FILE
+
+TRƯỜNG HỢP 1: BẠN ĐÃ CÓ PROJECT NEXT.JS
+1. Giải nén file licogi_mvp_files.zip.
+2. Copy thư mục "src" trong gói này.
+3. Dán đè/merge vào thư mục "src" của project Next.js.
+4. Mở Terminal đúng tại thư mục project và chạy:
+
+   npm install leaflet react-leaflet
+   npm install -D @types/leaflet
+
+5. Sau đó bạn tự chạy:
+
+   npm run dev
+
+6. Mở trình duyệt:
+
+   http://localhost:3000
+
+
+TRƯỜNG HỢP 2: CHƯA CÓ PROJECT NEXT.JS
+Tạo project bằng lệnh:
+
+npx create-next-app@latest licogi-os --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
+
+Sau đó:
+- Vào thư mục licogi-os.
+- Copy thư mục src trong gói này và dán đè/merge vào project.
+- Chạy hai lệnh cài thư viện ở trên.
+
+
+CÁC ĐƯỜNG DẪN ĐỂ TEST
+/dashboard
+/projects
+/map
+/ai-profile
+/portal
+
+
+LƯU Ý
+- Không cần Google Maps API ở bản này vì đang dùng OpenStreetMap + Leaflet.
+- Dữ liệu hiện là dữ liệu mẫu trong src/data/projects.ts.
+- Nút "In / Lưu PDF" ở AI Profile dùng hộp thoại in của trình duyệt; chọn "Save as PDF" để lưu.

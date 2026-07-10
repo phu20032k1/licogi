@@ -1,0 +1,961 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleCode {
+  SUPER_ADMIN
+  SYSTEM_ADMIN
+  EXECUTIVE
+  PROJECT_MANAGER
+  ENGINEER
+  DATA_STEWARD
+  CUSTOMER
+}
+
+enum DataScope {
+  ALL
+  DEPARTMENT
+  ASSIGNED
+  OWN
+  CUSTOMER
+}
+
+enum PermissionAction {
+  VIEW
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  IMPORT
+  EXPORT
+  MANAGE
+}
+
+enum ModuleCode {
+  DASHBOARD
+  PROJECTS
+  DATA_CENTER
+  GIS_MAP
+  CONSTRUCTION
+  TASKS
+  DOCUMENTS
+  WARRANTY
+  PORTAL
+  PARTNERS
+  REPORTS
+  AI_PROFILE
+  USERS
+  ACTIVITY
+  SETTINGS
+  CONTRACTS
+  PAYMENTS
+  DEBT
+  PLANNING
+  BIM
+  AI_BRAIN
+  FINANCE
+  CRM
+  ERP
+  STORAGE
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum ProjectStatus {
+  ONGOING
+  COMPLETED
+  WARRANTY
+  PLANNING
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roles            Role[]
+  departments      Department[]
+  users            User[]
+  customers        Customer[]
+  projects         Project[]
+  employees        Employee[]
+  equipment        Equipment[]
+  documents        Document[]
+  warrantyTickets  WarrantyTicket[]
+  tasks            Task[]
+  auditLogs        AuditLog[]
+  moduleOwnerships ModuleOwnership[]
+  sessions         Session[]
+  uploadFiles      UploadFile[]
+  contracts        Contract[]
+  paymentRequests  PaymentRequest[]
+  debtLedgers      DebtLedger[]
+  constructionPlans ConstructionPlan[]
+  planTasks        PlanTask[]
+  dailyReports     DailyReport[]
+  bimModels        BimModel[]
+  aiKnowledgeItems AiKnowledgeItem[]
+  gisLayers        GisLayer[]
+  gisFeatures      GisFeature[]
+  financeAccounts  FinanceAccount[]
+  journalEntries   JournalEntry[]
+  journalLines     JournalLine[]
+  crmLeads         CrmLead[]
+  crmOpportunities CrmOpportunity[]
+  erpProcesses     ErpProcess[]
+  erpApprovals     ErpApproval[]
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users        User[]
+  projects     Project[]
+  employees    Employee[]
+  equipment    Equipment[]
+  documents    Document[]
+  tasks        Task[]
+  ownedModules ModuleOwnership[] @relation("DepartmentModuleOwner")
+  contracts    Contract[]
+  constructionPlans ConstructionPlan[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Role {
+  id             String    @id @default(cuid())
+  organizationId String
+  code           RoleCode
+  name           String
+  description    String?
+  dataScope      DataScope @default(ASSIGNED)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@unique([organizationId, code])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  module      ModuleCode
+  action      PermissionAction
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+
+  roles RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  organizationId     String
+  departmentId       String?
+  roleId             String
+  customerId         String?
+  email              String        @unique
+  name               String
+  phone              String?
+  passwordHash       String
+  status             AccountStatus @default(ACTIVE)
+  mustChangePassword Boolean       @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department      Department?     @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  role            Role            @relation(fields: [roleId], references: [id])
+  customer        Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  ownedProjects   Project[]       @relation("ProjectOwner")
+  projectMembers  ProjectMember[]
+  createdProjects Project[]       @relation("ProjectCreatedBy")
+  updatedProjects Project[]       @relation("ProjectUpdatedBy")
+  createdDocs     Document[]      @relation("DocumentCreatedBy")
+  updatedDocs     Document[]      @relation("DocumentUpdatedBy")
+  assignedTickets WarrantyTicket[] @relation("WarrantyAssignee")
+  createdTickets  WarrantyTicket[] @relation("WarrantyCreatedBy")
+  assignedTasks   Task[]          @relation("TaskAssignee")
+  createdTasks    Task[]          @relation("TaskCreatedBy")
+  auditLogs        AuditLog[]
+  ownedModules     ModuleOwnership[] @relation("UserModuleOwner")
+  sessions         Session[]
+  uploadedFiles    UploadFile[]       @relation("UploadCreatedBy")
+  createdContracts Contract[]         @relation("ContractCreatedBy")
+  createdPayments  PaymentRequest[]   @relation("PaymentCreatedBy")
+  approvedPayments PaymentRequest[]   @relation("PaymentApprovedBy")
+  createdDailyReports DailyReport[]   @relation("DailyReportCreatedBy")
+  createdBimModels BimModel[]         @relation("BimCreatedBy")
+  createdAiKnowledge AiKnowledgeItem[] @relation("AiKnowledgeCreatedBy")
+  createdJournalEntries JournalEntry[] @relation("JournalEntryCreatedBy")
+  createdCrmLeads CrmLead[]           @relation("CrmLeadCreatedBy")
+  createdErpApprovals ErpApproval[]   @relation("ErpApprovalCreatedBy")
+  assignedErpApprovals ErpApproval[]  @relation("ErpApprovalAssignee")
+}
+
+model Customer {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  country        String?
+  industry       String?
+  contactName    String?
+  contactEmail   String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects     Project[]
+  users        User[]
+  contracts    Contract[]
+  crmLeads     CrmLead[]
+  crmOpportunities CrmOpportunity[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, name])
+}
+
+model Project {
+  id                String        @id @default(cuid())
+  organizationId    String
+  customerId        String?
+  departmentId      String?
+  ownerId           String?
+  createdById       String?
+  updatedById       String?
+  code              String
+  name              String
+  type              String
+  status            ProjectStatus @default(ONGOING)
+  province          String?
+  contractValueVnd  Float?
+  valueRange        String?
+  constructionArea  String?
+  floorArea         String?
+  scale             String?
+  progress          Int           @default(0)
+  risk              RiskLevel     @default(LOW)
+  healthScore       Int           @default(80)
+  lat               Float?
+  lng               Float?
+  mapsUrl           String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  department   Department?     @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  owner        User?           @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdBy    User?           @relation("ProjectCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    User?           @relation("ProjectUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  members      ProjectMember[]
+  equipment    Equipment[]
+  documents    Document[]
+  uploadFiles  UploadFile[]
+  warranties   WarrantyTicket[]
+  tasks        Task[]
+  contracts    Contract[]
+  paymentRequests PaymentRequest[]
+  debtLedgers  DebtLedger[]
+  constructionPlans ConstructionPlan[]
+  planTasks    PlanTask[]
+  dailyReports DailyReport[]
+  bimModels    BimModel[]
+  aiKnowledgeItems AiKnowledgeItem[]
+  gisFeatures  GisFeature[]
+  crmOpportunities CrmOpportunity[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([customerId])
+}
+
+model ProjectMember {
+  projectId      String
+  userId         String
+  responsibility String?
+  canApprove     Boolean @default(false)
+  createdAt      DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+}
+
+model Employee {
+  id             String   @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  code           String
+  fullName       String
+  englishName    String?
+  position       String?
+  phone          String?
+  quantity       Int?
+  skillGroup     String?
+  assignedProjectCode String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+}
+
+model Equipment {
+  id              String   @id @default(cuid())
+  organizationId  String
+  departmentId    String?
+  projectId       String?
+  code            String
+  name            String
+  category        String
+  quantity        String?
+  quantityNumber  Int?
+  specifications  String?
+  status          String?
+  maintenanceDate DateTime?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, category])
+}
+
+model Document {
+  id             String   @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  projectId      String?
+  createdById    String?
+  updatedById    String?
+  code           String
+  name           String
+  type           String?
+  revision       String?
+  status         String?
+  fileUrl        String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("DocumentCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    User?        @relation("DocumentUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  uploadFiles  UploadFile[]
+  aiKnowledgeItems AiKnowledgeItem[]
+
+  @@unique([organizationId, code])
+}
+
+model WarrantyTicket {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  assigneeId     String?
+  createdById    String?
+  code           String
+  title          String
+  priority       String?
+  deadline       DateTime?
+  status         String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  assignee     User?        @relation("WarrantyAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("WarrantyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+}
+
+model Task {
+  id             String   @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  projectId      String?
+  assigneeId     String?
+  createdById    String?
+  title          String
+  status         String   @default("Mới")
+  priority       String?
+  dueDate        DateTime?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  assignee     User?        @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+}
+
+model ModuleOwnership {
+  id                String     @id @default(cuid())
+  organizationId    String
+  module            ModuleCode
+  ownerDepartmentId String?
+  ownerUserId       String?
+  dataScope         DataScope
+  description       String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ownerDepartment Department?  @relation("DepartmentModuleOwner", fields: [ownerDepartmentId], references: [id], onDelete: SetNull)
+  ownerUser       User?        @relation("UserModuleOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, module])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  module         ModuleCode
+  action         PermissionAction
+  entity         String?
+  entityId       String?
+  message        String
+  ip             String?
+  userAgent      String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, module, createdAt])
+  @@index([userId, createdAt])
+}
+
+
+model Session {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String
+  tokenHash      String    @unique
+  userAgent      String?
+  ip             String?
+  deviceName     String?
+  lastSeenAt     DateTime  @default(now())
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([organizationId, createdAt])
+}
+
+model UploadFile {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  documentId     String?
+  createdById    String?
+  provider       String   @default("S3_COMPATIBLE")
+  bucket         String
+  objectKey      String
+  fileName       String
+  originalName   String
+  mimeType       String?
+  sizeBytes      Int
+  checksumSha256 String?
+  publicUrl      String?
+  status         String   @default("UPLOADED")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  document     Document?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("UploadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, objectKey])
+  @@index([organizationId, projectId])
+  @@index([documentId])
+}
+
+model Contract {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  customerId     String?
+  departmentId   String?
+  createdById    String?
+  code           String
+  contractNo     String?
+  title          String
+  type           String?
+  status         String   @default("DRAFT")
+  currency       String   @default("VND")
+  valueVnd       Float    @default(0)
+  vatRate        Float    @default(0)
+  signedDate     DateTime?
+  startDate      DateTime?
+  endDate        DateTime?
+  retentionRate  Float    @default(0)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("ContractCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  paymentRequests PaymentRequest[]
+  debtLedgers     DebtLedger[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([projectId])
+}
+
+model PaymentRequest {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  contractId     String?
+  createdById    String?
+  approvedById   String?
+  code           String
+  title          String
+  phase          String?
+  amountVnd      Float    @default(0)
+  requestedDate  DateTime @default(now())
+  dueDate        DateTime?
+  paidDate       DateTime?
+  status         String   @default("REQUESTED")
+  invoiceNo      String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contract     Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("PaymentCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy   User?        @relation("PaymentApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  debtLedgers  DebtLedger[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([contractId])
+}
+
+model DebtLedger {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  contractId     String?
+  paymentRequestId String?
+  code           String
+  partnerName    String
+  type           String   @default("RECEIVABLE")
+  amountVnd      Float    @default(0)
+  paidVnd        Float    @default(0)
+  dueDate        DateTime?
+  status         String   @default("OPEN")
+  notes          String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contract     Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  paymentRequest PaymentRequest? @relation(fields: [paymentRequestId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([dueDate])
+}
+
+model ConstructionPlan {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String
+  departmentId   String?
+  code           String
+  name           String
+  status         String   @default("PLANNING")
+  baselineStart  DateTime?
+  baselineFinish DateTime?
+  forecastFinish DateTime?
+  progress       Int      @default(0)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  tasks        PlanTask[]
+
+  @@unique([organizationId, code])
+  @@index([projectId])
+}
+
+model PlanTask {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String
+  planId         String
+  parentId       String?
+  code           String
+  name           String
+  wbs            String?
+  startDate      DateTime?
+  endDate        DateTime?
+  progress       Int      @default(0)
+  status         String   @default("TODO")
+  critical       Boolean  @default(false)
+  dependencies   Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  plan         ConstructionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  parent       PlanTask?    @relation("PlanTaskTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children     PlanTask[]   @relation("PlanTaskTree")
+
+  @@unique([organizationId, code])
+  @@index([planId])
+  @@index([projectId])
+}
+
+model DailyReport {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String
+  createdById    String?
+  reportDate     DateTime
+  weather        String?
+  manpowerCount  Int      @default(0)
+  equipmentCount Int      @default(0)
+  workDone       String
+  issues         String?
+  safetyNotes    String?
+  progress       Int      @default(0)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation("DailyReportCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, reportDate])
+}
+
+model BimModel {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  createdById    String?
+  code           String
+  name           String
+  version        String?
+  discipline     String?
+  modelUrl       String?
+  viewerProvider String?  @default("AUTODESK_APS")
+  urn            String?
+  status         String   @default("UPLOADED")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("BimCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([projectId])
+}
+
+model AiKnowledgeItem {
+  id             String   @id @default(cuid())
+  organizationId String
+  projectId      String?
+  documentId     String?
+  createdById    String?
+  title          String
+  sourceType     String   @default("DOCUMENT")
+  sourceUrl      String?
+  summary        String?
+  contentText    String?
+  vectorStatus   String   @default("PENDING")
+  embeddingModel String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  document     Document?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("AiKnowledgeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, vectorStatus])
+  @@index([projectId])
+}
+
+model GisLayer {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  layerType      String   @default("PROJECT")
+  visible        Boolean  @default(true)
+  style          Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  features     GisFeature[]
+
+  @@unique([organizationId, code])
+}
+
+model GisFeature {
+  id             String   @id @default(cuid())
+  organizationId String
+  layerId        String
+  projectId      String?
+  code           String
+  name           String
+  geometry       Json
+  properties     Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  layer        GisLayer     @relation(fields: [layerId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([layerId])
+}
+
+model FinanceAccount {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  parentCode     String?
+  isActive       Boolean  @default(true)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  debitLines   JournalLine[] @relation("DebitAccount")
+  creditLines  JournalLine[] @relation("CreditAccount")
+
+  @@unique([organizationId, code])
+}
+
+model JournalEntry {
+  id             String   @id @default(cuid())
+  organizationId String
+  createdById    String?
+  code           String
+  postingDate    DateTime @default(now())
+  description    String
+  sourceModule   String?
+  status         String   @default("DRAFT")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation("JournalEntryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  lines        JournalLine[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, postingDate])
+}
+
+model JournalLine {
+  id             String   @id @default(cuid())
+  organizationId String
+  entryId        String
+  debitAccountId String?
+  creditAccountId String?
+  amountVnd      Float    @default(0)
+  description    String?
+  projectCode    String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  entry        JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  debitAccount FinanceAccount? @relation("DebitAccount", fields: [debitAccountId], references: [id], onDelete: SetNull)
+  creditAccount FinanceAccount? @relation("CreditAccount", fields: [creditAccountId], references: [id], onDelete: SetNull)
+
+  @@index([entryId])
+}
+
+model CrmLead {
+  id             String   @id @default(cuid())
+  organizationId String
+  customerId     String?
+  createdById    String?
+  code           String
+  companyName    String
+  contactName    String?
+  contactEmail   String?
+  country        String?
+  source         String?
+  stage          String   @default("NEW")
+  estimatedValueVnd Float @default(0)
+  nextActionAt   DateTime?
+  notes          String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("CrmLeadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  opportunities CrmOpportunity[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, stage])
+}
+
+model CrmOpportunity {
+  id             String   @id @default(cuid())
+  organizationId String
+  leadId         String?
+  customerId     String?
+  projectId      String?
+  code           String
+  name           String
+  stage          String   @default("QUALIFYING")
+  probability    Int      @default(10)
+  estimatedValueVnd Float @default(0)
+  expectedCloseDate DateTime?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead         CrmLead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  project      Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, stage])
+}
+
+model ErpProcess {
+  id             String   @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  module         ModuleCode
+  steps          Json
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  approvals    ErpApproval[]
+
+  @@unique([organizationId, code])
+}
+
+model ErpApproval {
+  id             String   @id @default(cuid())
+  organizationId String
+  processId      String?
+  createdById    String?
+  assigneeId     String?
+  code           String
+  title          String
+  module         ModuleCode
+  entity         String?
+  entityId       String?
+  status         String   @default("PENDING")
+  currentStep    Int      @default(1)
+  payload        Json?
+  approvedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process      ErpProcess? @relation(fields: [processId], references: [id], onDelete: SetNull)
+  createdBy    User?       @relation("ErpApprovalCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  assignee     User?       @relation("ErpApprovalAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+}

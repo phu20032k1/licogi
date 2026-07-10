@@ -1,0 +1,44 @@
+LICOGI 18.3 INDUSTRIAL CONSTRUCTION OPERATING SYSTEM
+BẢN GIAO DIỆN NÂNG CẤP TOÀN DIỆN - NEXT.JS 16
+
+1. CÁCH CHẠY
+- Giải nén file ZIP vào thư mục mới, ví dụ:
+  C:\Users\phú\Desktop\licogi-professional-full
+- Mở đúng thư mục đó bằng VS Code.
+- Mở Terminal và chạy:
+
+  npm install
+  npm run dev
+
+- Mở trình duyệt:
+  http://localhost:3000
+
+2. CÁC TRANG ĐÃ HOÀN THIỆN
+- /dashboard      Trung tâm điều hành, KPI, biểu đồ, cảnh báo
+- /projects       Quản lý dự án, thêm/sửa/xóa, lọc, dạng bảng/thẻ, xuất CSV
+- /map            Bản đồ GIS, lọc dự án, xem tiến độ và Project Health
+- /construction   Tiến độ thi công, nguồn lực, QA/QC và HSE
+- /documents      Quản lý hồ sơ, bản vẽ và phiên bản tài liệu
+- /warranty       Quản lý yêu cầu bảo hành và SLA
+- /portal         Cổng thông tin dành cho Chủ đầu tư
+- /partners       Quản lý nhà thầu phụ và nhà cung cấp
+- /reports        Báo cáo quản trị và biểu đồ kinh doanh
+- /ai-profile     Hồ sơ năng lực thủ công; phần AI được để lại cho giai đoạn sau
+
+3. DỮ LIỆU HIỆN TẠI
+- Dữ liệu dự án thêm/sửa/xóa được lưu trong localStorage của trình duyệt.
+- Chưa kết nối cơ sở dữ liệu thật.
+- Các nút nghiệp vụ ở module mới là giao diện demo để kiểm thử luồng.
+- Bản đồ dùng OpenStreetMap nên máy cần có Internet để tải nền bản đồ.
+
+4. KIỂM TRA BẢN PRODUCTION
+  npm run lint
+  npm run build
+  npm start
+
+Bản này đã được chạy thành công cả npm run lint và npm run build.
+
+5. LƯU Ý
+- Không đặt project trong thư mục có cấu trúc src/src.
+- Project chỉ dùng src/app, không tạo thêm app ở ngoài thư mục src.
+- Không cần sửa alias @ trong tsconfig.json.

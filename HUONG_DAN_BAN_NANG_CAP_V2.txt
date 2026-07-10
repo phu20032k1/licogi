@@ -1,0 +1,55 @@
+LICOGI 18.3 PROFESSIONAL V2 - HƯỚNG DẪN CHẠY
+================================================
+
+BẢN NÀY ĐÃ NÂNG CẤP THÊM:
+- Thanh tìm kiếm toàn hệ thống: Ctrl + K
+- Trung tâm thông báo dạng drawer
+- Menu tài khoản quản trị
+- Trung tâm công việc và luồng phê duyệt
+- Trang tài khoản và phân quyền
+- Nhật ký hoạt động hệ thống
+- Trang cài đặt hệ thống
+- Trang chi tiết từng dự án /projects/[id]
+- Project Control Room: tiến độ, mốc, hồ sơ, QA/QC-HSE, tài chính
+- Nhập CSV và xuất CSV danh sách dự án
+- Nút xem chi tiết dự án trong bảng và dạng thẻ
+- Menu và giao diện responsive cho desktop/mobile
+
+CÁCH CHẠY SẠCH NHẤT
+--------------------
+1. Giải nén ZIP ra thư mục mới, ví dụ:
+   C:\Users\phú\Desktop\licogi-professional-v2
+
+2. Mở đúng thư mục đó bằng VS Code.
+
+3. Mở Terminal và chạy:
+   npm install
+
+4. Chạy hệ thống:
+   npm run dev
+
+5. Mở trình duyệt:
+   http://localhost:3000
+
+CÁC TRANG MỚI
+-------------
+http://localhost:3000/tasks
+http://localhost:3000/users
+http://localhost:3000/activity
+http://localhost:3000/settings
+http://localhost:3000/projects/1
+
+KIỂM TRA NHANH
+--------------
+- Nhấn Ctrl + K để tìm toàn hệ thống.
+- Nhấn chuông góc phải để mở thông báo.
+- Vào Dự án -> nhấn biểu tượng con mắt để mở chi tiết.
+- Vào Công việc & phê duyệt -> thử duyệt/từ chối đề nghị.
+- Vào Danh mục dự án -> thử nhập/xuất CSV.
+
+LƯU Ý
+-----
+- AI chưa được nối theo yêu cầu hiện tại.
+- Cơ sở dữ liệu và đăng nhập thật chưa nối; dữ liệu dự án vẫn lưu localStorage.
+- Các form tài khoản, cài đặt và phê duyệt là bản mô phỏng giao diện/nghiệp vụ.
+- Đã kiểm tra npm run lint và npm run build thành công trên Next.js 16.2.10.

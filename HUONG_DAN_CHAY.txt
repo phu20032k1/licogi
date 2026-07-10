@@ -1,0 +1,17 @@
+LICOGI 18.3 - BẢN ĐÃ SỬA CẤU TRÚC NEXT.JS 16
+
+1. Giải nén thư mục này.
+2. Mở đúng thư mục có package.json bằng VS Code.
+3. Mở Terminal và chạy:
+   npm install
+4. Sau khi cài xong, chạy:
+   npm run dev
+5. Mở trình duyệt:
+   http://localhost:3000
+
+LƯU Ý:
+- Bản này chỉ dùng src/app.
+- Không tạo thêm thư mục app ở ngoài src.
+- Trang chủ tự chuyển sang /dashboard.
+- Quản lý dự án ở /projects.
+- Bản đồ ở /map.
