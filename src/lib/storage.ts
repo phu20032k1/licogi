@@ -95,7 +95,8 @@ export function signS3Request(method: "PUT" | "GET" | "DELETE", objectKey: strin
 export async function putObject(objectKey: string, buffer: Buffer, contentType?: string) {
   const config = storageConfig();
   const signed = signS3Request("PUT", objectKey, buffer, contentType || "application/octet-stream", config);
-  const response = await fetch(signed.url, { method: "PUT", headers: signed.headers, body: buffer });
+  const body = new Uint8Array(buffer);
+  const response = await fetch(signed.url, { method: "PUT", headers: signed.headers, body });
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     throw new Error(`S3/MinIO upload failed: ${response.status} ${text.slice(0, 300)}`);

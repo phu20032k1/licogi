@@ -42,3 +42,5 @@ next-env.d.ts
 
 # local data store
 /.licogi-data
+
+!.env.example

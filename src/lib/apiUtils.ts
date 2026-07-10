@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ModuleCode, PermissionAction } from "@prisma/client";
+import { ModuleCode, PermissionAction, Prisma } from "@prisma/client";
 import { authorize, audit, AuthUser } from "./authServer";
 
 export function moduleCode(value: string) {
@@ -25,7 +25,7 @@ export async function requireModule(module: string, action: PermissionAction) {
   return authorize(moduleCode(module), action);
 }
 
-export async function writeAudit(user: AuthUser, module: string, action: PermissionAction, message: string, entity?: string, entityId?: string, metadata?: Record<string, unknown>) {
+export async function writeAudit(user: AuthUser, module: string, action: PermissionAction, message: string, entity?: string, entityId?: string, metadata?: Prisma.InputJsonObject) {
   return audit(user, moduleCode(module), action, message, entity, entityId, metadata);
 }
 

@@ -5,6 +5,7 @@ import {
   DataScope,
   ModuleCode,
   PermissionAction,
+  Prisma,
   RoleCode,
 } from "@prisma/client";
 
@@ -377,7 +378,7 @@ export async function audit(
 
   entityId?:string,
 
-  metadata?:Record<string,unknown>
+  metadata?: Prisma.InputJsonObject
 
 ) {
 
