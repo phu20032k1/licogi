@@ -112,6 +112,8 @@ export default function DataCenterPage() {
   const [editValue, setEditValue] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creatingNewRow, setCreatingNewRow] = useState(false);
+  const [tempNewRows, setTempNewRows] = useState<PreviewRow[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const activeEntity = useMemo(() => dataEntities.find((item) => item.key === activeKey) ?? dataEntities[0], [activeKey]);
@@ -167,6 +169,7 @@ export default function DataCenterPage() {
     setErrors([]);
     setFileName("");
     setBulkText("");
+    setTempNewRows([]);
     if (fileInput.current) fileInput.current.value = "";
   }
 
@@ -300,6 +303,59 @@ export default function DataCenterPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ row: nextRow }),
     });
+  }
+
+  async function addNewRow() {
+    setCreatingNewRow(true);
+    try {
+      const emptyRow: PreviewRow = {};
+      visibleColumns.forEach((col) => {
+        emptyRow[col] = "";
+      });
+      
+      // Thêm dòng tạm thời vào state, không gửi API ngay
+      setTempNewRows((current) => [...current, emptyRow]);
+      setMessage("Thêm dòng trống. Nhập dữ liệu vào bảng rồi bấm Lưu khi hoàn thành.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không tạo được dòng mới.");
+    } finally {
+      setCreatingNewRow(false);
+    }
+  }
+
+  async function saveTempRows() {
+    if (!tempNewRows.length) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/data/${activeEntity.key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "append", rows: tempNewRows }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message ?? "Không lưu được dữ liệu.");
+      setRows(data.rows);
+      setTempNewRows([]);
+      setRowCounts((current) => ({ ...current, [activeEntity.key]: data.rows.length }));
+      setMessage(`Đã lưu ${tempNewRows.length} dòng mới.`);
+      window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: tempNewRows.length } }));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không lưu được dữ liệu.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function updateTempRow(index: number, key: string, value: string) {
+    setTempNewRows((current) => {
+      const updated = [...current];
+      updated[index] = { ...updated[index], [key]: value };
+      return updated;
+    });
+  }
+
+  function removeTempRow(index: number) {
+    setTempNewRows((current) => current.filter((_, i) => i !== index));
   }
 
   return (
@@ -465,10 +521,42 @@ export default function DataCenterPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-black text-slate-950">Dữ liệu hiện có</h2>
-                <p className="mt-1 text-sm text-slate-500">Có thể sửa trực tiếp từng ô, chọn nhiều dòng để sửa/xóa hàng loạt.</p>
+                <p className="mt-1 text-sm text-slate-500">Có thể sửa trực tiếp từng ô, chọn nhiều dòng để sửa/xóa hàng loạt, hoặc bấm nút + để thêm dòng mới.</p>
               </div>
-              <button type="button" onClick={toggleAll} disabled={!rows.length} className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-extrabold text-slate-700 disabled:text-slate-300">{selectedIds.length === rows.length && rows.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}</button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={addNewRow} disabled={loading || creatingNewRow} className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-orange-700 disabled:bg-slate-300"><PlusCircle size={16} /> Thêm dòng</button>
+                {tempNewRows.length > 0 && (
+                  <button type="button" onClick={saveTempRows} disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-emerald-700 disabled:bg-slate-300"><Save size={16} /> Lưu {tempNewRows.length} dòng</button>
+                )}
+                <button type="button" onClick={toggleAll} disabled={!rows.length} className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-extrabold text-slate-700 disabled:text-slate-300">{selectedIds.length === rows.length && rows.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}</button>
+              </div>
             </div>
+
+            {tempNewRows.length > 0 && (
+              <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4">
+                <h3 className="font-black text-orange-900">Dòng mới chưa lưu ({tempNewRows.length})</h3>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[1040px] text-left text-xs">
+                    <thead className="bg-orange-100 font-extrabold uppercase tracking-[0.08em] text-orange-700">
+                      <tr><th className="w-12 px-3 py-3">Xóa</th>{visibleColumns.slice(0, 5).map((column) => <th key={column} className="px-3 py-3">{column}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-orange-100">
+                      {tempNewRows.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-orange-100">
+                          <td className="px-3 py-2"><button type="button" onClick={() => removeTempRow(idx)} className="text-red-600 hover:text-red-900"><Trash2 size={14} /></button></td>
+                          {visibleColumns.slice(0, 5).map((column) => (
+                            <td key={column} className="min-w-[150px] px-2 py-2">
+                              <input value={row[column] ?? ""} onChange={(event) => updateTempRow(idx, column, event.target.value)} className="w-full rounded-lg border border-orange-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200" placeholder={`Nhập ${column}`} />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1040px] text-left text-xs">
@@ -489,7 +577,7 @@ export default function DataCenterPage() {
                   </tbody>
                 </table>
               </div>
-              {!rows.length ? <div className="p-12 text-center"><Database className="mx-auto text-slate-300" size={30} /><p className="mt-3 font-black text-slate-800">Chưa có dữ liệu</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Dữ liệu đã được để trống theo yêu cầu. Hãy nhập CSV thật hoặc dán nhiều dòng vào ô “Thêm hàng loạt”.</p></div> : null}
+              {!rows.length ? <div className="p-12 text-center"><Database className="mx-auto text-slate-300" size={30} /><p className="mt-3 font-black text-slate-800">Chưa có dữ liệu</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Dữ liệu đã được để trống theo yêu cầu. Bấm nút <span className="inline-flex items-center gap-1 rounded-lg bg-orange-100 px-2 py-1 font-extrabold text-orange-700"><PlusCircle size={14} /> Thêm dòng</span> để nhập dữ liệu trực tiếp, hoặc nhập CSV thật / dán nhiều dòng vào ô "Thêm hàng loạt".</p></div> : null}
             </div>
           </section>
         </div>

@@ -4,7 +4,9 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ["error"],
+});
 const seed = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "licogi.seed.json"), "utf8"));
 
 function passwordHash(password) {
