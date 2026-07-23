@@ -1,1 +1,1 @@
-project_code,project_name,type,status,investor,province,value_range,progress,lat,lng
+project_code,project_name,customer_code,type,status,investor,province,value_range,contract_value_vnd,construction_area,floor_area,scale,progress,risk,health_score,lat,lng,maps_url,source

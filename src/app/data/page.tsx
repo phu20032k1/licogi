@@ -84,7 +84,9 @@ function validateRows(entity: DataEntity, rows: PreviewRow[]) {
     if (entity.key === "projects") {
       if (row.status && !["ongoing", "completed", "warranty"].includes(row.status)) errors.push({ row: index + 2, message: "status phải là ongoing / completed / warranty" });
       if (row.progress && (Number.isNaN(Number(row.progress)) || Number(row.progress) < 0 || Number(row.progress) > 100)) errors.push({ row: index + 2, message: "progress phải từ 0 đến 100" });
+      if (row.health_score && (Number.isNaN(Number(row.health_score)) || Number(row.health_score) < 0 || Number(row.health_score) > 100)) errors.push({ row: index + 2, message: "health_score phải từ 0 đến 100" });
     }
+    if (entity.key === "ai_knowledge" && row.vector_status && !["PENDING", "READY", "ERROR"].includes(row.vector_status.toUpperCase())) errors.push({ row: index + 2, message: "vector_status phải là PENDING / READY / ERROR" });
     if (row.contact_email && !row.contact_email.includes("@")) errors.push({ row: index + 2, message: "Email liên hệ không hợp lệ" });
   });
   return errors;
@@ -363,11 +365,16 @@ export default function DataCenterPage() {
       <PageHeader
         eyebrow="Data Center"
         title="Trung tâm dữ liệu & nhập liệu"
-        description="Nhập dữ liệu sạch từ CSV, thêm hàng loạt, sửa hàng loạt và xóa hàng loạt trước khi đưa lên Dashboard, GIS, hồ sơ, thi công và bảo hành. Dữ liệu ban đầu để trống, không còn dữ liệu minh họa."
+        description="Nhập dữ liệu sạch từ CSV, thêm hàng loạt, sửa hàng loạt và xóa hàng loạt trước khi đưa lên Dashboard, GIS, hồ sơ năng lực, thi công, bảo hành và AI Construction Brain. Dữ liệu ban đầu để trống, không còn dữ liệu minh họa."
         actions={
-          <a href={activeEntity.templateFile} download className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200 hover:bg-orange-700">
-            <Download size={16} /> Tải cấu trúc CSV
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <a href="/templates/licogi_bulk_update_template.xlsx" download className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 py-2.5 text-xs font-extrabold text-orange-700 hover:bg-orange-50">
+              <FileSpreadsheet size={16} /> Tải Excel tổng hợp
+            </a>
+            <a href={activeEntity.templateFile} download className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200 hover:bg-orange-700">
+              <Download size={16} /> Tải cấu trúc CSV
+            </a>
+          </div>
         }
       />
 
@@ -375,7 +382,7 @@ export default function DataCenterPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Tổng bản ghi" value={String(totalRecords)} note="từ các bảng dữ liệu" icon={Database} tone="orange" />
-        <StatCard title="Nhóm dữ liệu" value={String(dataEntities.length)} note="dự án, khách hàng, hồ sơ..." icon={ClipboardList} tone="blue" />
+        <StatCard title="Nhóm dữ liệu" value={String(dataEntities.length)} note="dự án, nhân sự, thiết bị, AI..." icon={ClipboardList} tone="blue" />
         <StatCard title="Bảng đang chọn" value={String(rows.length)} note={activeEntity.title} icon={FileSpreadsheet} tone="green" />
         <StatCard title="Tỷ lệ hợp lệ" value={`${cleanRate}%`} note="theo cột bắt buộc" icon={CheckCircle2} tone="violet" />
       </section>
@@ -451,7 +458,7 @@ export default function DataCenterPage() {
               <div>
                 <div className="flex items-center gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-orange-50 text-orange-700"><PlusCircle size={20} /></span>
-                  <div><h2 className="text-lg font-black text-slate-950">Thêm hàng loạt</h2><p className="mt-1 text-sm text-slate-500">Upload CSV hoặc dán nhiều dòng. Có thể thêm vào bảng hiện tại hoặc thay thế toàn bộ bảng.</p></div>
+                  <div><h2 className="text-lg font-black text-slate-950">Thêm hàng loạt</h2><p className="mt-1 text-sm text-slate-500">Upload CSV UTF-8 hoặc dán nhiều dòng. Có thể cập nhật theo mã, thêm vào bảng hiện tại hoặc thay thế toàn bộ bảng.</p></div>
                 </div>
                 <textarea value={bulkText} onChange={(event) => setBulkText(event.target.value)} rows={7} className="mt-5 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm outline-none focus:border-orange-300 focus:ring-4 focus:ring-orange-50" placeholder={`Dán CSV tại đây. Có thể có header hoặc theo đúng thứ tự:\n${visibleColumns.join(",")}`} />
                 <div className="mt-3 flex flex-wrap gap-2">

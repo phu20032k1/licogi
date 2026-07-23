@@ -1,1 +1,1 @@
-equipment_code,equipment_name,category,project_code,status,maintenance_date
+equipment_code,equipment_name,category,quantity,quantity_number,specifications,project_code,status,maintenance_date,source

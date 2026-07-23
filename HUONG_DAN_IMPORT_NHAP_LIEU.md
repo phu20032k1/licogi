@@ -27,7 +27,7 @@ Quy trình chuẩn:
 
 ```text
 /data
-→ Chọn bảng cần nhập: Dự án / Chủ đầu tư / Nhân sự / Thiết bị / Hồ sơ / Bảo hành
+→ Chọn bảng cần nhập: Dự án / Chủ đầu tư / Nhân sự / Thiết bị / Hồ sơ / Bảo hành / Tri thức AI
 → Bấm “Tải CSV” hoặc “Tải cấu trúc CSV”
 → Mở file bằng Excel
 → Điền dữ liệu thật
@@ -82,6 +82,7 @@ employees   Nhân sự / nhóm năng lực
  equipment  Thiết bị / máy móc
 documents   Hồ sơ / bản vẽ / tài liệu
 warranty    Bảo hành / yêu cầu sau bàn giao
+ai_knowledge Tri thức AI / dữ liệu RAG
 ```
 
 ## 6. Sửa dữ liệu sau khi import
@@ -133,3 +134,25 @@ WarrantyTicket
 - Admin: import được tất cả bảng dữ liệu.
 - Data Steward: import dữ liệu theo phạm vi được giao.
 - Các vai trò khác: chỉ xem hoặc nhập dữ liệu nghiệp vụ trong chức năng của họ, không import toàn hệ thống.
+
+
+## 8. Bộ mẫu cập nhật hàng loạt mới
+
+Tải file tổng hợp:
+
+```text
+/public/templates/licogi_bulk_update_template.xlsx
+```
+
+File gồm các sheet: Hướng dẫn, Hồ sơ năng lực, Nhân sự, Máy móc thiết bị và Tri thức AI. Sau khi hoàn thiện, lưu từng sheet thành CSV UTF-8 tương ứng rồi nhập tại `/data`.
+
+Thứ tự nên nhập để liên kết đúng:
+
+```text
+1. Chủ đầu tư (nếu có)
+2. Hồ sơ năng lực / Dự án
+3. Nhân sự
+4. Máy móc thiết bị
+5. Hồ sơ / tài liệu
+6. Tri thức AI
+```
