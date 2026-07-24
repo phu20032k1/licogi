@@ -14,11 +14,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const isPublicPage = pathname === "/";
   const isLoginPage = pathname === "/login";
   const isChangePasswordPage = pathname === "/change-password";
 
   useEffect(() => {
     const sync = () => {
+      if (isPublicPage) {
+        setChecked(true);
+        setLoggedIn(false);
+        return;
+      }
       const session = readSession();
       setLoggedIn(Boolean(session));
       setChecked(true);
@@ -48,9 +54,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       window.removeEventListener("licogi-auth-updated", sync);
       window.removeEventListener("storage", sync);
     };
-  }, [isLoginPage, isChangePasswordPage, pathname, router]);
+  }, [isPublicPage, isLoginPage, isChangePasswordPage, pathname, router]);
 
-  if (isLoginPage || isChangePasswordPage) return <>{children}</>;
+  if (isPublicPage || isLoginPage || isChangePasswordPage) return <>{children}</>;
 
   if (!checked || !loggedIn) {
     return (

@@ -6,7 +6,9 @@ const PUBLIC_PREFIXES = ["/_next", "/favicon.ico", "/file.svg", "/globe.svg", "/
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return NextResponse.next();
+  if (pathname === "/") return NextResponse.next();
   if (pathname.startsWith("/api/auth")) return NextResponse.next();
+  if (pathname.startsWith("/api/public")) return NextResponse.next();
   if (pathname === "/api/health") return NextResponse.next();
   if (pathname === "/login" || pathname === "/change-password") return NextResponse.next();
   if (pathname.startsWith("/api") && !request.cookies.get(SESSION_COOKIE)?.value) {

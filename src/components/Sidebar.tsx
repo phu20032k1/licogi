@@ -22,6 +22,7 @@ import {
   Map,
   Handshake,
   HardHat,
+  Home,
   LayoutDashboard,
   MapPinned,
   ReceiptText,
@@ -136,6 +137,11 @@ export default function Sidebar({ mobileOpen, onCloseMobile, collapsed, onToggle
         </div>
 
         <div className="relative flex-1 overflow-y-auto px-3 py-5">
+          <Link href="/" onClick={onCloseMobile} title={collapsed ? "Website công khai" : undefined} className={`mb-5 flex min-h-11 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-orange-400/40 hover:bg-orange-500/10 hover:text-white ${collapsed ? "lg:justify-center" : ""}`}>
+            <Home size={19} className="shrink-0 text-orange-400" />
+            <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>Website công khai</span>
+            <span className={`ml-auto rounded-md bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-bold text-orange-300 ${collapsed ? "lg:hidden" : ""}`}>Home</span>
+          </Link>
           {visibleGroups.map((group) => <div key={group.label} className="mb-6">
             <p className={`mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 ${collapsed ? "lg:text-center lg:text-[0px]" : ""}`}>{collapsed ? <span className="hidden lg:inline">•••</span> : group.label}</p>
             <nav className="space-y-1">

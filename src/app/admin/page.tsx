@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { Activity, Building2, Database, FileStack, HardHat, RefreshCcw, ShieldCheck, UsersRound } from "lucide-react";
+import { Activity, Building2, Database, FileStack, HardHat, MapPinned, RefreshCcw, ShieldCheck, UsersRound } from "lucide-react";
 import PageHeader from "../../components/ui/PageHeader";
+
+const ProjectMap = dynamic(() => import("../../components/ProjectMap"), {
+  ssr: false,
+  loading: () => <div className="grid h-[520px] place-items-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-500">Đang tải bản đồ quản trị...</div>,
+});
 
 type Overview = {
   summary: { users: number; activeUsers: number; projects: number; customers: number; employees: number; employeeGroups: number; equipment: number; equipmentGroups: number; documents: number; warranty: number };
@@ -53,6 +59,14 @@ export default function AdminPage() {
       <Metric icon={Building2} label="Nhân lực" value={String(s.employees)} note={`${s.employeeGroups} nhóm năng lực`} />
       <Metric icon={Database} label="Thiết bị" value={String(s.equipment)} note={`${s.equipmentGroups} nhóm thiết bị`} />
     </section> : null}
+
+    <section className="rounded-[28px] border border-slate-200 bg-slate-950 p-3 shadow-xl sm:p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 px-2 text-white">
+        <div><p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-orange-400"><MapPinned size={15}/> Bản đồ dữ liệu dự án</p><h2 className="mt-1 text-xl font-black">Đồng bộ marker Trang chủ ↔ Admin</h2><p className="mt-1 text-sm text-slate-400">Sau khi import dự án, hệ thống tự lấy tọa độ hoặc định vị theo tỉnh thành và hiển thị cùng bộ icon ngành hàng trên hai bản đồ.</p></div>
+        <Link href="/data" className="rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white">Import dữ liệu dự án</Link>
+      </div>
+      <ProjectMap compact />
+    </section>
 
     <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
       <article className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

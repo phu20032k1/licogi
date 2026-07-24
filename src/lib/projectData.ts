@@ -1,21 +1,20 @@
-import { Project, ProjectStatus, ProjectType, provinceCoordinates } from "../data/projects";
+import { Project, ProjectStatus, ProjectType } from "../data/projects";
+import { normalizeProjectStatus, normalizeProjectType, resolveProvinceCoordinates } from "./projectMapVisuals";
 
 type StoredRow = Record<string, string> & { _id?: string };
-
-const fallbackType: ProjectType = "Công nghiệp";
-const validTypes: ProjectType[] = ["Công nghiệp", "Dân dụng", "Hạ tầng", "Giao thông", "Điện năng"];
-const validStatuses: ProjectStatus[] = ["ongoing", "completed", "warranty"];
 
 export type ProjectWithRowId = Project & { _rowId?: string };
 
 export function rowToProject(row: StoredRow, index: number): ProjectWithRowId {
   const province = row.province || "Hà Nội";
-  const fallback = provinceCoordinates[province] ?? provinceCoordinates["Hà Nội"];
-  const type = validTypes.includes(row.type as ProjectType) ? row.type as ProjectType : fallbackType;
-  const status = validStatuses.includes(row.status as ProjectStatus) ? row.status as ProjectStatus : "ongoing";
+  const fallback = resolveProvinceCoordinates(province);
+  const type: ProjectType = normalizeProjectType(row.type);
+  const status: ProjectStatus = normalizeProjectStatus(row.status);
   const progress = Number.isFinite(Number(row.progress)) ? Math.max(0, Math.min(100, Number(row.progress))) : 0;
-  const lat = Number.isFinite(Number(row.lat)) ? Number(row.lat) : fallback.lat;
-  const lng = Number.isFinite(Number(row.lng)) ? Number(row.lng) : fallback.lng;
+  const parsedLat = row.lat?.trim() ? Number(row.lat) : Number.NaN;
+  const parsedLng = row.lng?.trim() ? Number(row.lng) : Number.NaN;
+  const lat = Number.isFinite(parsedLat) ? parsedLat : fallback.lat;
+  const lng = Number.isFinite(parsedLng) ? parsedLng : fallback.lng;
   return {
     _rowId: row._id,
     id: Number(row.id) || index + 1,
@@ -57,6 +56,7 @@ export function projectToRow(project: ProjectWithRowId): Record<string, string> 
     investor: project.investor,
     province: project.province,
     value_range: project.valueRange,
+    scale: project.scale ?? "",
     progress: String(project.progress),
     lat: String(project.lat),
     lng: String(project.lng),
