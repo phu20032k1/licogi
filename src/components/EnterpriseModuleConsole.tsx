@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Plus, Database, UploadCloud } from "lucide-react";
+import BulkImportPanel, { BulkImportField } from "./BulkImportPanel";
+
+type CreateField = BulkImportField & {
+  type?: "text" | "number" | "date" | "textarea";
+  defaultValue?: string;
+};
 
 type Props = {
   title: string;
@@ -9,7 +15,7 @@ type Props = {
   endpoint: string;
   primaryKey: string;
   recordsKey?: string;
-  createFields?: { name: string; label: string; type?: "text" | "number" | "date" | "textarea"; placeholder?: string; defaultValue?: string }[];
+  createFields?: CreateField[];
   kind?: string;
   note?: string;
 };
@@ -70,22 +76,26 @@ export default function EnterpriseModuleConsole({ title, subtitle, endpoint, pri
 
   const columns = useMemo(() => {
     const sample = records[0] ? flattenRecord(records[0]) : {};
-    return Object.keys(sample).slice(0, 8);
+    return Object.keys(sample).slice(0, 9);
   }, [records]);
 
-  async function createRecord(event: React.FormEvent<HTMLFormElement>) {
+  async function postOne(row: Record<string, string>) {
+    const body: Record<string, unknown> = { ...row };
+    if (kind && !body.kind) body.kind = kind;
+    const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok || !json.ok) throw new Error(json.message || "Không tạo được bản ghi");
+  }
+
+  async function createRecord(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!createFields.length) return;
     setCreating(true);
     setError("");
     setMessage("");
     try {
-      const body: Record<string, unknown> = { ...form };
-      if (kind) body.kind = kind;
-      const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const json = await response.json();
-      if (!response.ok || !json.ok) throw new Error(json.message || "Không tạo được bản ghi");
-      setMessage("Đã tạo bản ghi mới và ghi audit log.");
+      await postOne(form);
+      setMessage("Đã lưu bản ghi mới vào database.");
       setForm({});
       await load();
     } catch (err) {
@@ -95,50 +105,74 @@ export default function EnterpriseModuleConsole({ title, subtitle, endpoint, pri
     }
   }
 
+  async function importRecords(rows: Record<string, string>[]) {
+    setError("");
+    setMessage("");
+    let imported = 0;
+    const failed: string[] = [];
+    for (let index = 0; index < rows.length; index += 1) {
+      try {
+        await postOne(rows[index]);
+        imported += 1;
+      } catch (err) {
+        failed.push(`Dòng ${index + 1}: ${err instanceof Error ? err.message : "lỗi không xác định"}`);
+      }
+    }
+    await load();
+    if (failed.length) {
+      setMessage(`Đã import ${imported}/${rows.length} dòng. ${failed.length} dòng lỗi chưa được lưu.`);
+      throw new Error(failed.slice(0, 4).join(" · "));
+    }
+    setMessage(`Đã import hàng loạt ${imported} bản ghi và lưu vào database.`);
+  }
+
   return (
-    <main className="space-y-6">
-      <section className="rounded-[28px] bg-slate-950 p-7 text-white shadow-xl">
+    <main className="space-y-5">
+      <section className="rounded-[24px] bg-slate-950 p-5 text-white shadow-lg sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-300">Enterprise Module</p>
-            <h1 className="mt-2 text-3xl font-black">{title}</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">{subtitle}</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-orange-300">Enterprise Module</p>
+            <h1 className="mt-1.5 text-2xl font-black">{title}</h1>
+            <p className="mt-1.5 max-w-4xl text-xs leading-6 text-slate-300 sm:text-sm">{subtitle}</p>
           </div>
-          <button onClick={load} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/15"><RefreshCw size={16} /> Tải lại</button>
+          <button onClick={load} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 text-xs font-bold text-white hover:bg-white/15"><RefreshCw size={15} /> Tải lại</button>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><Database size={20} className="text-orange-300" /><p className="mt-3 text-xs uppercase tracking-wide text-slate-400">Bản ghi</p><p className="text-2xl font-black">{records.length}</p></div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><UploadCloud size={20} className="text-orange-300" /><p className="mt-3 text-xs uppercase tracking-wide text-slate-400">API</p><p className="text-sm font-black">{endpoint}</p></div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><Plus size={20} className="text-orange-300" /><p className="mt-3 text-xs uppercase tracking-wide text-slate-400">RBAC</p><p className="text-sm font-black">VIEW / CREATE / UPDATE / DELETE</p></div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3.5"><Database size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Bản ghi</p><p className="text-xl font-black">{records.length}</p></div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3.5"><UploadCloud size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">API</p><p className="truncate text-xs font-black">{endpoint}</p></div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3.5"><Plus size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Nhập liệu</p><p className="text-xs font-black">Nhập tay hoặc import CSV</p></div>
         </div>
       </section>
 
-      {note ? <section className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm leading-7 text-orange-900">{note}</section> : null}
+      {note ? <section className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm leading-6 text-orange-900">{note}</section> : null}
       {error ? <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}
       {message ? <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div> : null}
 
       {createFields.length ? (
-        <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-950">Tạo nhanh</h2>
-          <form onSubmit={createRecord} className="mt-5 grid gap-4 md:grid-cols-3">
+        <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><h2 className="text-lg font-black text-slate-950">Tạo mới</h2><p className="mt-1 text-xs text-slate-500">Có thể nhập một bản ghi hoặc import nhiều dòng từ CSV/Excel.</p></div>
+            <BulkImportPanel fields={createFields} onImport={importRecords} compact />
+          </div>
+          <form onSubmit={createRecord} className="mt-4 grid gap-3 md:grid-cols-3">
             {createFields.map((field) => (
-              <label key={field.name} className={field.type === "textarea" ? "md:col-span-3 text-sm font-bold text-slate-700" : "text-sm font-bold text-slate-700"}>{field.label}
+              <label key={field.name} className={field.type === "textarea" ? "md:col-span-3 text-xs font-bold text-slate-700" : "text-xs font-bold text-slate-700"}>{field.label}
                 {field.type === "textarea" ? (
-                  <textarea value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} placeholder={field.placeholder} className="input-field mt-1.5 min-h-24 w-full rounded-xl px-4 py-3 text-sm" />
+                  <textarea value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} placeholder={field.placeholder} className="input-field mt-1.5 min-h-20 w-full rounded-xl px-3.5 py-2.5 text-sm" />
                 ) : (
-                  <input value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} type={field.type || "text"} placeholder={field.placeholder} className="input-field mt-1.5 w-full rounded-xl px-4 py-3 text-sm" />
+                  <input value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} type={field.type || "text"} placeholder={field.placeholder} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" />
                 )}
               </label>
             ))}
-            <div className="md:col-span-3"><button disabled={creating} className="rounded-xl bg-orange-600 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-orange-100 hover:bg-orange-700 disabled:bg-slate-300">{creating ? "Đang tạo..." : "Tạo bản ghi"}</button></div>
+            <div className="md:col-span-3"><button disabled={creating} className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-md shadow-orange-100 hover:bg-orange-700 disabled:bg-slate-300">{creating ? "Đang lưu..." : "Lưu bản ghi"}</button></div>
           </form>
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 p-5"><h2 className="text-xl font-black text-slate-950">Dữ liệu từ Prisma</h2></div>
-        {loading ? <p className="p-6 text-sm text-slate-500">Đang tải...</p> : records.length === 0 ? <p className="p-6 text-sm text-slate-500">Chưa có dữ liệu.</p> : (
-          <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr>{columns.map((col) => <th key={col} className="px-4 py-3">{col}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{records.map((row, idx) => { const flat=flattenRecord(row); return <tr key={String(row.id || idx)} className="hover:bg-slate-50/70">{columns.map((col) => <td key={col} className="max-w-[260px] truncate px-4 py-3 font-medium text-slate-700">{formatValue(flat[col])}</td>)}</tr>; })}</tbody></table></div>
+      <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 px-5 py-4"><h2 className="text-lg font-black text-slate-950">Dữ liệu đã lưu</h2></div>
+        {loading ? <p className="p-5 text-sm text-slate-500">Đang tải...</p> : records.length === 0 ? <p className="p-5 text-sm text-slate-500">Chưa có dữ liệu.</p> : (
+          <div className="overflow-x-auto"><table className="min-w-full text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500"><tr>{columns.map((col) => <th key={col} className="whitespace-nowrap px-3.5 py-3">{col}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{records.map((row, idx) => { const flat=flattenRecord(row); return <tr key={String(row.id || idx)} className="hover:bg-slate-50/70">{columns.map((col) => <td key={col} className="max-w-[240px] truncate px-3.5 py-3 font-medium text-slate-700">{formatValue(flat[col])}</td>)}</tr>; })}</tbody></table></div>
         )}
       </section>
 

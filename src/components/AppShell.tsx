@@ -71,7 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative min-h-screen max-w-full overflow-x-hidden text-slate-900">
+    <div className="app-shell relative min-h-screen max-w-full overflow-x-hidden text-slate-900">
       <div className="pointer-events-none fixed inset-0 z-[-1]">
         <div className="absolute left-[12%] top-24 h-64 w-64 rounded-full bg-stone-300/20 blur-3xl" />
         <div className="absolute right-[8%] top-10 h-72 w-72 rounded-full bg-orange-200/16 blur-3xl" />
@@ -82,10 +82,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         collapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((value) => !value)}
       />
-      <div className={`min-h-screen max-w-full min-w-0 transition-[padding] duration-300 ${collapsed ? "lg:pl-[88px]" : "lg:pl-[290px]"}`}>
+      <div className={`min-h-screen max-w-full min-w-0 transition-[padding] duration-300 ${collapsed ? "lg:pl-[76px]" : "lg:pl-[260px]"}`}>
         <Topbar onOpenMobile={() => setMobileOpen(true)} />
-        <main className="max-w-full px-3 pb-12 pt-5 sm:px-5 lg:px-6 xl:px-8">
-          <div className="mx-auto max-w-[1680px] min-w-0">{children}</div>
+        <main className="max-w-full px-3 pb-10 pt-4 sm:px-4 lg:px-5 xl:px-6">
+          <div className="mx-auto max-w-[1820px] min-w-0">{children}</div>
         </main>
       </div>
     </div>

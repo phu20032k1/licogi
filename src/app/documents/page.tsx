@@ -1,39 +1,61 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Download, FileCheck2, FileClock, FileSearch, FolderOpen, Search, Upload, PlusCircle, Save } from "lucide-react";
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/StatCard";
 import ProgressBar from "../../components/ui/ProgressBar";
-import { documents as initialDocuments } from "../../data/operations";
-import { appendClientRows, readClientRows } from "../../lib/clientDataStore";
+import BulkImportPanel from "../../components/BulkImportPanel";
+import { appendClientRows, mergeServerAndClientRows, readClientRows } from "../../lib/clientDataStore";
 
 function EmptyBox({ title, description }: { title: string; description: string }) {
   return <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 text-center"><p className="text-sm font-black text-slate-800">{title}</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">{description}</p></div>;
 }
 
+function rowsToDocuments(rows: Record<string, string>[]) {
+  return rows.map((row, index) => ({
+    code: row.document_code || `DOC-${String(index + 1).padStart(3, "0")}`,
+    name: row.document_name || "Tài liệu chưa đặt tên",
+    project: row.project_code || "Chưa gắn dự án",
+    type: row.document_type || "Hồ sơ năng lực",
+    revision: row.revision || "Rev.01",
+    owner: row.owner || "Phòng Kỹ thuật",
+    updated: row._updatedAt ? new Date(row._updatedAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    status: row.status || "Chờ phê duyệt",
+  }));
+}
+
 export default function DocumentsPage() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
-  const [items, setItems] = useState(() => {
-    if (typeof window === "undefined") return initialDocuments;
-    const localRows = readClientRows("documents");
-    if (!localRows.length) return initialDocuments;
-    return localRows.map((row, index) => ({
-      code: row.document_code || `DOC-${String(index + 1).padStart(3, "0")}`,
-      name: row.document_name || "Tài liệu chưa đặt tên",
-      project: row.project_code || "Chưa gắn dự án",
-      type: row.document_type || "Hồ sơ năng lực",
-      revision: row.revision || "Rev.01",
-      owner: row.owner || "Phòng Kỹ thuật",
-      updated: new Date().toISOString().slice(0, 10),
-      status: row.status || "Chờ phê duyệt",
-    }));
-  });
+  const [items, setItems] = useState(() => rowsToDocuments(readClientRows("documents")));
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [draft, setDraft] = useState({ code: "DOC-NEW-001", name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", owner: "Phòng Kỹ thuật", updated: new Date().toISOString().slice(0, 10), status: "Chờ phê duyệt" });
+
+  async function loadDocuments() {
+    try {
+      const response = await fetch("/api/data/documents", { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được hồ sơ.");
+      const merged = mergeServerAndClientRows("documents", data.rows || []);
+      setItems(rowsToDocuments(merged));
+    } catch {
+      setItems(rowsToDocuments(readClientRows("documents")));
+    }
+  }
+
+  useEffect(() => { void loadDocuments(); }, []);
+
+  async function importDocuments(rows: Record<string, string>[]) {
+    const normalized = rows.map((row, index) => ({ ...row, document_code: row.document_code || `DOC-${Date.now()}-${index + 1}`, status: row.status || "Chờ phê duyệt" }));
+    const response = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: normalized }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.message || "Không import được hồ sơ.");
+    setMessage(`Đã import ${normalized.length} hồ sơ vào database.`);
+    await loadDocuments();
+  }
 
   const filtered = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase("vi");
@@ -62,9 +84,7 @@ export default function DocumentsPage() {
       const upsertResponse = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: `DOC-${String(items.length + 1).padStart(3, "0")}`, document_name: file.name, project_code: draft.project.trim() || "", document_type: draft.type, revision: draft.revision, status: draft.status, file_url: data.file?.publicUrl || "", source: "Upload từ hồ sơ/bản vẽ" }] }) });
       const upsertData = await upsertResponse.json();
       if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
-      const nextItem = { code: `DOC-${String(items.length + 1).padStart(3, "0")}`, name: file.name, project: draft.project || "Chưa gắn dự án", type: draft.type, revision: draft.revision, owner: draft.owner, updated: new Date().toISOString().slice(0, 10), status: draft.status };
-      appendClientRows("documents", [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Upload từ hồ sơ/bản vẽ" }]);
-      setItems((current) => [nextItem, ...current]);
+      await loadDocuments();
       setDraft((current) => ({ ...current, code: `DOC-${String(items.length + 2).padStart(3, "0")}`, name: "", project: "", type: current.type, revision: current.revision, owner: current.owner, updated: current.updated, status: current.status }));
       setMessage(`Đã upload ${file.name} và lưu vào Data Center.`);
     } catch (error) {
@@ -89,7 +109,7 @@ export default function DocumentsPage() {
       const upsertResponse = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ" }] }) });
       const upsertData = await upsertResponse.json();
       if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
-      setItems((current) => [nextItem, ...current]);
+      await loadDocuments();
       setMessage(`Đã thêm hồ sơ ${nextItem.name} vào danh sách và Data Center.`);
     } catch {
       appendClientRows("documents", [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ (bản cục bộ)" }]);
@@ -148,7 +168,8 @@ export default function DocumentsPage() {
 
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 bg-slate-50/70 p-4">
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              <BulkImportPanel compact fields={[{ name: "document_code", label: "Mã hồ sơ", placeholder: "DOC-001" },{ name: "document_name", label: "Tên hồ sơ", placeholder: "Biện pháp thi công", required: true },{ name: "project_code", label: "Mã dự án", placeholder: "LCG-2026-001" },{ name: "document_type", label: "Loại hồ sơ", placeholder: "Bản vẽ thiết kế" },{ name: "revision", label: "Phiên bản", placeholder: "Rev.01" },{ name: "status", label: "Trạng thái", placeholder: "Chờ phê duyệt" },{ name: "file_url", label: "URL file", placeholder: "" }]} onImport={importDocuments} description="Import danh sách hồ sơ từ CSV hoặc dán bảng Excel; dữ liệu được ghi vào Data Center." />
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                 <label className="text-xs font-bold text-slate-600">Mã hồ sơ<input value={draft.code} onChange={(event) => setDraft((current) => ({ ...current, code: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" /></label>
                 <label className="text-xs font-bold text-slate-600">Tên hồ sơ<input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Nhập tên hồ sơ" /></label>
                 <label className="text-xs font-bold text-slate-600">Dự án liên quan<input value={draft.project} onChange={(event) => setDraft((current) => ({ ...current, project: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Mã dự án/đề tài" /></label>

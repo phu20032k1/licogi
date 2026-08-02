@@ -1,6 +1,6 @@
 import { Project, ProjectStatus, ProjectType } from "../data/projects";
 import { normalizeProjectStatus, normalizeProjectType, resolveProvinceCoordinates } from "./projectMapVisuals";
-import { readClientRows } from "./clientDataStore";
+import { mergeServerAndClientRows, readClientRows } from "./clientDataStore";
 
 type StoredRow = Record<string, string> & { _id?: string };
 
@@ -78,7 +78,7 @@ export async function fetchProjectsFromDataCenter(): Promise<ProjectWithRowId[]>
     const response = await fetch("/api/data/projects", { cache: "no-store" });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.message ?? "Không tải được danh mục dự án.");
-    return (data.rows as StoredRow[]).map(rowToProject);
+    return mergeServerAndClientRows("projects", data.rows as StoredRow[]).map(rowToProject);
   } catch {
     return readClientRows("projects").map((row, index) => rowToProject(row as StoredRow, index));
   }

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { CalendarDays, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import BulkImportPanel from "./BulkImportPanel";
 import {
   Project,
   ProjectRisk,
@@ -17,6 +18,7 @@ type Props = {
   initialProject?: Project | null;
   onSave: (project: Project) => void;
   onCancel: () => void;
+  onBulkImported?: () => void;
 };
 
 type FormState = {
@@ -80,11 +82,25 @@ function createInitialForm(initialProject?: Project | null): FormState {
   };
 }
 
-export default function ProjectForm({ initialProject, onSave, onCancel }: Props) {
+export default function ProjectForm({ initialProject, onSave, onCancel, onBulkImported }: Props) {
   const [form, setForm] = useState<FormState>(() => createInitialForm(initialProject));
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+
+  async function importProjects(rows: Record<string, string>[]) {
+    const response = await fetch("/api/data/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "append", rows }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.message || "Không import được danh sách dự án.");
+    window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: "projects", rows: rows.length } }));
+    onBulkImported?.();
+    router.refresh();
+    onCancel();
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,12 +149,31 @@ export default function ProjectForm({ initialProject, onSave, onCancel }: Props)
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-5">
       <button type="button" aria-label="Đóng" onClick={onCancel} className="absolute inset-0" />
       <form onSubmit={handleSubmit} className="relative max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
-          <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-orange-600">Dữ liệu dự án</p>
-            <h2 className="mt-1 text-xl font-black text-slate-950">{initialProject ? "Cập nhật dự án" : "Thêm dự án mới"}</h2>
+        <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-orange-600">Dữ liệu dự án</p>
+              <h2 className="mt-1 text-xl font-black text-slate-950">{initialProject ? "Cập nhật dự án" : "Thêm dự án mới"}</h2>
+            </div>
+            <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"><X size={19} /></button>
           </div>
-          <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"><X size={19} /></button>
+          {!initialProject ? <BulkImportPanel
+            className="mt-3"
+            compact
+            fields={[
+              { name: "project_code", label: "Mã dự án", placeholder: "LCG-2026-001" },
+              { name: "project_name", label: "Tên dự án", placeholder: "Nhà máy FDI", required: true },
+              { name: "investor", label: "Chủ đầu tư", placeholder: "ABC Vietnam" },
+              { name: "type", label: "Loại công trình", placeholder: "Công nghiệp" },
+              { name: "province", label: "Tỉnh/Thành", placeholder: "Hà Nội" },
+              { name: "status", label: "Trạng thái", placeholder: "ongoing" },
+              { name: "value_range", label: "Khoảng giá trị", placeholder: "100-200 tỷ" },
+              { name: "progress", label: "Tiến độ", placeholder: "0" },
+              { name: "manager", label: "Chỉ huy trưởng", placeholder: "Nguyễn Văn A" },
+            ]}
+            onImport={importProjects}
+            description="Import nhiều dự án ngay tại cửa sổ Tạo mới. Có thể chọn CSV hoặc dán bảng từ Excel."
+          /> : null}
         </div>
 
         <div className="space-y-7 px-5 py-6 sm:px-7">

@@ -675,3 +675,23 @@ code {
   .public-ai-launcher-label { display: none; }
   .public-ai-launcher { width: 58px; padding: 0; justify-content: center; }
 }
+
+/* Desktop density: keep more information visible without browser zoom. */
+@media (min-width: 1280px) {
+  .app-shell .glass-card,
+  .app-shell .professional-card,
+  .app-shell .enterprise-card {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  }
+
+  .app-shell table {
+    font-size: 0.79rem;
+  }
+
+  .app-shell input,
+  .app-shell select,
+  .app-shell textarea,
+  .app-shell button {
+    line-height: 1.25;
+  }
+}

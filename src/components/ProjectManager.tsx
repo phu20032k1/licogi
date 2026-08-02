@@ -181,7 +181,7 @@ export default function ProjectManager() {
         </section>
       )}
 
-      {showForm ? <ProjectForm key={editing?._rowId ?? "new"} initialProject={editing} onSave={saveProject} onCancel={() => { setEditing(null); setShowForm(false); }} /> : null}
+      {showForm ? <ProjectForm key={editing?._rowId ?? "new"} initialProject={editing} onSave={saveProject} onBulkImported={() => { setMessage("Đã import danh sách dự án và lưu vào database."); void load(); }} onCancel={() => { setEditing(null); setShowForm(false); }} /> : null}
     </div>
   );
 }

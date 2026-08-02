@@ -62,8 +62,8 @@ export default function Topbar({ onOpenMobile }: { onOpenMobile: () => void }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-[82px] border-b border-white/70 bg-white/90 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur-2xl">
-        <div className="flex h-full min-w-0 items-center gap-3 px-3 sm:px-5 lg:px-6 xl:px-8">
+      <header className="sticky top-0 z-30 h-[72px] border-b border-white/70 bg-white/90 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur-2xl">
+        <div className="flex h-full min-w-0 items-center gap-3 px-3 sm:px-4 lg:px-5 xl:px-6">
           <button type="button" onClick={onOpenMobile} className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm hover:bg-slate-50 lg:hidden">
             <Menu size={20} />
           </button>
@@ -72,7 +72,7 @@ export default function Topbar({ onOpenMobile }: { onOpenMobile: () => void }) {
             <p className="mt-0.5 hidden items-center gap-1.5 text-xs text-slate-500 sm:flex"><Building2 size={13} className="text-orange-600" />Kiến tạo hạ tầng · Dẫn dắt phát triển</p>
           </div>
 
-          <button type="button" onClick={() => setSearchOpen(true)} className="ml-auto hidden w-full max-w-md items-center gap-2 rounded-2xl border border-slate-200 bg-white/85 px-3 py-2.5 text-left text-slate-500 shadow-sm transition hover:border-orange-200 hover:bg-orange-50/40 xl:flex">
+          <button type="button" onClick={() => setSearchOpen(true)} className="ml-auto hidden w-full max-w-sm items-center gap-2 rounded-2xl border border-slate-200 bg-white/85 px-3 py-2.5 text-left text-slate-500 shadow-sm transition hover:border-orange-200 hover:bg-orange-50/40 xl:flex">
             <Search size={17} />
             <span className="min-w-0 flex-1 truncate text-sm">Tìm dự án, hồ sơ, đối tác, bảo hành...</span>
             <kbd className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold">Ctrl K</kbd>

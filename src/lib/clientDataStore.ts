@@ -63,3 +63,37 @@ export function deleteClientRows(entity: string, ids: string[]) {
   writeClientRows(entity, current);
   return current;
 }
+
+const naturalKeyByEntity: Record<string, string> = {
+  projects: "project_code",
+  customers: "customer_code",
+  employees: "employee_code",
+  equipment: "equipment_code",
+  documents: "document_code",
+  warranty: "ticket_code",
+  ai_knowledge: "knowledge_code",
+};
+
+/**
+ * Gộp dữ liệu API với các bản ghi local fallback. Nếu một bản ghi local đã có
+ * cùng mã với bản ghi trên server thì ưu tiên server và tự loại bản local cũ.
+ * Nhờ vậy dữ liệu tạo lúc API tạm lỗi không biến mất chỉ vì refresh trang.
+ */
+export function mergeServerAndClientRows(entity: string, serverRows: Record<string, string>[]) {
+  if (typeof window === "undefined") return serverRows.map((row) => normalizeRow(row, String(row._id || "")));
+  const server = serverRows.map((row) => normalizeRow(row, String(row._id || "")));
+  const local = readClientRows(entity);
+  if (!local.length) return server;
+
+  const keyField = naturalKeyByEntity[entity];
+  const serverIds = new Set(server.map((row) => row._id));
+  const serverKeys = new Set(keyField ? server.map((row) => String(row[keyField] || "").trim()).filter(Boolean) : []);
+  const pending = local.filter((row) => {
+    if (serverIds.has(row._id)) return false;
+    const key = keyField ? String(row[keyField] || "").trim() : "";
+    return !key || !serverKeys.has(key);
+  });
+
+  if (pending.length !== local.length) writeClientRows(entity, pending);
+  return [...pending, ...server];
+}

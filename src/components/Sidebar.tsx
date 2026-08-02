@@ -122,15 +122,15 @@ export default function Sidebar({ mobileOpen, onCloseMobile, collapsed, onToggle
     <>
       {mobileOpen ? <button type="button" aria-label="Đóng menu" onClick={onCloseMobile} className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden" /> : null}
 
-      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-[#071426] text-white shadow-2xl shadow-slate-950/20 transition-all duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} ${collapsed ? "w-[290px] lg:w-[88px]" : "w-[290px]"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-[#071426] text-white shadow-2xl shadow-slate-950/20 transition-all duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} ${collapsed ? "w-[260px] lg:w-[76px]" : "w-[260px]"}`}>
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -left-24 top-10 h-56 w-56 rounded-full bg-orange-500/15 blur-3xl" />
           <div className="absolute -right-28 bottom-16 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
         </div>
 
-        <div className="relative flex h-[82px] items-center justify-between border-b border-white/10 px-5">
+        <div className="relative flex h-[72px] items-center justify-between border-b border-white/10 px-4">
           <Link href="/dashboard" onClick={onCloseMobile} className="flex min-w-0 items-center gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-600 shadow-lg shadow-orange-950/20 "><Building2 size={23} strokeWidth={2.2} /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-orange-600 shadow-lg shadow-orange-950/20 "><Building2 size={23} strokeWidth={2.2} /></span>
             <span className={`min-w-0 transition-opacity ${collapsed ? "lg:hidden" : ""}`}><span className="block truncate text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">Industrial Construction OS</span><span className="mt-1 block truncate text-lg font-black tracking-tight">LICOGI 18.3</span></span>
           </Link>
           <button type="button" onClick={onCloseMobile} className="rounded-xl p-2 text-slate-300 hover:bg-white/10 lg:hidden"><X size={20} /></button>

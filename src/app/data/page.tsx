@@ -21,7 +21,7 @@ import {
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/StatCard";
 import { DataEntity, DataEntityKey, dataEntities, importChecklist } from "../../data/dataCenter";
-import { appendClientRows, deleteClientRows, readClientRows, replaceClientRows, updateClientRows } from "../../lib/clientDataStore";
+import { appendClientRows, deleteClientRows, mergeServerAndClientRows, readClientRows, replaceClientRows, updateClientRows } from "../../lib/clientDataStore";
 
 type PreviewRow = Record<string, string>;
 type StoredRow = PreviewRow & { _id: string; _createdAt: string; _updatedAt: string };
@@ -99,7 +99,7 @@ async function fetchRows(entity: DataEntityKey) {
     const response = await fetch(`/api/data/${entity}`, { cache: "no-store" });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.message ?? "Không đọc được dữ liệu");
-    return data.rows as StoredRow[];
+    return mergeServerAndClientRows(entity, data.rows as StoredRow[]) as StoredRow[];
   } catch {
     const fallbackRows = readClientRows(entity) as StoredRow[];
     if (fallbackRows.length) return fallbackRows;
@@ -128,6 +128,7 @@ export default function DataCenterPage() {
   const [creatingNewRow, setCreatingNewRow] = useState(false);
   const [tempNewRows, setTempNewRows] = useState<PreviewRow[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
+  const skipDraftPersist = useRef(false);
 
   const activeEntity = useMemo(() => dataEntities.find((item) => item.key === activeKey) ?? dataEntities[0], [activeKey]);
   const visibleColumns = activeEntity.columns.map((column) => column.key);
@@ -182,13 +183,36 @@ export default function DataCenterPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    skipDraftPersist.current = true;
+    try {
+      const saved = window.localStorage.getItem(`licogi-data-draft:${activeKey}`);
+      const parsed = saved ? JSON.parse(saved) : [];
+      setTempNewRows(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setTempNewRows([]);
+    }
+  }, [activeKey]);
+
+  useEffect(() => {
+    if (skipDraftPersist.current) {
+      skipDraftPersist.current = false;
+      return;
+    }
+    const draftKey = `licogi-data-draft:${activeKey}`;
+    if (tempNewRows.length) {
+      window.localStorage.setItem(draftKey, JSON.stringify(tempNewRows));
+    } else {
+      window.localStorage.removeItem(draftKey);
+    }
+  }, [activeKey, tempNewRows]);
+
   function clearPreview() {
     setPreviewRows([]);
     setHeaders([]);
     setErrors([]);
     setFileName("");
     setBulkText("");
-    setTempNewRows([]);
     if (fileInput.current) fileInput.current.value = "";
   }
 
@@ -378,6 +402,7 @@ export default function DataCenterPage() {
       if (!response.ok || !data.ok) throw new Error(data.message ?? "Không lưu được dữ liệu.");
       setRows(data.rows);
       setTempNewRows([]);
+      window.localStorage.removeItem(`licogi-data-draft:${activeEntity.key}`);
       setRowCounts((current) => ({ ...current, [activeEntity.key]: data.rows.length }));
       setMessage(`Đã lưu ${tempNewRows.length} dòng mới.`);
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: tempNewRows.length } }));
@@ -385,6 +410,7 @@ export default function DataCenterPage() {
       const fallbackRows = appendClientRows(activeEntity.key, tempNewRows);
       setRows(fallbackRows as StoredRow[]);
       setTempNewRows([]);
+      window.localStorage.removeItem(`licogi-data-draft:${activeEntity.key}`);
       setRowCounts((current) => ({ ...current, [activeEntity.key]: fallbackRows.length }));
       setMessage(error instanceof Error ? error.message : "Đã lưu dòng mới vào bản ghi cục bộ.");
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: tempNewRows.length } }));
