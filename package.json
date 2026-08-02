@@ -12,7 +12,7 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "setup:db": "npm run db:generate && npm run db:push && npm run db:seed",
+    "setup:db": "pnpm run db:generate && pnpm run db:push && pnpm run db:seed",
     "prod:check": "node scripts/production-check.js",
     "docker:prod": "docker compose -f docker-compose.production.yml up -d --build"
   },
@@ -39,5 +39,6 @@
   },
   "engines": {
     "node": "24.x"
-  }
+  },
+  "packageManager": "pnpm@9.14.4"
 }
