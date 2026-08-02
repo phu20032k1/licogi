@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Download,
   Eye,
@@ -32,7 +32,6 @@ export default function ProjectManager() {
   const [type, setType] = useState<"all" | ProjectType>("all");
   const [status, setStatus] = useState<"all" | ProjectStatus>("all");
   const [view, setView] = useState<"table" | "grid">("table");
-  const importInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setLoading(true);
@@ -77,10 +76,11 @@ export default function ProjectManager() {
       if (!response.ok || !data.ok) throw new Error(data.message ?? "Không lưu được dự án.");
       setEditing(null);
       setShowForm(false);
-      setMessage("Đã lưu dữ liệu dự án.");
+      setMessage("Đã lưu dữ liệu dự án vào Data Center.");
       await load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không lưu được dự án.");
+      throw error;
     }
   }
 
@@ -121,8 +121,7 @@ export default function ProjectManager() {
         actions={
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => { setEditing(null); setShowForm(true); }} className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200 hover:bg-orange-700"><Plus size={16} /> Thêm dự án</button>
-            <button type="button" onClick={() => importInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-50"><Upload size={16} /> Import tại Data Center</button>
-            <input ref={importInputRef} type="hidden" />
+            <Link href="/data?entity=projects" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:bg-slate-50"><Upload size={16} /> Import tại Data Center</Link>
           </div>
         }
       />

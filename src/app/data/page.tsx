@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   CheckCircle2,
@@ -100,7 +101,10 @@ async function fetchRows(entity: DataEntityKey) {
 }
 
 export default function DataCenterPage() {
-  const [activeKey, setActiveKey] = useState<DataEntityKey>("projects");
+  const searchParams = useSearchParams();
+  const entityParam = searchParams.get("entity");
+  const initialEntity = entityParam && dataEntities.some((entity) => entity.key === entityParam) ? entityParam as DataEntityKey : "projects";
+  const [activeKey, setActiveKey] = useState<DataEntityKey>(initialEntity);
   const [rows, setRows] = useState<StoredRow[]>([]);
   const [rowCounts, setRowCounts] = useState<Record<string, number>>({});
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
@@ -151,12 +155,18 @@ export default function DataCenterPage() {
   }
 
   useEffect(() => {
+    if (entityParam && dataEntities.some((entity) => entity.key === entityParam) && activeKey !== entityParam) {
+      const timer = window.setTimeout(() => {
+        setActiveKey(entityParam as DataEntityKey);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
     const timer = window.setTimeout(() => {
       void refresh(activeKey);
     }, 0);
     return () => window.clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeKey]);
+  }, [activeKey, entityParam]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -584,7 +594,7 @@ export default function DataCenterPage() {
                   </tbody>
                 </table>
               </div>
-              {!rows.length ? <div className="p-12 text-center"><Database className="mx-auto text-slate-300" size={30} /><p className="mt-3 font-black text-slate-800">Chưa có dữ liệu</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Dữ liệu đã được để trống theo yêu cầu. Bấm nút <span className="inline-flex items-center gap-1 rounded-lg bg-orange-100 px-2 py-1 font-extrabold text-orange-700"><PlusCircle size={14} /> Thêm dòng</span> để nhập dữ liệu trực tiếp, hoặc nhập CSV thật / dán nhiều dòng vào ô "Thêm hàng loạt".</p></div> : null}
+              {!rows.length ? <div className="p-12 text-center"><Database className="mx-auto text-slate-300" size={30} /><p className="mt-3 font-black text-slate-800">Chưa có dữ liệu</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Dữ liệu đã được để trống theo yêu cầu. Bấm nút <span className="inline-flex items-center gap-1 rounded-lg bg-orange-100 px-2 py-1 font-extrabold text-orange-700"><PlusCircle size={14} /> Thêm dòng</span> để nhập dữ liệu trực tiếp, hoặc nhập CSV thật / dán nhiều dòng vào ô &#34;Thêm hàng loạt&#34;.</p></div> : null}
             </div>
           </section>
         </div>

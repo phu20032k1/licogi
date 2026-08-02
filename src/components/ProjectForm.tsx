@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { CalendarDays, Save, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   Project,
   ProjectRisk,
@@ -82,16 +83,20 @@ function createInitialForm(initialProject?: Project | null): FormState {
 export default function ProjectForm({ initialProject, onSave, onCancel }: Props) {
   const [form, setForm] = useState<FormState>(() => createInitialForm(initialProject));
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!form.name.trim() || !form.investor.trim()) {
       setError("Vui lòng nhập tên dự án và chủ đầu tư.");
       return;
     }
+    setSubmitting(true);
+    setError("");
     const coordinates = provinceCoordinates[form.province] ?? provinceCoordinates["Hà Nội"];
     const completedProgress = form.status === "ongoing" ? Math.max(0, Math.min(100, form.progress)) : 100;
-    onSave({
+    const project = {
       id: initialProject?.id ?? Date.now(),
       code: form.code.trim(),
       name: form.name.trim(),
@@ -112,7 +117,16 @@ export default function ProjectForm({ initialProject, onSave, onCancel }: Props)
       risk: form.risk,
       photos: initialProject?.photos ?? 0,
       documents: initialProject?.documents ?? 0,
-    });
+    };
+
+    try {
+      await onSave(project);
+      router.refresh();
+    } catch {
+      setError("Đã xảy ra lỗi khi lưu dự án. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -163,7 +177,7 @@ export default function ProjectForm({ initialProject, onSave, onCancel }: Props)
 
         <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
           <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">Hủy</button>
-          <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-600"><Save size={17} /> {initialProject ? "Lưu thay đổi" : "Thêm dự án"}</button>
+          <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"><Save size={17} /> {submitting ? "Đang lưu..." : initialProject ? "Lưu thay đổi" : "Thêm dự án"}</button>
         </div>
       </form>
     </div>
