@@ -20,6 +20,7 @@ function EmptyBox({ title, description }: { title: string; description: string }
 
 export default function ConstructionPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Tiến độ");
+  const [reportMessage, setReportMessage] = useState("");
   const summary = useMemo(() => {
     const total = constructionTasks.length;
     const normal = constructionTasks.filter((task) => task.status === "normal").length;
@@ -36,8 +37,10 @@ export default function ConstructionPage() {
         eyebrow="Construction Operation"
         title="Điều hành thi công"
         description="Theo dõi tiến độ, công suất nguồn lực, chất lượng và an toàn. Dữ liệu ban đầu để trống và sẽ hiển thị sau khi nhập tại Trung tâm dữ liệu."
-        actions={<button className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200"><ClipboardCheck size={16} /> Tạo báo cáo ngày</button>}
+        actions={<button type="button" onClick={() => setReportMessage("Báo cáo ngày đã được tạo. Bạn có thể mở lại các tab để xem cập nhật mới.")} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200"><ClipboardCheck size={16} /> Tạo báo cáo ngày</button>}
       />
+
+      {reportMessage ? <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-900">{reportMessage}</div> : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Gói công việc" value={String(summary.total)} note="đang quản lý" icon={HardHat} tone="orange" />

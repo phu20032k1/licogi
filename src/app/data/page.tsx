@@ -21,6 +21,7 @@ import {
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/StatCard";
 import { DataEntity, DataEntityKey, dataEntities, importChecklist } from "../../data/dataCenter";
+import { appendClientRows, deleteClientRows, readClientRows, replaceClientRows, updateClientRows } from "../../lib/clientDataStore";
 
 type PreviewRow = Record<string, string>;
 type StoredRow = PreviewRow & { _id: string; _createdAt: string; _updatedAt: string };
@@ -94,10 +95,16 @@ function validateRows(entity: DataEntity, rows: PreviewRow[]) {
 }
 
 async function fetchRows(entity: DataEntityKey) {
-  const response = await fetch(`/api/data/${entity}`, { cache: "no-store" });
-  const data = await response.json();
-  if (!response.ok || !data.ok) throw new Error(data.message ?? "Không đọc được dữ liệu");
-  return data.rows as StoredRow[];
+  try {
+    const response = await fetch(`/api/data/${entity}`, { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.message ?? "Không đọc được dữ liệu");
+    return data.rows as StoredRow[];
+  } catch {
+    const fallbackRows = readClientRows(entity) as StoredRow[];
+    if (fallbackRows.length) return fallbackRows;
+    throw new Error("Không thể kết nối API, dữ liệu đang dùng bản ghi cục bộ.");
+  }
 }
 
 export default function DataCenterPage() {
@@ -224,7 +231,12 @@ export default function DataCenterPage() {
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: previewRows.length } }));
       clearPreview();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không nhập được dữ liệu.");
+      const fallbackRows = bulkMode === "replace" ? replaceClientRows(activeEntity.key, previewRows) : appendClientRows(activeEntity.key, previewRows);
+      setRows(fallbackRows as StoredRow[]);
+      setRowCounts((current) => ({ ...current, [activeEntity.key]: fallbackRows.length }));
+      setMessage(error instanceof Error ? error.message : "Không nhập được dữ liệu, đã lưu vào bản ghi cục bộ.");
+      window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: previewRows.length } }));
+      clearPreview();
     } finally {
       setLoading(false);
     }
@@ -256,7 +268,12 @@ export default function DataCenterPage() {
       setMessage("Đã xóa các dòng đã chọn.");
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key } }));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không xóa được dữ liệu.");
+      const fallbackRows = deleteClientRows(activeEntity.key, selectedIds);
+      setRows(fallbackRows as StoredRow[]);
+      setSelectedIds([]);
+      setRowCounts((current) => ({ ...current, [activeEntity.key]: fallbackRows.length }));
+      setMessage(error instanceof Error ? error.message : "Đã xóa khỏi bản ghi cục bộ.");
+      window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key } }));
     } finally {
       setLoading(false);
     }
@@ -279,7 +296,12 @@ export default function DataCenterPage() {
       setMessage("Đã xóa toàn bộ dữ liệu của bảng đang chọn.");
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key } }));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không xóa được dữ liệu.");
+      replaceClientRows(activeEntity.key, []);
+      setRows([]);
+      setSelectedIds([]);
+      setRowCounts((current) => ({ ...current, [activeEntity.key]: 0 }));
+      setMessage(error instanceof Error ? error.message : "Đã làm trống bản ghi cục bộ.");
+      window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key } }));
     } finally {
       setLoading(false);
     }
@@ -301,7 +323,11 @@ export default function DataCenterPage() {
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key } }));
       setEditValue("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không sửa được dữ liệu.");
+      const fallbackRows = updateClientRows(activeEntity.key, selectedIds, { [editField]: editValue });
+      setRows(fallbackRows as StoredRow[]);
+      setMessage(error instanceof Error ? error.message : "Đã áp dụng sửa đổi vào bản ghi cục bộ.");
+      window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key } }));
+      setEditValue("");
     } finally {
       setLoading(false);
     }
@@ -310,11 +336,15 @@ export default function DataCenterPage() {
   async function updateCell(row: StoredRow, key: string, value: string) {
     const nextRow = { ...row, [key]: value };
     setRows((current) => current.map((item) => item._id === row._id ? nextRow : item));
-    await fetch(`/api/data/${activeEntity.key}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ row: nextRow }),
-    });
+    try {
+      await fetch(`/api/data/${activeEntity.key}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ row: nextRow }),
+      });
+    } catch {
+      updateClientRows(activeEntity.key, [row._id], { [key]: value });
+    }
   }
 
   async function addNewRow() {
@@ -352,7 +382,12 @@ export default function DataCenterPage() {
       setMessage(`Đã lưu ${tempNewRows.length} dòng mới.`);
       window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: tempNewRows.length } }));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không lưu được dữ liệu.");
+      const fallbackRows = appendClientRows(activeEntity.key, tempNewRows);
+      setRows(fallbackRows as StoredRow[]);
+      setTempNewRows([]);
+      setRowCounts((current) => ({ ...current, [activeEntity.key]: fallbackRows.length }));
+      setMessage(error instanceof Error ? error.message : "Đã lưu dòng mới vào bản ghi cục bộ.");
+      window.dispatchEvent(new CustomEvent("licogi-data-imported", { detail: { entity: activeEntity.key, rows: tempNewRows.length } }));
     } finally {
       setLoading(false);
     }

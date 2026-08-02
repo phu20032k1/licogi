@@ -21,6 +21,7 @@ import PageHeader from "./ui/PageHeader";
 import ProgressBar from "./ui/ProgressBar";
 import { RiskBadge, StatusBadge } from "./ui/StatusBadge";
 import ProjectForm from "./ProjectForm";
+import { appendClientRows, deleteClientRows, updateClientRows } from "../lib/clientDataStore";
 
 export default function ProjectManager() {
   const [items, setItems] = useState<ProjectWithRowId[]>([]);
@@ -78,23 +79,33 @@ export default function ProjectManager() {
       setShowForm(false);
       setMessage("Đã lưu dữ liệu dự án vào Data Center.");
       await load();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không lưu được dự án.");
-      throw error;
+    } catch {
+      if (project._rowId) {
+        updateClientRows("projects", [project._rowId], row);
+      } else {
+        appendClientRows("projects", [row]);
+      }
+      setEditing(null);
+      setShowForm(false);
+      setMessage("Đã lưu dự án vào bản ghi cục bộ vì API chưa phản hồi. Bạn vẫn có thể tiếp tục làm việc ngay.");
+      await load();
     }
   }
 
   async function deleteProject(project: ProjectWithRowId) {
     if (!project._rowId) return;
     if (!window.confirm(`Xóa dự án “${project.name}”? Dữ liệu đã xóa không thể khôi phục.`)) return;
-    const response = await fetch("/api/data/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: [project._rowId] }) });
-    const data = await response.json();
-    if (!response.ok || !data.ok) {
-      setMessage(data.message ?? "Không xóa được dự án.");
-      return;
+    try {
+      const response = await fetch("/api/data/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: [project._rowId] }) });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message ?? "Không xóa được dự án.");
+      setMessage("Đã xóa dự án.");
+      await load();
+    } catch {
+      deleteClientRows("projects", [project._rowId]);
+      setMessage("Đã xóa dự án khỏi bản ghi cục bộ.");
+      await load();
     }
-    setMessage("Đã xóa dự án.");
-    await load();
   }
 
   function exportCsv() {

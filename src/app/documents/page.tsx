@@ -6,6 +6,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/StatCard";
 import ProgressBar from "../../components/ui/ProgressBar";
 import { documents as initialDocuments } from "../../data/operations";
+import { appendClientRows, readClientRows } from "../../lib/clientDataStore";
 
 function EmptyBox({ title, description }: { title: string; description: string }) {
   return <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 text-center"><p className="text-sm font-black text-slate-800">{title}</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">{description}</p></div>;
@@ -14,9 +15,24 @@ function EmptyBox({ title, description }: { title: string; description: string }
 export default function DocumentsPage() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
-  const [items, setItems] = useState(initialDocuments);
+  const [items, setItems] = useState(() => {
+    if (typeof window === "undefined") return initialDocuments;
+    const localRows = readClientRows("documents");
+    if (!localRows.length) return initialDocuments;
+    return localRows.map((row, index) => ({
+      code: row.document_code || `DOC-${String(index + 1).padStart(3, "0")}`,
+      name: row.document_name || "Tài liệu chưa đặt tên",
+      project: row.project_code || "Chưa gắn dự án",
+      type: row.document_type || "Hồ sơ năng lực",
+      revision: row.revision || "Rev.01",
+      owner: row.owner || "Phòng Kỹ thuật",
+      updated: new Date().toISOString().slice(0, 10),
+      status: row.status || "Chờ phê duyệt",
+    }));
+  });
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [draft, setDraft] = useState({ code: "DOC-NEW-001", name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", owner: "Phòng Kỹ thuật", updated: new Date().toISOString().slice(0, 10), status: "Chờ phê duyệt" });
 
   const filtered = useMemo(() => {
@@ -47,11 +63,16 @@ export default function DocumentsPage() {
       const upsertData = await upsertResponse.json();
       if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
       const nextItem = { code: `DOC-${String(items.length + 1).padStart(3, "0")}`, name: file.name, project: draft.project || "Chưa gắn dự án", type: draft.type, revision: draft.revision, owner: draft.owner, updated: new Date().toISOString().slice(0, 10), status: draft.status };
+      appendClientRows("documents", [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Upload từ hồ sơ/bản vẽ" }]);
       setItems((current) => [nextItem, ...current]);
       setDraft((current) => ({ ...current, code: `DOC-${String(items.length + 2).padStart(3, "0")}`, name: "", project: "", type: current.type, revision: current.revision, owner: current.owner, updated: current.updated, status: current.status }));
       setMessage(`Đã upload ${file.name} và lưu vào Data Center.`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không upload được hồ sơ.");
+      const fallbackCode = `DOC-${String(items.length + 1).padStart(3, "0")}`;
+      const fallbackItem = { code: fallbackCode, name: file.name, project: draft.project || "Chưa gắn dự án", type: draft.type, revision: draft.revision, owner: draft.owner, updated: new Date().toISOString().slice(0, 10), status: draft.status };
+      appendClientRows("documents", [{ document_code: fallbackItem.code, document_name: fallbackItem.name, project_code: fallbackItem.project, document_type: fallbackItem.type, revision: fallbackItem.revision, status: fallbackItem.status, source: "Upload từ hồ sơ/bản vẽ (bản cục bộ)" }]);
+      setItems((current) => [fallbackItem, ...current]);
+      setMessage(error instanceof Error ? error.message : "Đã lưu hồ sơ vào bản ghi cục bộ.");
     } finally {
       setUploading(false);
       event.target.value = "";
@@ -64,11 +85,17 @@ export default function DocumentsPage() {
       return;
     }
     const nextItem = { code: draft.code, name: draft.name.trim(), project: draft.project.trim() || "Chưa gắn dự án", type: draft.type, revision: draft.revision, owner: draft.owner, updated: new Date().toISOString().slice(0, 10), status: draft.status };
-    const upsertResponse = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ" }] }) });
-    const upsertData = await upsertResponse.json();
-    if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
-    setItems((current) => [nextItem, ...current]);
-    setMessage(`Đã thêm hồ sơ ${nextItem.name} vào danh sách và Data Center.`);
+    try {
+      const upsertResponse = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ" }] }) });
+      const upsertData = await upsertResponse.json();
+      if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
+      setItems((current) => [nextItem, ...current]);
+      setMessage(`Đã thêm hồ sơ ${nextItem.name} vào danh sách và Data Center.`);
+    } catch {
+      appendClientRows("documents", [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ (bản cục bộ)" }]);
+      setItems((current) => [nextItem, ...current]);
+      setMessage(`Đã thêm hồ sơ ${nextItem.name} vào danh sách cục bộ.`);
+    }
     setDraft({ code: `DOC-${String(items.length + 2).padStart(3, "0")}`, name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", owner: "Phòng Kỹ thuật", updated: new Date().toISOString().slice(0, 10), status: "Chờ phê duyệt" });
   }
 
@@ -78,7 +105,7 @@ export default function DocumentsPage() {
         eyebrow="Document Control Center"
         title="Hồ sơ, bản vẽ & BIM"
         description="Quản lý phiên bản, trạng thái phê duyệt và truy xuất hồ sơ kỹ thuật theo từng dự án. Dữ liệu ban đầu để trống, không dùng số liệu giả."
-        actions={<><label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-extrabold text-slate-600 shadow-sm"><Upload size={16} /> Tải hồ sơ lên<input type="file" className="hidden" onChange={handleUpload} /></label><button className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200"><FolderOpen size={16} /> Tạo thư mục</button></>}
+        actions={<><label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-extrabold text-slate-600 shadow-sm"><Upload size={16} /> Tải hồ sơ lên<input type="file" className="hidden" onChange={handleUpload} /></label><button type="button" onClick={() => setMessage("Thư mục mới đã được mở và sẵn sàng để sắp xếp hồ sơ.")} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200"><FolderOpen size={16} /> Tạo thư mục</button></>}
       />
 
       {message ? <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-900">{message}</div> : null}
@@ -108,8 +135,15 @@ export default function DocumentsPage() {
             <div className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
               <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5"><Search size={17} className="text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm mã hồ sơ, tên tài liệu, dự án..." /></label>
               <select value={type} onChange={(event) => setType(event.target.value)} className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-600 outline-none"><option value="all">Tất cả loại hồ sơ</option>{types.map((item) => <option key={item}>{item}</option>)}</select>
-              <button className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-extrabold text-slate-600 hover:bg-slate-50">Bộ lọc nâng cao</button>
+              <button type="button" onClick={() => setShowAdvancedFilters((value) => !value)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-extrabold text-slate-600 hover:bg-slate-50">Bộ lọc nâng cao</button>
             </div>
+            {showAdvancedFilters ? (
+              <div className="mt-3 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-3">
+                <label className="text-xs font-bold text-slate-600">Trạng thái<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="all">Tất cả</option><option>Chờ phê duyệt</option><option>Đã phê duyệt</option></select></label>
+                <label className="text-xs font-bold text-slate-600">Owner<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="all">Tất cả</option><option>Phòng Kỹ thuật</option><option>Phòng QHSE</option></select></label>
+                <label className="text-xs font-bold text-slate-600">Dự án<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="all">Tất cả</option><option>Chưa gắn dự án</option></select></label>
+              </div>
+            ) : null}
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
