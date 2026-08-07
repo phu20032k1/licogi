@@ -1,0 +1,77 @@
+/* Production polish layered after globals.css. Keep this file small and override-only. */
+
+:root {
+  --licogi-focus: rgba(249, 115, 22, 0.28);
+}
+
+html { scroll-behavior: smooth; }
+body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+
+button,
+a,
+input,
+select,
+textarea { -webkit-tap-highlight-color: transparent; }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--licogi-focus);
+  outline-offset: 2px;
+}
+
+button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+.public-map-controls { grid-template-columns: minmax(0, 1fr) 220px 220px; }
+.public-map-stats button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.public-map-stats button:hover { transform: translateY(-1px); }
+.public-map-stats button.is-orange { background: #fff7ed; color: #c2410c; }
+.public-map-stats button.is-green { background: #ecfdf5; color: #047857; }
+.public-map-stats button.is-blue { background: #f0f9ff; color: #0369a1; }
+.public-map-stats button.is-active { border-color: currentColor; box-shadow: 0 0 0 3px rgba(148, 163, 184, .13); }
+.public-map-error { display: flex; align-items: center; gap: 10px; max-width: min(92%, 620px); }
+.public-map-error button { border: 1px solid rgba(255,255,255,.35); border-radius: 8px; padding: 5px 8px; background: rgba(255,255,255,.12); color: #fff; font-size: 10px; font-weight: 900; }
+.public-map-popup a { text-decoration: none; }
+.public-map-canvas .leaflet-control-zoom a { color: #0f172a; }
+
+/* Dense enterprise tables remain usable on narrow screens without clipping actions. */
+table { font-variant-numeric: tabular-nums; }
+.overflow-x-auto { overscroll-behavior-x: contain; }
+
+/* Avoid motion-heavy UI for users who request reduced animation. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (max-width: 920px) {
+  .public-map-controls { grid-template-columns: 1fr 1fr; }
+  .public-map-controls label { grid-column: 1 / -1; }
+}
+
+@media (max-width: 560px) {
+  .public-map-controls { grid-template-columns: 1fr; }
+  .public-map-controls label { grid-column: auto; }
+  .public-map-toolbar { align-items: flex-start; padding-inline: 18px; }
+  .public-map-controls,
+  .public-map-stats,
+  .public-map-legend { padding-inline: 18px; }
+  .public-map-canvas { margin-inline: 6px; }
+}
