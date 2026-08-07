@@ -27,32 +27,30 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9000/minio/health/live"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
 
   minio-init:
     image: minio/mc:latest
     depends_on:
       minio:
-        condition: service_healthy
+        condition: service_started
     entrypoint: >
       /bin/sh -c "
-      mc alias set local http://minio:9000 ${S3_ACCESS_KEY_ID} ${S3_SECRET_ACCESS_KEY};
+      until mc alias set local http://minio:9000 ${S3_ACCESS_KEY_ID} ${S3_SECRET_ACCESS_KEY}; do sleep 2; done;
       mc mb -p local/${S3_BUCKET:-licogi-os} || true;
       mc anonymous set download local/${S3_BUCKET:-licogi-os} || true;
       exit 0;
       "
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png}
+        NEXT_PUBLIC_MAP_ATTRIBUTION: "${NEXT_PUBLIC_MAP_ATTRIBUTION:-&copy; OpenStreetMap contributors}"
     restart: unless-stopped
     depends_on:
       postgres:
-        condition: service_healthy
-      minio:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
@@ -61,7 +59,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-licogi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-licogi_os}?schema=public
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png}
-      NEXT_PUBLIC_MAP_ATTRIBUTION: ${NEXT_PUBLIC_MAP_ATTRIBUTION:-&copy; OpenStreetMap contributors}
+      NEXT_PUBLIC_MAP_ATTRIBUTION: "${NEXT_PUBLIC_MAP_ATTRIBUTION:-&copy; OpenStreetMap contributors}"
       PRISMA_SEED_PASSWORD: ${PRISMA_SEED_PASSWORD:-Demo@123456}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
       S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9000/licogi-os}
