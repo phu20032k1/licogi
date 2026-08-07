@@ -14,44 +14,69 @@ type Props = {
   singlePointZoom?: number;
 };
 
+function validPoint(point: MapPoint) {
+  return Number.isFinite(point.lat) && Number.isFinite(point.lng) && point.lat >= -90 && point.lat <= 90 && point.lng >= -180 && point.lng <= 180;
+}
+
 export default function MapViewportController({
   points,
   selected,
-  maxZoom = 8,
-  selectedZoom = 7,
-  singlePointZoom = 7,
+  maxZoom = 7,
+  selectedZoom = 6.5,
+  singlePointZoom = 6,
 }: Props) {
   const map = useMap();
 
   useEffect(() => {
     const invalidate = () => map.invalidateSize({ animate: false });
     const frame = window.requestAnimationFrame(invalidate);
+    const timer = window.setTimeout(invalidate, 180);
     window.addEventListener("resize", invalidate);
     return () => {
       window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
       window.removeEventListener("resize", invalidate);
     };
   }, [map]);
 
   useEffect(() => {
-    if (selected && Number.isFinite(selected.lat) && Number.isFinite(selected.lng)) {
-      map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), { duration: 0.55 });
+    map.stop();
+
+    if (selected && validPoint(selected)) {
+      map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), {
+        duration: 0.45,
+        easeLinearity: 0.3,
+      });
       return;
     }
 
-    const valid = points.filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng));
+    const valid = points.filter(validPoint);
     if (!valid.length) {
       map.setView([16.2, 106], 5, { animate: false });
       return;
     }
 
     if (valid.length === 1) {
-      map.setView([valid[0].lat, valid[0].lng], Math.min(maxZoom, singlePointZoom), { animate: true });
+      map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, singlePointZoom), {
+        duration: 0.4,
+        easeLinearity: 0.3,
+      });
       return;
     }
 
-    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number]));
-    map.fitBounds(bounds, { padding: [56, 56], maxZoom, animate: true, duration: 0.5 });
+    const rawBounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number]));
+    const bounds = rawBounds.pad(0.14);
+    const size = map.getSize();
+    const horizontalPadding = Math.max(32, Math.min(72, Math.round(size.x * 0.055)));
+    const verticalPadding = Math.max(32, Math.min(64, Math.round(size.y * 0.07)));
+
+    map.fitBounds(bounds, {
+      paddingTopLeft: [horizontalPadding, verticalPadding],
+      paddingBottomRight: [horizontalPadding, verticalPadding],
+      maxZoom,
+      animate: true,
+      duration: 0.45,
+    });
   }, [map, maxZoom, points, selected, selectedZoom, singlePointZoom]);
 
   return null;
