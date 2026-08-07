@@ -1,16 +1,49 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import AppShell from "../components/AppShell";
+import { siteConfig } from "../lib/siteConfig";
 import "./globals.css";
+import "./production.css";
 
 export const metadata: Metadata = {
-  title: { default: "LICOGI 18.3 | Kiến tạo hạ tầng - Dẫn dắt phát triển", template: "%s | LICOGI 18.3" },
-  description: "Website năng lực và hệ điều hành quản trị số dành cho LICOGI 18.3: ngành hàng, bản đồ GIS, dự án, video, tin tức và trợ lý AI.",
-  icons: { icon: "/brand/licogi183-logo.svg" },
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: "LICOGI 18.3 | Kiến tạo hạ tầng - Dẫn dắt phát triển",
+    template: "%s | LICOGI 18.3",
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.productName,
+  category: "construction",
+  alternates: { canonical: "/" },
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/brand/licogi183-logo.svg", shortcut: "/brand/licogi183-logo.svg" },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/",
+    siteName: siteConfig.name,
+    title: "LICOGI 18.3 | Năng lực thi công & hệ điều hành số",
+    description: siteConfig.description,
+    images: [{ url: "/media/hero-construction.svg", width: 1400, height: 900, alt: "LICOGI 18.3 Industrial Construction" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LICOGI 18.3 | Năng lực thi công & hệ điều hành số",
+    description: siteConfig.description,
+    images: ["/media/hero-construction.svg"],
+  },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f172a",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <body>
         <AppShell>{children}</AppShell>
       </body>

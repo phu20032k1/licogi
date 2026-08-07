@@ -7,6 +7,8 @@ import { MapContainer, Marker, Popup, TileLayer, Tooltip } from "react-leaflet";
 import { Building2, MapPin, RefreshCcw, Search, Sparkles } from "lucide-react";
 import { ProjectStatus, ProjectType, projectTypes, statusLabels } from "../data/projects";
 import { getMarkerVisual, markerHtml } from "../lib/projectMapVisuals";
+import { siteConfig } from "../lib/siteConfig";
+import MapViewportController from "./map/MapViewportController";
 
 type PublicProject = {
   id: string;
@@ -24,35 +26,51 @@ type PublicProject = {
   lat: number;
   lng: number;
   description?: string;
+  updatedAt?: string;
+};
+
+type PublicProjectsResponse = {
+  ok: boolean;
+  total?: number;
+  projects?: PublicProject[];
+  generatedAt?: string;
+  message?: string;
 };
 
 export default function PublicProjectMap() {
   const [projects, setProjects] = useState<PublicProject[]>([]);
   const [search, setSearch] = useState("");
   const [type, setType] = useState<"all" | ProjectType>("all");
+  const [status, setStatus] = useState<"all" | ProjectStatus>("all");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [generatedAt, setGeneratedAt] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showInitialLoading = false) => {
+    showInitialLoading ? setLoading(true) : setRefreshing(true);
     try {
       const response = await fetch("/api/public/projects", { cache: "no-store" });
-      const data = await response.json();
+      const data = (await response.json()) as PublicProjectsResponse;
       if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được bản đồ.");
-      setProjects(data.projects || []);
+      setProjects(Array.isArray(data.projects) ? data.projects : []);
+      setGeneratedAt(data.generatedAt || new Date().toISOString());
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tải được bản đồ.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
-    const interval = window.setInterval(() => void load(), 30000);
-    const refresh = () => void load();
+    void load(true);
+    const refresh = () => void load(false);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load(false);
+    }, 60000);
     window.addEventListener("licogi-data-imported", refresh);
     window.addEventListener("licogi-projects-updated", refresh);
     return () => {
@@ -62,19 +80,38 @@ export default function PublicProjectMap() {
     };
   }, [load]);
 
-  const filtered = useMemo(() => {
+  const searchAndTypeFiltered = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase("vi");
     return projects.filter((project) => {
-      const haystack = [project.name, project.province, project.investor, project.type, project.code].join(" ").toLocaleLowerCase("vi");
+      const haystack = [project.name, project.province, project.investor, project.type, project.code]
+        .join(" ")
+        .toLocaleLowerCase("vi");
       return (!keyword || haystack.includes(keyword)) && (type === "all" || project.type === type);
     });
   }, [projects, search, type]);
 
-  const statusCounts = useMemo(() => ({
-    ongoing: filtered.filter((item) => item.status === "ongoing").length,
-    completed: filtered.filter((item) => item.status === "completed").length,
-    warranty: filtered.filter((item) => item.status === "warranty").length,
-  }), [filtered]);
+  const filtered = useMemo(
+    () => searchAndTypeFiltered.filter((project) => status === "all" || project.status === status),
+    [searchAndTypeFiltered, status],
+  );
+
+  const statusCounts = useMemo(
+    () => ({
+      ongoing: searchAndTypeFiltered.filter((item) => item.status === "ongoing").length,
+      completed: searchAndTypeFiltered.filter((item) => item.status === "completed").length,
+      warranty: searchAndTypeFiltered.filter((item) => item.status === "warranty").length,
+    }),
+    [searchAndTypeFiltered],
+  );
+
+  const selectedProject = selectedId ? filtered.find((project) => project.id === selectedId) : null;
+  const updatedLabel = generatedAt
+    ? new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }).format(new Date(generatedAt))
+    : "";
+
+  useEffect(() => {
+    if (selectedId && !filtered.some((project) => project.id === selectedId)) setSelectedId(null);
+  }, [filtered, selectedId]);
 
   return (
     <div className="public-map-shell">
@@ -82,29 +119,42 @@ export default function PublicProjectMap() {
         <div>
           <span className="public-kicker"><Sparkles size={14} /> Dữ liệu dự án đồng bộ</span>
           <h3>Bản đồ năng lực thi công</h3>
-          <p>Dữ liệu nhập ở Trung tâm dữ liệu được cập nhật lên cả bản đồ công khai và bản đồ quản trị.</p>
+          <p>Dữ liệu từ Trung tâm dữ liệu được dùng chung cho website công khai và hệ thống quản trị.</p>
+          {updatedLabel ? <p className="mt-2 text-xs font-semibold text-slate-400">Cập nhật gần nhất: {updatedLabel}</p> : null}
         </div>
-        <button type="button" onClick={() => void load()} className="public-icon-button" aria-label="Tải lại bản đồ"><RefreshCcw size={17} className={loading ? "animate-spin" : ""} /></button>
+        <button type="button" onClick={() => void load(false)} className="public-icon-button" aria-label="Tải lại bản đồ" disabled={refreshing}>
+          <RefreshCcw size={17} className={refreshing ? "animate-spin" : ""} />
+        </button>
       </div>
 
       <div className="public-map-controls">
-        <label><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm dự án, tỉnh thành, chủ đầu tư..." /></label>
-        <select value={type} onChange={(event) => setType(event.target.value as "all" | ProjectType)}>
+        <label aria-label="Tìm dự án"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm dự án, tỉnh thành, chủ đầu tư..." /></label>
+        <select aria-label="Lọc ngành hàng" value={type} onChange={(event) => setType(event.target.value as "all" | ProjectType)}>
           <option value="all">Tất cả ngành hàng</option>
           {projectTypes.map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
+        <select aria-label="Lọc trạng thái" value={status} onChange={(event) => setStatus(event.target.value as "all" | ProjectStatus)}>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="ongoing">Đang thi công</option>
+          <option value="completed">Hoàn thành</option>
+          <option value="warranty">Bảo hành</option>
         </select>
       </div>
 
       <div className="public-map-stats">
-        <span><b>{filtered.length}</b> dự án</span>
-        <span className="is-orange"><b>{statusCounts.ongoing}</b> đang thi công</span>
-        <span className="is-green"><b>{statusCounts.completed}</b> hoàn thành</span>
-        <span className="is-blue"><b>{statusCounts.warranty}</b> bảo hành</span>
+        <button type="button" onClick={() => setStatus("all")} className={status === "all" ? "is-active" : ""}><b>{searchAndTypeFiltered.length}</b> dự án</button>
+        <button type="button" onClick={() => setStatus("ongoing")} className={`is-orange ${status === "ongoing" ? "is-active" : ""}`}><b>{statusCounts.ongoing}</b> đang thi công</button>
+        <button type="button" onClick={() => setStatus("completed")} className={`is-green ${status === "completed" ? "is-active" : ""}`}><b>{statusCounts.completed}</b> hoàn thành</button>
+        <button type="button" onClick={() => setStatus("warranty")} className={`is-blue ${status === "warranty" ? "is-active" : ""}`}><b>{statusCounts.warranty}</b> bảo hành</button>
       </div>
 
       <div className="public-map-canvas">
         <MapContainer center={[16.2, 106.0]} zoom={5} scrollWheelZoom={false} className="h-[520px] w-full md:h-[620px]">
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer attribution={siteConfig.map.attribution} url={siteConfig.map.tileUrl} />
+          <MapViewportController
+            points={filtered.map(({ lat, lng }) => ({ lat, lng }))}
+            selected={selectedProject ? { lat: selectedProject.lat, lng: selectedProject.lng } : null}
+          />
           {filtered.map((project) => {
             const selected = selectedId === project.id;
             return <Marker
@@ -126,16 +176,18 @@ export default function PublicProjectMap() {
                   <strong>{project.name}</strong>
                   <p><MapPin size={13} /> {project.province} · {project.type}</p>
                   <p><Building2 size={13} /> {project.investor}</p>
+                  {project.valueRange ? <p>Giá trị: {project.valueRange}</p> : null}
                   <div className="public-map-popup-progress"><span style={{ width: `${project.progress}%` }} /></div>
                   <div className="public-map-popup-meta"><span>{statusLabels[project.status]}</span><b>{project.progress}%</b></div>
+                  <a className="public-text-link mt-3 inline-flex" href={`https://www.google.com/maps/search/?api=1&query=${project.lat},${project.lng}`} target="_blank" rel="noreferrer">Mở vị trí bản đồ</a>
                 </div>
               </Popup>
             </Marker>;
           })}
         </MapContainer>
         {loading && projects.length === 0 ? <div className="public-map-loading">Đang tải dữ liệu dự án...</div> : null}
-        {error ? <div className="public-map-error">{error}</div> : null}
-        {!loading && !error && filtered.length === 0 ? <div className="public-map-empty">Chưa có dữ liệu phù hợp. Hãy import dự án trong trang quản trị.</div> : null}
+        {error ? <div className="public-map-error"><span>{error}</span><button type="button" onClick={() => void load(false)}>Thử lại</button></div> : null}
+        {!loading && !error && filtered.length === 0 ? <div className="public-map-empty">Không có dự án phù hợp với bộ lọc hiện tại.</div> : null}
       </div>
 
       <div className="public-map-legend">
