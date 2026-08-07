@@ -8,8 +8,10 @@ import { CheckCircle2, Filter, Layers3, MapPin, RefreshCcw, Search } from "lucid
 import { Project, ProjectStatus, ProjectType, projectTypes } from "../data/projects";
 import { fetchProjectsFromDataCenter } from "../lib/projectData";
 import { markerHtml } from "../lib/projectMapVisuals";
+import { siteConfig } from "../lib/siteConfig";
 import ProgressBar from "./ui/ProgressBar";
 import { RiskBadge, StatusBadge } from "./ui/StatusBadge";
+import MapViewportController from "./map/MapViewportController";
 
 type Props = { compact?: boolean };
 
@@ -21,14 +23,16 @@ export default function ProjectMap({ compact = false }: Props) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  const sync = useCallback(async () => {
-    setLoading(true);
+  const sync = useCallback(async (initial = false) => {
+    if (initial) setLoading(true);
     try {
-      setItems(await fetchProjectsFromDataCenter());
+      const next = await fetchProjectsFromDataCenter();
+      setItems(next);
+      setLastSync(new Date());
       setMessage("");
     } catch (error) {
-      setItems([]);
       setMessage(error instanceof Error ? error.message : "Không tải được dữ liệu dự án.");
     } finally {
       setLoading(false);
@@ -36,11 +40,15 @@ export default function ProjectMap({ compact = false }: Props) {
   }, []);
 
   useEffect(() => {
-    void sync();
-    const refresh = () => void sync();
+    void sync(true);
+    const refresh = () => void sync(false);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void sync(false);
+    }, 60000);
     window.addEventListener("licogi-data-imported", refresh);
     window.addEventListener("licogi-projects-updated", refresh);
     return () => {
+      window.clearInterval(interval);
       window.removeEventListener("licogi-data-imported", refresh);
       window.removeEventListener("licogi-projects-updated", refresh);
     };
@@ -56,28 +64,38 @@ export default function ProjectMap({ compact = false }: Props) {
     });
   }, [items, search, status, type]);
 
-  const selected = validProjects.find((project) => project.id === selectedId) ?? validProjects[0];
+  useEffect(() => {
+    if (selectedId !== null && !validProjects.some((project) => project.id === selectedId)) setSelectedId(null);
+  }, [selectedId, validProjects]);
+
+  const selected = (selectedId !== null ? validProjects.find((project) => project.id === selectedId) : null) ?? validProjects[0];
+  const viewportSelected = selectedId !== null ? validProjects.find((project) => project.id === selectedId) : null;
   const fdiCount = validProjects.filter((project) => project.investorCountry && project.investorCountry !== "Việt Nam").length;
   const mapHeight = compact ? "h-[430px] sm:h-[520px]" : "h-[570px] sm:h-[700px]";
+  const lastSyncLabel = lastSync ? new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" }).format(lastSync) : "--:--";
 
   return (
     <div className={`grid gap-5 ${compact ? "2xl:grid-cols-[330px_1fr]" : "xl:grid-cols-[390px_1fr]"}`}>
       <aside className="order-2 overflow-hidden rounded-[26px] border border-slate-200 bg-white/90 shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur xl:order-1">
         <div className="border-b border-slate-100 p-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400"><Filter size={14} /> Bộ lọc bản đồ</div>
-            <button type="button" onClick={() => void sync()} className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-orange-200 hover:text-orange-600" aria-label="Tải lại"><RefreshCcw size={15} className={loading ? "animate-spin" : ""}/></button>
+            <div>
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400"><Filter size={14} /> Bộ lọc bản đồ</div>
+              <p className="mt-1 text-[10px] font-semibold text-slate-400">Đồng bộ {lastSyncLabel}</p>
+            </div>
+            <button type="button" onClick={() => void sync(false)} className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:border-orange-200 hover:text-orange-600" aria-label="Tải lại"><RefreshCcw size={15} className={loading ? "animate-spin" : ""}/></button>
           </div>
           <label className="mt-3 flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-50"><Search size={16} className="text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm dự án, địa điểm, FDI..." /></label>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <select value={type} onChange={(event) => setType(event.target.value as "all" | ProjectType)} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 outline-none"><option value="all">Tất cả loại</option>{projectTypes.map((item) => <option key={item} value={item}>{item}</option>)}</select>
-            <select value={status} onChange={(event) => setStatus(event.target.value as "all" | ProjectStatus)} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 outline-none"><option value="all">Tất cả trạng thái</option><option value="ongoing">Đang thi công</option><option value="completed">Hoàn thành</option><option value="warranty">Bảo hành</option></select>
+            <select aria-label="Lọc loại dự án" value={type} onChange={(event) => setType(event.target.value as "all" | ProjectType)} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 outline-none"><option value="all">Tất cả loại</option>{projectTypes.map((item) => <option key={item} value={item}>{item}</option>)}</select>
+            <select aria-label="Lọc trạng thái dự án" value={status} onChange={(event) => setStatus(event.target.value as "all" | ProjectStatus)} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 outline-none"><option value="all">Tất cả trạng thái</option><option value="ongoing">Đang thi công</option><option value="completed">Hoàn thành</option><option value="warranty">Bảo hành</option></select>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
             <div className="rounded-xl bg-orange-50 px-2 py-2 text-orange-700">● Thi công</div>
             <div className="rounded-xl bg-emerald-50 px-2 py-2 text-emerald-700">● Hoàn thành</div>
             <div className="rounded-xl bg-sky-50 px-2 py-2 text-sky-700">● Bảo hành</div>
           </div>
+          {message ? <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-800">{message}</div> : null}
         </div>
 
         <div className="grid grid-cols-3 gap-2 border-b border-slate-100 p-4 text-center text-xs">
@@ -94,6 +112,7 @@ export default function ProjectMap({ compact = false }: Props) {
               <div className="mt-3"><div className="mb-1 flex justify-between text-[10px] font-bold text-slate-500"><span>Tiến độ</span><span>{project.progress}%</span></div><ProgressBar value={project.progress} tone={project.status === "ongoing" ? "orange" : project.status === "completed" ? "green" : "blue"} height="h-1.5" /></div>
             </button>
           ))}
+          {loading && !items.length ? <div className="p-10 text-center text-sm font-bold text-slate-500">Đang tải dự án...</div> : null}
           {!loading && validProjects.length === 0 ? <div className="p-10 text-center text-sm text-slate-500">{message || "Không có dự án phù hợp."}</div> : null}
         </div>
       </aside>
@@ -102,7 +121,11 @@ export default function ProjectMap({ compact = false }: Props) {
         <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white p-2 shadow-[0_18px_55px_rgba(15,23,42,0.07)]">
           <div className="relative">
             <MapContainer center={[16.2, 106.0]} zoom={5} scrollWheelZoom className={`${mapHeight} w-full rounded-2xl`}>
-              <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <TileLayer attribution={siteConfig.map.attribution} url={siteConfig.map.tileUrl} />
+              <MapViewportController
+                points={validProjects.map(({ lat, lng }) => ({ lat, lng }))}
+                selected={viewportSelected ? { lat: viewportSelected.lat, lng: viewportSelected.lng } : null}
+              />
               {validProjects.map((project) => {
                 const isSelected = selected?.id === project.id;
                 return <Marker
@@ -125,6 +148,7 @@ export default function ProjectMap({ compact = false }: Props) {
                       <p className="mt-2 text-xs text-slate-500">{project.investor} · {project.investorCountry || "Việt Nam"}</p>
                       <div className="mt-3 flex flex-wrap gap-1.5"><StatusBadge status={project.status} /><RiskBadge risk={project.risk ?? "low"} /></div>
                       <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Tiến độ</span><b>{project.progress}%</b></div><div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Health</span><b>{project.healthScore ?? 0}/100</b></div><div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Ảnh/Video</span><b>{project.photos ?? 0}/{project.videos ?? 0}</b></div><div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Hồ sơ</span><b>{project.documents ?? 0}</b></div></div>
+                      <a className="mt-3 inline-flex text-xs font-extrabold text-orange-600" href={`https://www.google.com/maps/search/?api=1&query=${project.lat},${project.lng}`} target="_blank" rel="noreferrer">Mở vị trí thực tế</a>
                     </div>
                   </Popup>
                 </Marker>;
@@ -132,7 +156,7 @@ export default function ProjectMap({ compact = false }: Props) {
             </MapContainer>
             <div className="pointer-events-none absolute left-4 top-4 z-[450] hidden rounded-2xl border border-white/60 bg-white/85 p-3 shadow-xl backdrop-blur lg:block">
               <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700"><Layers3 size={15} className="text-orange-500" /> Bản đồ năng lực</div>
-              <p className="mt-1 text-[11px] text-slate-500">Icon đồng bộ với bản đồ tại trang chủ</p>
+              <p className="mt-1 text-[11px] text-slate-500">Tự động căn vùng theo dữ liệu đang lọc</p>
             </div>
           </div>
         </div>
