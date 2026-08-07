@@ -15,12 +15,7 @@ export async function GET() {
   if ("response" in auth) return auth.response;
   const organizationId = auth.user.organizationId;
   const [tasks, projects, users] = await Promise.all([
-    prisma.task.findMany({
-      where: { organizationId },
-      include: { project: true, assignee: true },
-      orderBy: { updatedAt: "desc" },
-      take: 500,
-    }),
+    prisma.task.findMany({ where: { organizationId }, include: { project: true, assignee: true }, orderBy: { updatedAt: "desc" }, take: 500 }),
     prisma.project.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: { name: "asc" }, take: 500 }),
     prisma.user.findMany({ where: { organizationId, status: "ACTIVE" }, select: { id: true, email: true, name: true }, orderBy: { name: "asc" }, take: 500 }),
   ]);
@@ -66,12 +61,7 @@ export async function POST(request: Request) {
 
   const status = cleanString(body.status) || "Chưa làm";
   const progress = Math.max(0, Math.min(100, numberValue(body.progress, status === "Hoàn thành" ? 100 : 0)));
-  const metadata: Prisma.InputJsonObject = {
-    progress,
-    source: cleanString(body.source) || "TASKS_UI",
-    projectCode: cleanString(body.projectCode),
-    assigneeEmail: cleanString(body.assigneeEmail),
-  };
+  const metadata: Prisma.InputJsonObject = { progress, source: cleanString(body.source) || "TASKS_UI", projectCode: cleanString(body.projectCode), assigneeEmail: cleanString(body.assigneeEmail) };
 
   const task = await prisma.task.create({
     data: {
@@ -89,4 +79,20 @@ export async function POST(request: Request) {
   });
   await writeAudit(auth.user, MODULE, PermissionAction.CREATE, `Tạo công việc ${task.title}.`, "task", task.id, metadata);
   return NextResponse.json({ ok: true, task }, { status: 201 });
+}
+
+export async function DELETE(request: Request) {
+  const auth = await requireModule(MODULE, PermissionAction.DELETE);
+  if ("response" in auth) return auth.response;
+  const body = await request.json().catch(() => null) as { id?: string; ids?: string[] } | null;
+  const ids = Array.from(new Set([...(Array.isArray(body?.ids) ? body!.ids : []), ...(body?.id ? [body.id] : [])].map((value) => String(value || "").trim()).filter(Boolean)));
+  if (!ids.length) return bad("Chưa chọn công việc cần xóa.");
+  if (ids.length > 500) return bad("Mỗi lần chỉ xóa tối đa 500 công việc.", 413);
+
+  const existing = await prisma.task.findMany({ where: { organizationId: auth.user.organizationId, id: { in: ids } }, select: { id: true, title: true } });
+  if (!existing.length) return bad("Không tìm thấy công việc hợp lệ để xóa.", 404);
+  const validIds = existing.map((item) => item.id);
+  await prisma.task.deleteMany({ where: { organizationId: auth.user.organizationId, id: { in: validIds } } });
+  await writeAudit(auth.user, MODULE, PermissionAction.DELETE, `Xóa ${validIds.length} công việc.`, "task", validIds[0], { ids: validIds });
+  return NextResponse.json({ ok: true, deleted: validIds.length });
 }
