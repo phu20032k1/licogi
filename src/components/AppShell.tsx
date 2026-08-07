@@ -15,7 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isPublicPage = pathname === "/";
-  const isLoginPage = pathname === "/login";
+  const isAuthPage = pathname === "/login" || pathname === "/register";
   const isChangePasswordPage = pathname === "/change-password";
 
   useEffect(() => {
@@ -25,11 +25,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         setLoggedIn(false);
         return;
       }
+
       const session = readSession();
       setLoggedIn(Boolean(session));
       setChecked(true);
 
-      if (!session && !isLoginPage) {
+      if (!session && !isAuthPage) {
         void refreshServerSession().then((serverSession) => {
           setLoggedIn(Boolean(serverSession));
           if (!serverSession) router.replace("/login");
@@ -37,16 +38,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (session && isLoginPage) {
+      if (session && isAuthPage) {
         router.replace(roleDefaultRoute(session));
         return;
       }
 
-      if (session && !isLoginPage && !isChangePasswordPage) {
+      if (session && !isAuthPage && !isChangePasswordPage) {
         const routeModule = moduleFromPath(pathname);
         if (routeModule && !canViewModule(session, routeModule)) router.replace(roleDefaultRoute(session));
       }
     };
+
     sync();
     window.addEventListener("licogi-auth-updated", sync);
     window.addEventListener("storage", sync);
@@ -54,17 +56,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       window.removeEventListener("licogi-auth-updated", sync);
       window.removeEventListener("storage", sync);
     };
-  }, [isPublicPage, isLoginPage, isChangePasswordPage, pathname, router]);
+  }, [isPublicPage, isAuthPage, isChangePasswordPage, pathname, router]);
 
-  if (isPublicPage || isLoginPage || isChangePasswordPage) return <>{children}</>;
+  if (isPublicPage || isAuthPage || isChangePasswordPage) return <>{children}</>;
 
   if (!checked || !loggedIn) {
     return (
       <div className="grid min-h-screen place-items-center bg-slate-100 px-4 text-center">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-xl">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-orange-600" />
-          <p className="mt-4 text-sm font-black text-slate-800">Đang kiểm tra phiên đăng nhập...</p>
-          <p className="mt-1 text-xs text-slate-500">Hệ thống mở đúng chức năng theo vai trò được cấp.</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-lg">
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-orange-600" />
+          <p className="mt-4 text-sm font-black text-slate-800">Đang tải phiên làm việc...</p>
         </div>
       </div>
     );
