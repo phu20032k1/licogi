@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { RefreshCw, Plus, Database, UploadCloud } from "lucide-react";
+import { Database, Plus, RefreshCw, Trash2, UploadCloud } from "lucide-react";
 import BulkImportPanel, { BulkImportField } from "./BulkImportPanel";
 
 type CreateField = BulkImportField & {
@@ -42,14 +42,20 @@ function flattenRecord(row: Record<string, unknown>) {
   return copy;
 }
 
+function rowId(row: Record<string, unknown>, index: number) {
+  return String(row.id ?? row.code ?? row.uuid ?? index);
+}
+
 export default function EnterpriseModuleConsole({ title, subtitle, endpoint, primaryKey, recordsKey, createFields = [], kind, note }: Props) {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -61,6 +67,7 @@ export default function EnterpriseModuleConsole({ title, subtitle, endpoint, pri
       setData(json);
       const key = recordsKey || primaryKey;
       setRecords(Array.isArray(json[key]) ? json[key] : []);
+      setSelectedIds([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tải được dữ liệu");
     } finally {
@@ -76,8 +83,15 @@ export default function EnterpriseModuleConsole({ title, subtitle, endpoint, pri
 
   const columns = useMemo(() => {
     const sample = records[0] ? flattenRecord(records[0]) : {};
-    return Object.keys(sample).slice(0, 9);
+    return Object.keys(sample).filter((key) => key !== "id").slice(0, 9);
   }, [records]);
+
+  const selectableIds = useMemo(
+    () => records.map((row, index) => rowId(row, index)).filter(Boolean),
+    [records],
+  );
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const allSelected = Boolean(selectableIds.length) && selectableIds.every((id) => selectedSet.has(id));
 
   async function postOne(row: Record<string, string>) {
     const body: Record<string, unknown> = { ...row };
@@ -126,57 +140,143 @@ export default function EnterpriseModuleConsole({ title, subtitle, endpoint, pri
     setMessage(`Đã import hàng loạt ${imported} bản ghi và lưu vào database.`);
   }
 
+  function toggleRow(id: string) {
+    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
+  function toggleAll() {
+    setSelectedIds(allSelected ? [] : selectableIds);
+  }
+
+  async function removeIds(ids: string[]) {
+    if (!ids.length) return;
+    const recordsById = new Map(records.map((row, index) => [rowId(row, index), row]));
+    const apiIds = ids.map((id) => recordsById.get(id)?.id).filter(Boolean).map(String);
+    if (apiIds.length !== ids.length) throw new Error("Một số bản ghi chưa có ID database nên chưa thể xóa ở màn này.");
+
+    for (const id of apiIds) {
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok || !json.ok) throw new Error(json.message || `Không xóa được bản ghi ${id}`);
+    }
+  }
+
+  async function deleteSelected() {
+    if (!selectedIds.length || deleting) return;
+    if (!window.confirm(`Xóa ${selectedIds.length} bản ghi đã chọn khỏi “${title}”? Hành động này không thể hoàn tác.`)) return;
+    setDeleting(true);
+    setError("");
+    setMessage("");
+    try {
+      await removeIds(selectedIds);
+      setMessage(`Đã xóa ${selectedIds.length} bản ghi.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không xóa được dữ liệu.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function deleteOne(id: string) {
+    if (deleting) return;
+    if (!window.confirm("Xóa bản ghi này? Hành động này không thể hoàn tác.")) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await removeIds([id]);
+      setMessage("Đã xóa bản ghi.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không xóa được dữ liệu.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <main className="space-y-5">
-      <section className="rounded-[24px] bg-slate-950 p-5 text-white shadow-lg sm:p-6">
+      <section className="rounded-[22px] bg-slate-950 p-5 text-white shadow-lg sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-orange-300">Enterprise Module</p>
             <h1 className="mt-1.5 text-2xl font-black">{title}</h1>
             <p className="mt-1.5 max-w-4xl text-xs leading-6 text-slate-300 sm:text-sm">{subtitle}</p>
           </div>
-          <button onClick={load} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 text-xs font-bold text-white hover:bg-white/15"><RefreshCw size={15} /> Tải lại</button>
+          <button type="button" onClick={load} className="licogi-btn licogi-btn-dark"><RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Tải lại</button>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3.5"><Database size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Bản ghi</p><p className="text-xl font-black">{records.length}</p></div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3.5"><UploadCloud size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">API</p><p className="truncate text-xs font-black">{endpoint}</p></div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3.5"><Plus size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Nhập liệu</p><p className="text-xs font-black">Nhập tay hoặc import CSV</p></div>
+          <div className="rounded-[14px] border border-white/10 bg-white/[0.06] p-3.5"><Database size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Bản ghi</p><p className="text-xl font-black">{records.length}</p></div>
+          <div className="rounded-[14px] border border-white/10 bg-white/[0.06] p-3.5"><UploadCloud size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">API</p><p className="truncate text-xs font-black">{endpoint}</p></div>
+          <div className="rounded-[14px] border border-white/10 bg-white/[0.06] p-3.5"><Plus size={18} className="text-orange-300" /><p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Nhập liệu</p><p className="text-xs font-black">Nhập tay hoặc import CSV</p></div>
         </div>
       </section>
 
-      {note ? <section className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm leading-6 text-orange-900">{note}</section> : null}
-      {error ? <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}
-      {message ? <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div> : null}
+      {note ? <section className="rounded-[16px] border border-orange-100 bg-orange-50 p-4 text-sm leading-6 text-orange-900">{note}</section> : null}
+      {error ? <div className="rounded-[16px] border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}
+      {message ? <div className="rounded-[16px] border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div> : null}
 
       {createFields.length ? (
-        <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="text-lg font-black text-slate-950">Tạo mới</h2><p className="mt-1 text-xs text-slate-500">Có thể nhập một bản ghi hoặc import nhiều dòng từ CSV/Excel.</p></div>
+            <div><h2 className="text-lg font-black text-slate-950">Tạo mới</h2><p className="mt-1 text-xs text-slate-500">Nhập một bản ghi hoặc import nhiều dòng từ CSV/Excel.</p></div>
             <BulkImportPanel fields={createFields} onImport={importRecords} compact />
           </div>
           <form onSubmit={createRecord} className="mt-4 grid gap-3 md:grid-cols-3">
             {createFields.map((field) => (
               <label key={field.name} className={field.type === "textarea" ? "md:col-span-3 text-xs font-bold text-slate-700" : "text-xs font-bold text-slate-700"}>{field.label}
                 {field.type === "textarea" ? (
-                  <textarea value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} placeholder={field.placeholder} className="input-field mt-1.5 min-h-20 w-full rounded-xl px-3.5 py-2.5 text-sm" />
+                  <textarea value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} placeholder={field.placeholder} className="input-field mt-1.5 min-h-20 w-full rounded-[12px] px-3.5 py-2.5 text-sm" />
                 ) : (
-                  <input value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} type={field.type || "text"} placeholder={field.placeholder} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" />
+                  <input value={form[field.name] ?? field.defaultValue ?? ""} onChange={(e) => setForm((old) => ({ ...old, [field.name]: e.target.value }))} type={field.type || "text"} placeholder={field.placeholder} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" />
                 )}
               </label>
             ))}
-            <div className="md:col-span-3"><button disabled={creating} className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-md shadow-orange-100 hover:bg-orange-700 disabled:bg-slate-300">{creating ? "Đang lưu..." : "Lưu bản ghi"}</button></div>
+            <div className="md:col-span-3"><button disabled={creating} className="licogi-btn licogi-btn-primary">{creating ? "Đang lưu..." : "Lưu bản ghi"}</button></div>
           </form>
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-5 py-4"><h2 className="text-lg font-black text-slate-950">Dữ liệu đã lưu</h2></div>
+      <section className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5">
+          <div><h2 className="text-base font-black text-slate-950 sm:text-lg">Dữ liệu đã lưu</h2><p className="mt-0.5 text-[11px] text-slate-500">{selectedIds.length ? `Đã chọn ${selectedIds.length} / ${records.length}` : `${records.length} bản ghi`}</p></div>
+          <div className="flex flex-wrap gap-2">
+            {records.length ? <button type="button" onClick={toggleAll} className="licogi-btn licogi-btn-secondary">{allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}</button> : null}
+            {selectedIds.length ? <button type="button" onClick={() => void deleteSelected()} disabled={deleting} className="licogi-btn licogi-btn-danger"><Trash2 size={15} /> {deleting ? "Đang xóa..." : `Xóa ${selectedIds.length}`}</button> : null}
+          </div>
+        </div>
         {loading ? <p className="p-5 text-sm text-slate-500">Đang tải...</p> : records.length === 0 ? <p className="p-5 text-sm text-slate-500">Chưa có dữ liệu.</p> : (
-          <div className="overflow-x-auto"><table className="min-w-full text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500"><tr>{columns.map((col) => <th key={col} className="whitespace-nowrap px-3.5 py-3">{col}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{records.map((row, idx) => { const flat=flattenRecord(row); return <tr key={String(row.id || idx)} className="hover:bg-slate-50/70">{columns.map((col) => <td key={col} className="max-w-[240px] truncate px-3.5 py-3 font-medium text-slate-700">{formatValue(flat[col])}</td>)}</tr>; })}</tbody></table></div>
+          <div className="licogi-table-scroll max-h-[680px] overflow-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="sticky top-0 z-10 bg-slate-50/95 text-[10px] uppercase tracking-wide text-slate-500 backdrop-blur">
+                <tr>
+                  <th className="w-12 px-3.5 py-3"><input aria-label="Chọn tất cả bản ghi" type="checkbox" checked={allSelected} onChange={toggleAll} className="h-4 w-4 rounded border-slate-300 accent-orange-600" /></th>
+                  {columns.map((col) => <th key={col} className="whitespace-nowrap px-3.5 py-3">{col}</th>)}
+                  <th className="sticky right-0 bg-slate-50/95 px-3.5 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {records.map((row, idx) => {
+                  const flat = flattenRecord(row);
+                  const id = rowId(row, idx);
+                  const selected = selectedSet.has(id);
+                  return <tr key={id} className={selected ? "bg-orange-50/60" : "hover:bg-slate-50/70"}>
+                    <td className="px-3.5 py-3"><input aria-label={`Chọn dòng ${idx + 1}`} type="checkbox" checked={selected} onChange={() => toggleRow(id)} className="h-4 w-4 rounded border-slate-300 accent-orange-600" /></td>
+                    {columns.map((col) => <td key={col} className="max-w-[240px] truncate px-3.5 py-3 font-medium text-slate-700">{formatValue(flat[col])}</td>)}
+                    <td className={`sticky right-0 px-3.5 py-2.5 text-right ${selected ? "bg-orange-50" : "bg-white"}`}><button type="button" onClick={() => void deleteOne(id)} className="licogi-icon-btn licogi-icon-btn-danger" title="Xóa bản ghi" aria-label="Xóa bản ghi"><Trash2 size={14} /></button></td>
+                  </tr>;
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
-      {data ? <details className="rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600"><summary className="cursor-pointer font-black text-slate-900">Xem JSON trả về từ API</summary><pre className="mt-4 max-h-96 overflow-auto rounded-xl bg-slate-950 p-4 text-slate-200">{JSON.stringify(data, null, 2)}</pre></details> : null}
+      {data ? <details className="rounded-[16px] border border-slate-200 bg-white p-4 text-xs text-slate-600"><summary className="cursor-pointer font-black text-slate-900">Xem JSON trả về từ API</summary><pre className="licogi-scroll mt-4 max-h-96 overflow-auto rounded-[14px] bg-slate-950 p-4 text-slate-200">{JSON.stringify(data, null, 2)}</pre></details> : null}
     </main>
   );
 }
