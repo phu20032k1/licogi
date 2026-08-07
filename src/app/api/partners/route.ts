@@ -47,19 +47,20 @@ function normalizeInput(input: PartnerInput, index = 0) {
   return { code, name, category, metadata };
 }
 
-export async function GET() {
-  const auth = await requireModule(MODULE, PermissionAction.VIEW);
-  if ("response" in auth) return auth.response;
-
+async function listPartners(organizationId: string) {
   const rows = await prisma.customer.findMany({
-    where: { organizationId: auth.user.organizationId },
+    where: { organizationId },
     select: { code: true, name: true, industry: true, metadata: true },
     orderBy: { updatedAt: "desc" },
     take: 1500,
   });
+  return rows.filter((row) => metaString(row.metadata, "kind") === "partner").map(toPartner);
+}
 
-  const partners = rows.filter((row) => metaString(row.metadata, "kind") === "partner").map(toPartner);
-  return NextResponse.json({ ok: true, partners });
+export async function GET() {
+  const auth = await requireModule(MODULE, PermissionAction.VIEW);
+  if ("response" in auth) return auth.response;
+  return NextResponse.json({ ok: true, partners: await listPartners(auth.user.organizationId) });
 }
 
 export async function POST(request: Request) {
@@ -103,12 +104,29 @@ export async function POST(request: Request) {
     { count: rows.length },
   );
 
-  const saved = await prisma.customer.findMany({
-    where: { organizationId: auth.user.organizationId },
-    select: { code: true, name: true, industry: true, metadata: true },
-    orderBy: { updatedAt: "desc" },
-    take: 1500,
-  });
+  return NextResponse.json({ ok: true, partners: await listPartners(auth.user.organizationId) }, { status: 201 });
+}
 
-  return NextResponse.json({ ok: true, partners: saved.filter((row) => metaString(row.metadata, "kind") === "partner").map(toPartner) }, { status: 201 });
+export async function DELETE(request: Request) {
+  const auth = await requireModule(MODULE, PermissionAction.DELETE);
+  if ("response" in auth) return auth.response;
+  const body = await request.json().catch(() => null) as { code?: string; codes?: string[] } | null;
+  const codes = Array.from(new Set([
+    ...(Array.isArray(body?.codes) ? body!.codes : []),
+    ...(body?.code ? [body.code] : []),
+  ].map((value) => cleanString(value)).filter(Boolean)));
+  if (!codes.length) return bad("Chưa chọn đối tác cần xóa.");
+  if (codes.length > 500) return bad("Mỗi lần chỉ xóa tối đa 500 đối tác.", 413);
+
+  const existing = await prisma.customer.findMany({
+    where: { organizationId: auth.user.organizationId, code: { in: codes } },
+    select: { id: true, code: true, metadata: true },
+  });
+  const partnerRows = existing.filter((row) => metaString(row.metadata, "kind") === "partner");
+  if (!partnerRows.length) return bad("Không tìm thấy đối tác hợp lệ để xóa.", 404);
+
+  const ids = partnerRows.map((row) => row.id);
+  await prisma.customer.deleteMany({ where: { organizationId: auth.user.organizationId, id: { in: ids } } });
+  await writeAudit(auth.user, MODULE, PermissionAction.DELETE, `Xóa ${ids.length} đối tác.`, "partner", partnerRows[0]?.code, { codes: partnerRows.map((row) => row.code) });
+  return NextResponse.json({ ok: true, deleted: ids.length, partners: await listPartners(auth.user.organizationId) });
 }
