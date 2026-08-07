@@ -1,79 +1,90 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { Download, FileCheck2, FileClock, FileSearch, FolderOpen, Search, Upload, PlusCircle, Save } from "lucide-react";
+import { FileCheck2, FileClock, FileSearch, FolderOpen, PlusCircle, Search, Trash2, Upload } from "lucide-react";
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/StatCard";
-import ProgressBar from "../../components/ui/ProgressBar";
 import BulkImportPanel from "../../components/BulkImportPanel";
-import { appendClientRows, mergeServerAndClientRows, readClientRows } from "../../lib/clientDataStore";
 
-function EmptyBox({ title, description }: { title: string; description: string }) {
-  return <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 text-center"><p className="text-sm font-black text-slate-800">{title}</p><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">{description}</p></div>;
-}
+type DocumentItem = { id: string; code: string; name: string; project: string; type: string; revision: string; owner: string; updated: string; status: string };
+type StoredRow = Record<string, string> & { _id: string; _createdAt?: string; _updatedAt?: string };
 
-function rowsToDocuments(rows: Record<string, string>[]) {
+function rowsToDocuments(rows: StoredRow[]): DocumentItem[] {
   return rows.map((row, index) => ({
+    id: row._id,
     code: row.document_code || `DOC-${String(index + 1).padStart(3, "0")}`,
     name: row.document_name || "Tài liệu chưa đặt tên",
     project: row.project_code || "Chưa gắn dự án",
     type: row.document_type || "Hồ sơ năng lực",
     revision: row.revision || "Rev.01",
-    owner: row.owner || "Phòng Kỹ thuật",
-    updated: row._updatedAt ? new Date(row._updatedAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    owner: row.owner || row.source || "Phòng Kỹ thuật",
+    updated: row._updatedAt ? new Date(row._updatedAt).toISOString().slice(0, 10) : "",
     status: row.status || "Chờ phê duyệt",
   }));
 }
 
 export default function DocumentsPage() {
+  const [items, setItems] = useState<DocumentItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
-  const [items, setItems] = useState(() => rowsToDocuments(readClientRows("documents")));
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [draft, setDraft] = useState({ code: "DOC-NEW-001", name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", owner: "Phòng Kỹ thuật", updated: new Date().toISOString().slice(0, 10), status: "Chờ phê duyệt" });
+  const [showCreate, setShowCreate] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [draft, setDraft] = useState({ name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", status: "Chờ phê duyệt" });
 
   async function loadDocuments() {
+    setError("");
     try {
       const response = await fetch("/api/data/documents", { cache: "no-store" });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được hồ sơ.");
-      const merged = mergeServerAndClientRows("documents", data.rows || []);
-      setItems(rowsToDocuments(merged));
-    } catch {
-      setItems(rowsToDocuments(readClientRows("documents")));
+      setItems(rowsToDocuments((data.rows || []) as StoredRow[]));
+      setSelectedIds([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không tải được hồ sơ.");
     }
   }
 
   useEffect(() => { void loadDocuments(); }, []);
+
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLocaleLowerCase("vi");
+    return items.filter((item) => (!keyword || [item.code, item.name, item.project, item.owner].some((value) => value.toLocaleLowerCase("vi").includes(keyword))) && (type === "all" || item.type === type));
+  }, [items, search, type]);
+  const types = Array.from(new Set(items.map((item) => item.type)));
+  const approved = items.filter((item) => item.status === "Đã phê duyệt").length;
+  const waiting = items.filter((item) => item.status.includes("Chờ")).length;
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const allFilteredSelected = Boolean(filtered.length) && filtered.every((item) => selectedSet.has(item.id));
 
   async function importDocuments(rows: Record<string, string>[]) {
     const normalized = rows.map((row, index) => ({ ...row, document_code: row.document_code || `DOC-${Date.now()}-${index + 1}`, status: row.status || "Chờ phê duyệt" }));
     const response = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: normalized }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) throw new Error(data.message || "Không import được hồ sơ.");
-    setMessage(`Đã import ${normalized.length} hồ sơ vào database.`);
+    setMessage(`Đã import ${normalized.length} hồ sơ.`);
     await loadDocuments();
   }
 
-  const filtered = useMemo(() => {
-    const keyword = search.trim().toLocaleLowerCase("vi");
-    return items.filter((item) => {
-      const matches = !keyword || [item.code, item.name, item.project, item.owner].some((value) => value.toLocaleLowerCase("vi").includes(keyword));
-      return matches && (type === "all" || item.type === type);
-    });
-  }, [items, search, type]);
-
-  const types = Array.from(new Set(items.map((item) => item.type)));
-  const approved = items.filter((item) => item.status === "Đã phê duyệt").length;
-  const waiting = items.filter((item) => item.status.includes("Chờ")).length;
+  async function addDraftDocument() {
+    if (!draft.name.trim()) { setError("Vui lòng nhập tên hồ sơ."); return; }
+    setError("");
+    const response = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: `DOC-${Date.now()}`, document_name: draft.name.trim(), project_code: draft.project.trim(), document_type: draft.type, revision: draft.revision, status: draft.status, source: "Thêm nhanh" }] }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) { setError(data.message || "Không lưu được hồ sơ."); return; }
+    setDraft({ name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", status: "Chờ phê duyệt" });
+    setShowCreate(false);
+    setMessage("Đã thêm hồ sơ.");
+    await loadDocuments();
+  }
 
   async function handleUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    setMessage("");
+    setUploading(true); setError("");
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -81,108 +92,53 @@ export default function DocumentsPage() {
       const response = await fetch("/api/uploads", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.message ?? "Không upload được hồ sơ.");
-      const upsertResponse = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: `DOC-${String(items.length + 1).padStart(3, "0")}`, document_name: file.name, project_code: draft.project.trim() || "", document_type: draft.type, revision: draft.revision, status: draft.status, file_url: data.file?.publicUrl || "", source: "Upload từ hồ sơ/bản vẽ" }] }) });
-      const upsertData = await upsertResponse.json();
-      if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
-      await loadDocuments();
-      setDraft((current) => ({ ...current, code: `DOC-${String(items.length + 2).padStart(3, "0")}`, name: "", project: "", type: current.type, revision: current.revision, owner: current.owner, updated: current.updated, status: current.status }));
-      setMessage(`Đã upload ${file.name} và lưu vào Data Center.`);
-    } catch (error) {
-      const fallbackCode = `DOC-${String(items.length + 1).padStart(3, "0")}`;
-      const fallbackItem = { code: fallbackCode, name: file.name, project: draft.project || "Chưa gắn dự án", type: draft.type, revision: draft.revision, owner: draft.owner, updated: new Date().toISOString().slice(0, 10), status: draft.status };
-      appendClientRows("documents", [{ document_code: fallbackItem.code, document_name: fallbackItem.name, project_code: fallbackItem.project, document_type: fallbackItem.type, revision: fallbackItem.revision, status: fallbackItem.status, source: "Upload từ hồ sơ/bản vẽ (bản cục bộ)" }]);
-      setItems((current) => [fallbackItem, ...current]);
-      setMessage(error instanceof Error ? error.message : "Đã lưu hồ sơ vào bản ghi cục bộ.");
-    } finally {
-      setUploading(false);
-      event.target.value = "";
-    }
+      await importDocuments([{ document_code: `DOC-${Date.now()}`, document_name: file.name, document_type: "Hồ sơ", revision: "Rev.01", status: "Chờ phê duyệt", file_url: data.file?.publicUrl || "", source: "Upload" }]);
+      setMessage(`Đã upload ${file.name}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không upload được hồ sơ.");
+    } finally { setUploading(false); event.target.value = ""; }
   }
 
-  async function addDraftDocument() {
-    if (!draft.name.trim()) {
-      setMessage("Vui lòng nhập tên hồ sơ trước khi lưu.");
-      return;
-    }
-    const nextItem = { code: draft.code, name: draft.name.trim(), project: draft.project.trim() || "Chưa gắn dự án", type: draft.type, revision: draft.revision, owner: draft.owner, updated: new Date().toISOString().slice(0, 10), status: draft.status };
+  function toggleItem(id: string) { setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]); }
+  function toggleAllFiltered() {
+    const ids = filtered.map((item) => item.id);
+    setSelectedIds((current) => allFilteredSelected ? current.filter((id) => !ids.includes(id)) : Array.from(new Set([...current, ...ids])));
+  }
+
+  async function deleteDocuments(ids: string[]) {
+    if (!ids.length || deleting) return;
+    if (!window.confirm(`Xóa ${ids.length} hồ sơ đã chọn?`)) return;
+    setDeleting(true); setError("");
     try {
-      const upsertResponse = await fetch("/api/data/documents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "append", rows: [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ" }] }) });
-      const upsertData = await upsertResponse.json();
-      if (!upsertResponse.ok || !upsertData.ok) throw new Error(upsertData.message ?? "Không lưu được hồ sơ vào Data Center.");
+      const response = await fetch("/api/data/documents", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.message || "Không xóa được hồ sơ.");
+      setMessage(`Đã xóa ${ids.length} hồ sơ.`);
       await loadDocuments();
-      setMessage(`Đã thêm hồ sơ ${nextItem.name} vào danh sách và Data Center.`);
-    } catch {
-      appendClientRows("documents", [{ document_code: nextItem.code, document_name: nextItem.name, project_code: nextItem.project, document_type: nextItem.type, revision: nextItem.revision, status: nextItem.status, source: "Thêm nhanh từ hồ sơ/bản vẽ (bản cục bộ)" }]);
-      setItems((current) => [nextItem, ...current]);
-      setMessage(`Đã thêm hồ sơ ${nextItem.name} vào danh sách cục bộ.`);
-    }
-    setDraft({ code: `DOC-${String(items.length + 2).padStart(3, "0")}`, name: "", project: "", type: "Hồ sơ năng lực", revision: "Rev.01", owner: "Phòng Kỹ thuật", updated: new Date().toISOString().slice(0, 10), status: "Chờ phê duyệt" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không xóa được hồ sơ.");
+    } finally { setDeleting(false); }
   }
 
-  return (
-    <div className="space-y-6 animate-fade-up">
-      <PageHeader
-        eyebrow="Document Control Center"
-        title="Hồ sơ, bản vẽ & BIM"
-        description="Quản lý phiên bản, trạng thái phê duyệt và truy xuất hồ sơ kỹ thuật theo từng dự án. Dữ liệu ban đầu để trống, không dùng số liệu giả."
-        actions={<><label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-extrabold text-slate-600 shadow-sm"><Upload size={16} /> Tải hồ sơ lên<input type="file" className="hidden" onChange={handleUpload} /></label><button type="button" onClick={() => setMessage("Thư mục mới đã được mở và sẵn sàng để sắp xếp hồ sơ.")} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-200"><FolderOpen size={16} /> Tạo thư mục</button></>}
-      />
+  return <div className="space-y-5 animate-fade-up">
+    <PageHeader eyebrow="Document Control" title="Hồ sơ, bản vẽ & BIM" description="Quản lý phiên bản, trạng thái và dữ liệu hồ sơ theo dự án." actions={<div className="flex flex-wrap gap-2"><label className="licogi-btn licogi-btn-secondary cursor-pointer"><Upload size={16} /> {uploading ? "Đang tải..." : "Tải hồ sơ"}<input type="file" className="hidden" onChange={handleUpload} /></label><button type="button" onClick={() => setShowCreate(true)} className="licogi-btn licogi-btn-primary"><PlusCircle size={16} /> Thêm hồ sơ</button></div>} />
+    {message ? <div className="rounded-[16px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{message}</div> : null}
+    {error ? <div className="rounded-[16px] border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div> : null}
 
-      {message ? <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-900">{message}</div> : null}
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><StatCard title="Tổng hồ sơ" value={String(items.length)} note="toàn bộ dự án" icon={FolderOpen} tone="slate" /><StatCard title="Đã phê duyệt" value={String(approved)} note="theo dữ liệu hiện có" icon={FileCheck2} tone="green" /><StatCard title="Chờ xử lý" value={String(waiting)} note="cần ký/phản hồi" icon={FileClock} tone="orange" /><StatCard title="Phiên bản mới" value="0" note="trong 7 ngày" icon={FileSearch} tone="blue" /></section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Tổng hồ sơ" value={String(items.length)} note="toàn bộ dự án" icon={FolderOpen} tone="slate" />
-        <StatCard title="Đã phê duyệt" value={String(approved)} note="theo dữ liệu hiện có" icon={FileCheck2} tone="green" />
-        <StatCard title="Chờ xử lý" value={String(waiting)} note="cần ký/phản hồi" icon={FileClock} tone="orange" />
-        <StatCard title="Phiên bản mới" value="0" note="trong 7 ngày" icon={FileSearch} tone="blue" />
-      </section>
+    <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="grid gap-3 md:grid-cols-[1fr_220px_auto]"><label className="flex items-center gap-2 rounded-[12px] border border-slate-200 bg-slate-50 px-3.5 py-2.5"><Search size={17} className="text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm mã hồ sơ, tên tài liệu, dự án..." /></label><select value={type} onChange={(event) => setType(event.target.value)} className="rounded-[12px] border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-600"><option value="all">Tất cả loại hồ sơ</option>{types.map((item) => <option key={item}>{item}</option>)}</select><button type="button" onClick={toggleAllFiltered} className="licogi-btn licogi-btn-secondary">{allFilteredSelected ? "Bỏ chọn" : "Chọn tất cả"}</button></div>
+      {selectedIds.length ? <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3"><p className="text-xs font-bold text-slate-600">Đã chọn {selectedIds.length} hồ sơ</p><button type="button" onClick={() => void deleteDocuments(selectedIds)} disabled={deleting} className="licogi-btn licogi-btn-danger"><Trash2 size={15} /> {deleting ? "Đang xóa..." : `Xóa ${selectedIds.length}`}</button></div> : null}
+    </section>
 
-      <section className="grid gap-6 xl:grid-cols-[260px_1fr]">
-        <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="px-2 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Cấu trúc thư mục</p>
-          <div className="mt-4 space-y-1.5 text-sm">
-            {["Tất cả hồ sơ", "Bản vẽ thiết kế", "Biện pháp thi công", "Hồ sơ nghiệm thu", "QA/QC & HSE", "RFI & Submittal"].map((label, index) => (
-              <button key={label} className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left font-bold transition ${index === 0 ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50"}`}>
-                <span className="flex items-center gap-2"><FolderOpen size={16} /> {label}</span><span className="text-[11px] text-slate-400">0</span>
-              </button>
-            ))}
-          </div>
-          <div className="mt-6 rounded-xl bg-[#071426] p-4 text-white"><p className="text-xs font-bold text-slate-400">Dung lượng lưu trữ</p><p className="mt-2 text-xl font-black">0 GB</p><ProgressBar value={0} tone="orange" /><p className="mt-2 text-[11px] text-slate-400">Chờ nối Storage thật</p></div>
-        </aside>
+    <section className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
+      <div className="licogi-table-scroll max-h-[700px] overflow-auto"><table className="w-full min-w-[980px] text-left text-xs"><thead className="sticky top-0 z-10 bg-slate-50/95 text-[10px] font-extrabold uppercase tracking-[0.08em] text-slate-500 backdrop-blur"><tr><th className="w-12 px-4 py-3"><input aria-label="Chọn tất cả hồ sơ đang hiển thị" type="checkbox" checked={allFilteredSelected} onChange={toggleAllFiltered} className="h-4 w-4 rounded border-slate-300 accent-orange-600" /></th><th className="px-4 py-3">Hồ sơ</th><th className="px-4 py-3">Dự án</th><th className="px-4 py-3">Loại</th><th className="px-4 py-3">Phiên bản</th><th className="px-4 py-3">Owner</th><th className="px-4 py-3">Trạng thái</th><th className="sticky right-0 bg-slate-50/95 px-4 py-3 text-right">Xóa</th></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((item) => {
+        const selected = selectedSet.has(item.id);
+        return <tr key={item.id} className={selected ? "bg-orange-50/60" : "hover:bg-slate-50/70"}><td className="px-4 py-3"><input aria-label={`Chọn ${item.name}`} type="checkbox" checked={selected} onChange={() => toggleItem(item.id)} className="h-4 w-4 rounded border-slate-300 accent-orange-600" /></td><td className="px-4 py-3"><p className="max-w-[300px] truncate font-extrabold text-slate-900">{item.name}</p><p className="mt-1 text-[10px] font-semibold text-slate-400">{item.code}{item.updated ? ` · ${item.updated}` : ""}</p></td><td className="max-w-[190px] px-4 py-3 font-semibold text-slate-600">{item.project}</td><td className="px-4 py-3 text-slate-600">{item.type}</td><td className="px-4 py-3 font-bold text-slate-700">{item.revision}</td><td className="px-4 py-3 text-slate-600">{item.owner}</td><td className="px-4 py-3"><span className={`rounded-[9px] px-2 py-1 text-[10px] font-extrabold ${item.status === "Đã phê duyệt" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{item.status}</span></td><td className={`sticky right-0 px-4 py-3 text-right ${selected ? "bg-orange-50" : "bg-white"}`}><button type="button" onClick={() => void deleteDocuments([item.id])} className="licogi-icon-btn licogi-icon-btn-danger"><Trash2 size={14} /></button></td></tr>;
+      })}</tbody></table></div>{!filtered.length ? <p className="p-8 text-center text-sm text-slate-500">Chưa có hồ sơ phù hợp.</p> : null}</section>
 
-        <div className="space-y-4">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5"><Search size={17} className="text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm mã hồ sơ, tên tài liệu, dự án..." /></label>
-              <select value={type} onChange={(event) => setType(event.target.value)} className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-600 outline-none"><option value="all">Tất cả loại hồ sơ</option>{types.map((item) => <option key={item}>{item}</option>)}</select>
-              <button type="button" onClick={() => setShowAdvancedFilters((value) => !value)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-extrabold text-slate-600 hover:bg-slate-50">Bộ lọc nâng cao</button>
-            </div>
-            {showAdvancedFilters ? (
-              <div className="mt-3 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-3">
-                <label className="text-xs font-bold text-slate-600">Trạng thái<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="all">Tất cả</option><option>Chờ phê duyệt</option><option>Đã phê duyệt</option></select></label>
-                <label className="text-xs font-bold text-slate-600">Owner<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="all">Tất cả</option><option>Phòng Kỹ thuật</option><option>Phòng QHSE</option></select></label>
-                <label className="text-xs font-bold text-slate-600">Dự án<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="all">Tất cả</option><option>Chưa gắn dự án</option></select></label>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50/70 p-4">
-              <BulkImportPanel compact fields={[{ name: "document_code", label: "Mã hồ sơ", placeholder: "DOC-001" },{ name: "document_name", label: "Tên hồ sơ", placeholder: "Biện pháp thi công", required: true },{ name: "project_code", label: "Mã dự án", placeholder: "LCG-2026-001" },{ name: "document_type", label: "Loại hồ sơ", placeholder: "Bản vẽ thiết kế" },{ name: "revision", label: "Phiên bản", placeholder: "Rev.01" },{ name: "status", label: "Trạng thái", placeholder: "Chờ phê duyệt" },{ name: "file_url", label: "URL file", placeholder: "" }]} onImport={importDocuments} description="Import danh sách hồ sơ từ CSV hoặc dán bảng Excel; dữ liệu được ghi vào Data Center." />
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                <label className="text-xs font-bold text-slate-600">Mã hồ sơ<input value={draft.code} onChange={(event) => setDraft((current) => ({ ...current, code: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" /></label>
-                <label className="text-xs font-bold text-slate-600">Tên hồ sơ<input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Nhập tên hồ sơ" /></label>
-                <label className="text-xs font-bold text-slate-600">Dự án liên quan<input value={draft.project} onChange={(event) => setDraft((current) => ({ ...current, project: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Mã dự án/đề tài" /></label>
-                <label className="text-xs font-bold text-slate-600">Loại hồ sơ<select value={draft.type} onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option>Hồ sơ năng lực</option><option>Bản vẽ thiết kế</option><option>Biện pháp thi công</option><option>Hồ sơ nghiệm thu</option><option>QA/QC & HSE</option><option>RFI & Submittal</option></select></label>
-                <button type="button" onClick={addDraftDocument} disabled={uploading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-3 py-2.5 text-xs font-extrabold text-white hover:bg-orange-700 disabled:bg-slate-300"><PlusCircle size={15} /> Thêm nhanh</button>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500"><Save size={14} /> Hàm này lưu ngay vào danh sách hiện tại; bạn cũng có thể tải file thật lên bằng nút ở đầu trang.</div>
-            </div>
-            <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead className="bg-slate-50 text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-500"><tr><th className="px-5 py-4">Tài liệu</th><th className="px-4 py-4">Dự án</th><th className="px-4 py-4">Loại</th><th className="px-4 py-4">Phiên bản</th><th className="px-4 py-4">Phụ trách</th><th className="px-4 py-4">Cập nhật</th><th className="px-5 py-4">Trạng thái</th><th className="px-5 py-4" /></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((item)=><tr key={item.code} className="hover:bg-slate-50/70"><td className="px-5 py-4"><p className="max-w-[300px] truncate font-extrabold text-slate-900">{item.name}</p><p className="mt-1 text-[11px] font-semibold text-slate-400">{item.code}</p></td><td className="max-w-[220px] px-4 py-4"><p className="truncate font-semibold text-slate-600">{item.project}</p></td><td className="px-4 py-4 text-slate-600">{item.type}</td><td className="px-4 py-4"><span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-700">{item.revision}</span></td><td className="px-4 py-4 text-slate-600">{item.owner}</td><td className="px-4 py-4 text-slate-500">{item.updated}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ${item.status === "Đã phê duyệt" ? "bg-emerald-50 text-emerald-700" : item.status.includes("Chờ") ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"}`}>{item.status}</span></td><td className="px-5 py-4"><button className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><Download size={15} /></button></td></tr>)}</tbody></table></div>
-            {filtered.length === 0 ? <div className="p-6"><EmptyBox title="Chưa có hồ sơ" description="Nhập hồ sơ/bản vẽ tại Trung tâm dữ liệu hoặc tải file lên bằng nút ở đầu trang." /></div> : null}
-          </section>
-        </div>
-      </section>
-    </div>
-  );
+    {showCreate ? <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-5"><button className="absolute inset-0" onClick={() => setShowCreate(false)} aria-label="Đóng" /><div className="modal-panel licogi-scroll relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-t-[22px] bg-white p-5 shadow-2xl sm:rounded-[20px]"><div className="flex items-center justify-between"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-orange-600">Document</p><h2 className="mt-1 text-lg font-black text-slate-900">Thêm hồ sơ</h2></div><button type="button" onClick={() => setShowCreate(false)} className="licogi-btn licogi-btn-secondary">Đóng</button></div><BulkImportPanel className="mt-4" compact fields={[{ name: "document_code", label: "Mã hồ sơ", placeholder: "DOC-001" },{ name: "document_name", label: "Tên hồ sơ", placeholder: "Biện pháp thi công", required: true },{ name: "project_code", label: "Mã dự án", placeholder: "LCG-001" },{ name: "document_type", label: "Loại hồ sơ", placeholder: "Bản vẽ" },{ name: "revision", label: "Phiên bản", placeholder: "Rev.01" },{ name: "status", label: "Trạng thái", placeholder: "Chờ phê duyệt" }]} onImport={importDocuments} />
+      <div className="mt-5 grid gap-3 md:grid-cols-2"><label className="text-xs font-bold text-slate-600 md:col-span-2">Tên hồ sơ<input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Mã dự án<input value={draft.project} onChange={(e) => setDraft({ ...draft, project: e.target.value })} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Loại hồ sơ<input value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Phiên bản<input value={draft.revision} onChange={(e) => setDraft({ ...draft, revision: e.target.value })} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Trạng thái<select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm"><option>Chờ phê duyệt</option><option>Đã phê duyệt</option></select></label></div><div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => setShowCreate(false)} className="licogi-btn licogi-btn-secondary">Hủy</button><button type="button" onClick={() => void addDraftDocument()} className="licogi-btn licogi-btn-primary">Lưu hồ sơ</button></div></div></div> : null}
+  </div>;
 }
