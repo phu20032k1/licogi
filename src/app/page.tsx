@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import BrandLogo from "../components/BrandLogo";
 import PublicAIAssistant from "../components/PublicAIAssistant";
+import PublicLiveMetrics from "../components/PublicLiveMetrics";
 
 const PublicProjectMap = dynamic(() => import("../components/PublicProjectMap"), { ssr: false, loading: () => <div className="public-map-skeleton">Đang khởi tạo bản đồ dự án...</div> });
 
@@ -58,7 +59,7 @@ export default function HomePage() {
         <div className="public-header-actions">
           <a className="public-header-phone" href="tel:+842213942550"><Phone size={15} /> 0221 3942 550</a>
           <Link href="/login" className="public-login"><LogIn size={16} /> Đăng nhập</Link>
-          <button type="button" className="public-menu-button" onClick={() => setMenuOpen((value) => !value)} aria-label="Mở menu">{menuOpen ? <X /> : <Menu />}</button>
+          <button type="button" className="public-menu-button" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? "Đóng menu" : "Mở menu"} aria-expanded={menuOpen}>{menuOpen ? <X /> : <Menu />}</button>
         </div>
       </div>
     </header>
@@ -71,7 +72,7 @@ export default function HomePage() {
           <div className="public-hero-copy">
             <span className="public-kicker public-kicker-light"><Sparkles size={15} /> Tổng thầu số · Dữ liệu sống · Năng lực thực chiến</span>
             <h1>Kiến tạo hạ tầng.<br/><em>Dẫn dắt phát triển.</em></h1>
-            <p>Không chỉ giới thiệu doanh nghiệp, nền tảng mới giúp LICOGI 18.3 chứng minh năng lực bằng dữ liệu dự án, bản đồ GIS, video công trường và hệ điều hành quản trị số.</p>
+            <p>Nền tảng giúp LICOGI 18.3 chứng minh năng lực bằng dữ liệu dự án, bản đồ GIS, video công trường và hệ điều hành quản trị số thay vì các chỉ số trình diễn cố định.</p>
             <div className="public-hero-actions">
               <a href="#ban-do" className="public-primary-button"><Map size={18} /> Khám phá bản đồ dự án <ArrowRight size={17} /></a>
               <a href="#gioi-thieu" className="public-secondary-button">Về LICOGI 18.3 <ChevronRight size={17} /></a>
@@ -83,18 +84,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="public-hero-dashboard">
-            <div className="public-dashboard-head"><span><i /> Dữ liệu năng lực</span><b>LIVE</b></div>
-            <div className="public-dashboard-number"><strong>360°</strong><span>Góc nhìn toàn diện<br/>về dự án và nguồn lực</span></div>
-            <div className="public-dashboard-bars">
-              <div><span>Năng lực công nghiệp</span><b>92%</b><i><em style={{ width: "92%" }} /></i></div>
-              <div><span>Hạ tầng & giao thông</span><b>86%</b><i><em style={{ width: "86%" }} /></i></div>
-              <div><span>Quản trị dữ liệu</span><b>78%</b><i><em style={{ width: "78%" }} /></i></div>
-            </div>
-            <div className="public-dashboard-modules">
-              <span><MapPin /> GIS Map</span><span><CircuitBoard /> AI Profile</span><span><ShieldCheck /> EPC OS</span>
-            </div>
-          </div>
+          <PublicLiveMetrics />
         </div>
         <a href="#nganh-hang" className="public-scroll-cue"><span /> Khám phá năng lực</a>
       </section>
@@ -107,7 +97,7 @@ export default function HomePage() {
         <div className="public-container">
           <div className="public-section-heading">
             <div><span className="public-kicker"><Zap size={14} /> Danh sách ngành hàng</span><h2>Năng lực thi công đa lĩnh vực</h2></div>
-            <p>Từ công trình công nghiệp đến hạ tầng kỹ thuật, mỗi nhóm ngành hàng được trình bày trực quan và có thể liên kết trực tiếp với dữ liệu dự án trên bản đồ.</p>
+            <p>Từ công trình công nghiệp đến hạ tầng kỹ thuật, mỗi nhóm ngành hàng được trình bày trực quan và liên kết với dữ liệu dự án trên bản đồ.</p>
           </div>
           <div className="public-sector-grid">
             {sectors.map((sector) => { const Icon = sector.icon; return <article key={sector.title} className="public-sector-card">
@@ -163,7 +153,7 @@ export default function HomePage() {
           <div className="public-video-copy">
             <span className="public-kicker"><Play size={14}/> Video năng lực</span>
             <h2>Kể câu chuyện công trình bằng hình ảnh chuyển động</h2>
-            <p>Khu vực video được thiết kế để giới thiệu công trường, quy trình thi công, thiết bị và những dấu mốc dự án. Tệp video mẫu đã được tích hợp sẵn và có thể thay bằng video doanh nghiệp bất cứ lúc nào.</p>
+            <p>Khu vực video giới thiệu công trường, quy trình thi công, thiết bị và những dấu mốc dự án. Có thể thay tệp mẫu bằng video doanh nghiệp thực tế mà không đổi bố cục trang.</p>
             <ul><li><CheckCircle2/> Video giới thiệu thương hiệu</li><li><CheckCircle2/> Nhật ký công trường theo dự án</li><li><CheckCircle2/> Hình ảnh trước – trong – sau thi công</li></ul>
             <a href="#tin-tuc" className="public-text-link">Xem hoạt động mới nhất <ArrowRight size={16}/></a>
           </div>
