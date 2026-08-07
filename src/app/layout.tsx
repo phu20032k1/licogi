@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import AppShell from "../components/AppShell";
 import { siteConfig } from "../lib/siteConfig";
 import "./globals.css";
+import "./production.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
