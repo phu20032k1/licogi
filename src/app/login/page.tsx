@@ -1,104 +1,137 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, CheckCircle2, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
+import BrandLogo from "../../components/BrandLogo";
 import { systemAccounts } from "../../data/dataCenter";
 import { saveSession, UserSession } from "../../lib/authSession";
 import { roleDefaultRoute } from "../../lib/rbac";
 
+const demoAccount = systemAccounts.find((account) => account.email === "admin@licogi183.vn") ?? systemAccounts[0];
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@licogi183.vn");
-  const [password, setPassword] = useState("Licogi@2026!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
+  async function authenticate(loginEmail: string, loginPassword: string, demo = false) {
+    demo ? setDemoLoading(true) : setLoading(true);
     setError("");
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.message || "Không đăng nhập được");
-      saveSession(data.user as UserSession);
-      router.push(data.redirectTo || roleDefaultRoute(data.user as UserSession));
+      if (!response.ok || !data.ok) throw new Error(data.message || "Không đăng nhập được.");
+
+      const user = data.user as UserSession;
+      saveSession(user);
+
+      const requested = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+      const safeRequested = requested && requested.startsWith("/") && !requested.startsWith("//") ? requested : null;
+      const target = data.mustChangePassword
+        ? "/change-password"
+        : safeRequested || data.redirectTo || roleDefaultRoute(user);
+
+      router.replace(target);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không đăng nhập được");
+      setError(err instanceof Error ? err.message : "Không đăng nhập được.");
     } finally {
       setLoading(false);
+      setDemoLoading(false);
     }
   }
 
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await authenticate(email, password);
+  }
+
   return (
-    <main className="min-h-screen bg-[#f4f1ec] px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-        <section className="relative overflow-hidden rounded-[34px] bg-[#071426] p-8 text-white shadow-2xl sm:p-10 lg:p-12">
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-orange-500/20 blur-3xl" />
-          <div className="absolute -bottom-24 left-12 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
-          <div className="relative">
-            <div className="flex items-center gap-4">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-orange-600 shadow-lg shadow-orange-950/20"><Building2 size={28} /></span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-slate-400">Industrial Construction OS</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight">LICOGI 18.3</h1>
-              </div>
-            </div>
-            <h2 className="mt-12 max-w-2xl text-4xl font-black leading-tight sm:text-5xl">Hệ điều hành quản trị tổng thầu EPC</h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300">Hệ thống dùng PostgreSQL/Prisma, phân quyền theo vai trò và chỉ mở đúng các chức năng được cấp cho từng bộ phận.</p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {["Dữ liệu chuẩn", "Phân quyền rõ", "Giao diện chuyên nghiệp"].map((item) => <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><CheckCircle2 className="text-orange-300" size={20} /><p className="mt-3 text-sm font-bold text-white">{item}</p></div>)}
-            </div>
-            <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.06] p-5">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-orange-300">Luồng vận hành</p>
-              <p className="mt-2 text-sm leading-7 text-slate-300">Đăng nhập → kiểm quyền từ database → mở đúng menu theo vai trò → dữ liệu nghiệp vụ ghi trực tiếp vào PostgreSQL.</p>
-            </div>
-          </div>
-        </section>
+    <main className="relative min-h-screen overflow-hidden bg-[#f7f8fb] px-4 py-8 text-slate-900">
+      <div className="pointer-events-none absolute left-1/2 top-[-18rem] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-orange-200/35 blur-3xl" />
+      <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
+        <div className="mb-7 flex justify-center"><BrandLogo /></div>
 
-        <section className="rounded-[34px] border border-slate-200 bg-white p-6 shadow-xl sm:p-8 lg:p-10">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-orange-600">Đăng nhập hệ thống</p>
-              <h2 className="mt-2 text-3xl font-black text-slate-950">Tài khoản hệ thống</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">Chọn tài khoản bên dưới để tự điền email và mật khẩu.</p>
-            </div>
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-900 text-white"><LockKeyhole size={22} /></span>
+        <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.10)] sm:p-8">
+          <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm font-bold">
+            <span className="rounded-lg bg-white px-3 py-2 text-center text-slate-950 shadow-sm">Đăng nhập</span>
+            <Link href="/register" className="rounded-lg px-3 py-2 text-center text-slate-500 transition hover:text-slate-900">Đăng ký</Link>
           </div>
 
-          <form onSubmit={submit} className="mt-8 space-y-4">
+          <div className="mt-7">
+            <h1 className="text-2xl font-black tracking-[-0.03em] text-slate-950">Chào mừng trở lại</h1>
+            <p className="mt-2 text-sm text-slate-500">Đăng nhập để tiếp tục vào hệ thống.</p>
+          </div>
+
+          <form onSubmit={submit} className="mt-6 space-y-4">
             <label className="block text-sm font-bold text-slate-700">Email
-              <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" className="input-field mt-1.5 w-full rounded-xl px-4 py-3 text-sm" />
+              <input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="name@company.com"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              />
             </label>
+
             <label className="block text-sm font-bold text-slate-700">Mật khẩu
-              <span className="mt-1.5 flex items-center rounded-xl border border-slate-300 bg-white focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-100">
-                <input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} className="min-w-0 flex-1 rounded-xl px-4 py-3 text-sm outline-none" />
-                <button type="button" onClick={() => setShowPassword((value) => !value)} className="px-3 text-slate-500">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+              <span className="mt-1.5 flex items-center rounded-xl border border-slate-200 bg-white transition focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-100">
+                <input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  placeholder="••••••••"
+                  className="min-w-0 flex-1 rounded-xl bg-transparent px-4 py-3 text-sm outline-none"
+                />
+                <button type="button" onClick={() => setShowPassword((value) => !value)} className="px-3 text-slate-400 transition hover:text-slate-700" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </span>
             </label>
-            {error ? <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div> : null}
-            <button disabled={loading} className="w-full rounded-xl bg-orange-600 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-700 disabled:bg-slate-300">{loading ? "Đang đăng nhập..." : "Đăng nhập"}</button>
+
+            {error ? <div role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div> : null}
+
+            <button disabled={loading || demoLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
+              {loading ? <Loader2 size={17} className="animate-spin" /> : null}
+              {loading ? "Đang đăng nhập" : "Tiếp tục"}
+              {!loading ? <ArrowRight size={16} /> : null}
+            </button>
           </form>
 
-          <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-center gap-2"><ShieldCheck size={18} className="text-orange-600" /><p className="text-sm font-black text-slate-900">Tài khoản seed trong Prisma</p></div>
-            <div className="mt-4 space-y-2">
-              {systemAccounts.map((account) => (
-                <button key={account.email} type="button" onClick={() => { setEmail(account.email); setPassword(account.defaultPassword); }} className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-orange-200 hover:bg-orange-50/40">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-black text-slate-900">{account.role}</p><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">{account.passwordEnv}</span></div>
-                  <p className="mt-1 text-xs text-slate-500">{account.email}</p>
-                  <p className="mt-1 text-xs font-bold text-orange-700">Mật khẩu mặc định: {account.defaultPassword}</p>
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300"><span className="h-px flex-1 bg-slate-200" /> hoặc <span className="h-px flex-1 bg-slate-200" /></div>
+
+          <button
+            type="button"
+            disabled={loading || demoLoading}
+            onClick={() => void authenticate(demoAccount.email, demoAccount.defaultPassword, true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-5 py-3 text-sm font-extrabold text-orange-700 transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {demoLoading ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
+            {demoLoading ? "Đang mở bản demo" : "Vào bản demo"}
+          </button>
+
+          <p className="mt-6 text-center text-sm text-slate-500">Chưa có tài khoản? <Link href="/register" className="font-extrabold text-orange-600 hover:text-orange-700">Tạo tài khoản</Link></p>
         </section>
+
+        <div className="mt-6 flex items-center justify-center gap-4 text-xs font-semibold text-slate-400">
+          <Link href="/" className="transition hover:text-slate-700">Trang chủ</Link>
+          <span>•</span>
+          <span>LICOGI 18.3</span>
+        </div>
       </div>
     </main>
   );
