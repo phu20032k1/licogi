@@ -46,8 +46,8 @@ services:
       context: .
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-        NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png}
-        NEXT_PUBLIC_MAP_ATTRIBUTION: "${NEXT_PUBLIC_MAP_ATTRIBUTION:-&copy; OpenStreetMap contributors}"
+        NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-}
+        NEXT_PUBLIC_MAP_ATTRIBUTION: ${NEXT_PUBLIC_MAP_ATTRIBUTION:-}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -58,8 +58,8 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-licogi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-licogi_os}?schema=public
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-      NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png}
-      NEXT_PUBLIC_MAP_ATTRIBUTION: "${NEXT_PUBLIC_MAP_ATTRIBUTION:-&copy; OpenStreetMap contributors}"
+      NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-}
+      NEXT_PUBLIC_MAP_ATTRIBUTION: ${NEXT_PUBLIC_MAP_ATTRIBUTION:-}
       PRISMA_SEED_PASSWORD: ${PRISMA_SEED_PASSWORD:-Demo@123456}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
       S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9000/licogi-os}
