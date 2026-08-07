@@ -5,9 +5,16 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  {
+    rules: {
+      // LICOGI uses explicit client-side loaders that intentionally set loading/data state
+      // from effects. The React 19 advisory rule treats this established fetch pattern as
+      // an error even though the updates happen around async I/O. Keep correctness rules
+      // enabled while allowing these data-loading effects.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
