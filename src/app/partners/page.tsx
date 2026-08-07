@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Building2, Handshake, Plus, RefreshCcw, Search, ShieldCheck, Star, UsersRound } from "lucide-react";
+import { BadgeCheck, Building2, Handshake, Plus, RefreshCcw, Search, ShieldCheck, Star, Trash2, UsersRound } from "lucide-react";
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/StatCard";
 import ProgressBar from "../../components/ui/ProgressBar";
@@ -14,11 +14,13 @@ export default function PartnersPage() {
   const [items, setItems] = useState<Partner[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,6 +29,7 @@ export default function PartnersPage() {
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được dữ liệu đối tác.");
       setItems(Array.isArray(data.partners) ? data.partners : []);
+      setSelectedCodes([]);
       setMessage("");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không tải được dữ liệu đối tác.");
@@ -45,6 +48,8 @@ export default function PartnersPage() {
   const strategic = items.filter((item) => item.status === "Chiến lược").length;
   const reviewing = items.filter((item) => item.status.includes("Đánh giá")).length;
   const averageRating = items.length ? (items.reduce((sum, item) => sum + item.rating, 0) / items.length).toFixed(1) : "0";
+  const selectedSet = useMemo(() => new Set(selectedCodes), [selectedCodes]);
+  const allFilteredSelected = Boolean(filtered.length) && filtered.every((item) => selectedSet.has(item.code));
 
   async function importPartners(rows: Record<string, string>[]) {
     if (!rows.length) return;
@@ -98,9 +103,43 @@ export default function PartnersPage() {
     }
   }
 
+  function togglePartner(code: string) {
+    setSelectedCodes((current) => current.includes(code) ? current.filter((item) => item !== code) : [...current, code]);
+  }
+
+  function toggleAllFiltered() {
+    const visibleCodes = filtered.map((item) => item.code);
+    setSelectedCodes((current) => {
+      if (allFilteredSelected) return current.filter((code) => !visibleCodes.includes(code));
+      return Array.from(new Set([...current, ...visibleCodes]));
+    });
+  }
+
+  async function deletePartners(codes: string[]) {
+    if (!codes.length || deleting) return;
+    if (!window.confirm(`Xóa ${codes.length} đối tác đã chọn? Hành động này không thể hoàn tác.`)) return;
+    setDeleting(true);
+    try {
+      const response = await fetch("/api/partners", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codes }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.message || "Không xóa được đối tác.");
+      setItems(Array.isArray(data.partners) ? data.partners : []);
+      setSelectedCodes([]);
+      setMessage(`Đã xóa ${data.deleted ?? codes.length} đối tác.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không xóa được đối tác.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return <div className="space-y-5 animate-fade-up">
-    <PageHeader eyebrow="Partner Marketplace" title="Hệ sinh thái đối tác" description="Quản lý hồ sơ năng lực, đánh giá hiệu suất, an toàn và lịch sử hợp tác của nhà thầu phụ, nhà cung cấp. Dữ liệu được lưu tập trung trong PostgreSQL." actions={<div className="flex gap-2"><button type="button" onClick={() => void load()} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-extrabold text-slate-600"><RefreshCcw size={15} className={loading ? "animate-spin" : ""}/> Đồng bộ</button><button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-md shadow-orange-200"><Plus size={16} /> Thêm đối tác</button></div>} />
-    {message ? <div className="rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-900">{message}</div> : null}
+    <PageHeader eyebrow="Partner Marketplace" title="Hệ sinh thái đối tác" description="Quản lý nhà thầu phụ, nhà cung cấp và lịch sử hợp tác trong một danh mục tập trung." actions={<div className="flex flex-wrap gap-2"><button type="button" onClick={() => void load()} className="licogi-btn licogi-btn-secondary"><RefreshCcw size={15} className={loading ? "animate-spin" : ""}/> Đồng bộ</button><button onClick={() => setShowForm(true)} className="licogi-btn licogi-btn-primary"><Plus size={16} /> Thêm đối tác</button></div>} />
+    {message ? <div className="rounded-[16px] border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-900">{message}</div> : null}
 
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard title="Đối tác hoạt động" value={String(items.length)} note="dữ liệu database" icon={Handshake} tone="orange" />
@@ -109,13 +148,29 @@ export default function PartnersPage() {
       <StatCard title="Điểm trung bình" value={`${averageRating}/5`} note="chất lượng hợp tác" icon={Star} tone="violet" />
     </section>
 
-    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm"><div className="grid gap-3 md:grid-cols-[1fr_200px]"><label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5"><Search size={16} className="text-slate-400" /><input value={search} onChange={(event)=>setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm tên, mã, lĩnh vực, khu vực..." /></label><select aria-label="Lọc lĩnh vực đối tác" value={category} onChange={(event)=>setCategory(event.target.value)} className="rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600"><option value="all">Tất cả lĩnh vực</option>{categories.map((item)=><option key={item}>{item}</option>)}</select></div></section>
+    <section className="rounded-[18px] border border-slate-200 bg-white p-3.5 shadow-sm">
+      <div className="grid gap-3 md:grid-cols-[1fr_200px_auto]">
+        <label className="flex items-center gap-2 rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5"><Search size={16} className="text-slate-400" /><input value={search} onChange={(event)=>setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm tên, mã, lĩnh vực, khu vực..." /></label>
+        <select aria-label="Lọc lĩnh vực đối tác" value={category} onChange={(event)=>setCategory(event.target.value)} className="rounded-[12px] border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600"><option value="all">Tất cả lĩnh vực</option>{categories.map((item)=><option key={item}>{item}</option>)}</select>
+        <button type="button" onClick={toggleAllFiltered} className="licogi-btn licogi-btn-secondary">{allFilteredSelected ? "Bỏ chọn" : "Chọn tất cả"}</button>
+      </div>
+      {selectedCodes.length ? <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3"><p className="text-xs font-bold text-slate-600">Đã chọn <span className="text-orange-700">{selectedCodes.length}</span> đối tác</p><button type="button" onClick={() => void deletePartners(selectedCodes)} disabled={deleting} className="licogi-btn licogi-btn-danger"><Trash2 size={15} /> {deleting ? "Đang xóa..." : `Xóa ${selectedCodes.length}`}</button></div> : null}
+    </section>
 
-    {loading && !items.length ? <p className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-bold text-slate-500">Đang tải dữ liệu đối tác...</p> : null}
-    {!loading && filtered.length ? <section className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">{filtered.map((partner) => <article key={partner.code} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700"><Building2 size={19} /></span><div className="min-w-0"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-orange-600">{partner.code}</p><h3 className="mt-1 truncate text-sm font-black text-slate-900">{partner.name}</h3><p className="mt-1 text-[11px] text-slate-500">{partner.category} · {partner.region}</p></div></div><span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold text-emerald-700">{partner.status}</span></div><div className="mt-4 grid grid-cols-3 gap-2"><div className="rounded-xl bg-slate-50 p-2.5 text-center"><p className="text-base font-black">{partner.rating}</p><p className="text-[9px] text-slate-400">ĐÁNH GIÁ</p></div><div className="rounded-xl bg-slate-50 p-2.5 text-center"><p className="text-base font-black">{partner.projects}</p><p className="text-[9px] text-slate-400">DỰ ÁN</p></div><div className="rounded-xl bg-slate-50 p-2.5 text-center"><p className="text-base font-black">{partner.safety}</p><p className="text-[9px] text-slate-400">HSE</p></div></div><div className="mt-4"><div className="mb-1 flex justify-between text-[10px]"><span className="flex items-center gap-1 font-bold text-slate-600"><ShieldCheck size={13} /> Mức đáp ứng</span><span className="font-black">{Math.round((partner.rating / 5) * 100)}%</span></div><ProgressBar value={(partner.rating / 5) * 100} tone="green" /></div></article>)}</section> : null}
-    {!loading && !filtered.length ? <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">Chưa có dữ liệu đối tác phù hợp.</p> : null}
+    {loading && !items.length ? <p className="rounded-[18px] border border-slate-200 bg-white p-8 text-center text-sm font-bold text-slate-500">Đang tải dữ liệu đối tác...</p> : null}
+    {!loading && filtered.length ? <section className="licogi-scroll max-h-[760px] overflow-y-auto pr-1"><div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">{filtered.map((partner) => {
+      const selected = selectedSet.has(partner.code);
+      return <article key={partner.code} className={`relative rounded-[18px] border bg-white p-4 shadow-sm transition ${selected ? "border-orange-300 ring-2 ring-orange-100" : "border-slate-200 hover:border-slate-300 hover:shadow-md"}`}>
+        <div className="absolute right-3 top-3 flex items-center gap-2"><input aria-label={`Chọn ${partner.name}`} type="checkbox" checked={selected} onChange={() => togglePartner(partner.code)} className="h-4 w-4 rounded border-slate-300 accent-orange-600" /><button type="button" onClick={() => void deletePartners([partner.code])} className="licogi-icon-btn licogi-icon-btn-danger" title="Xóa đối tác"><Trash2 size={14} /></button></div>
+        <div className="flex items-start gap-3 pr-20"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-slate-100 text-slate-700"><Building2 size={19} /></span><div className="min-w-0"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-orange-600">{partner.code}</p><h3 className="mt-1 truncate text-sm font-black text-slate-900">{partner.name}</h3><p className="mt-1 text-[11px] text-slate-500">{partner.category} · {partner.region}</p></div></div>
+        <div className="mt-4 flex"><span className="rounded-[9px] bg-emerald-50 px-2 py-1 text-[9px] font-extrabold text-emerald-700">{partner.status}</span></div>
+        <div className="mt-3 grid grid-cols-3 gap-2"><div className="rounded-[12px] bg-slate-50 p-2.5 text-center"><p className="text-base font-black">{partner.rating}</p><p className="text-[9px] text-slate-400">ĐÁNH GIÁ</p></div><div className="rounded-[12px] bg-slate-50 p-2.5 text-center"><p className="text-base font-black">{partner.projects}</p><p className="text-[9px] text-slate-400">DỰ ÁN</p></div><div className="rounded-[12px] bg-slate-50 p-2.5 text-center"><p className="text-base font-black">{partner.safety}</p><p className="text-[9px] text-slate-400">HSE</p></div></div>
+        <div className="mt-4"><div className="mb-1 flex justify-between text-[10px]"><span className="flex items-center gap-1 font-bold text-slate-600"><ShieldCheck size={13} /> Mức đáp ứng</span><span className="font-black">{Math.round((partner.rating / 5) * 100)}%</span></div><ProgressBar value={(partner.rating / 5) * 100} tone="green" /></div>
+      </article>;
+    })}</div></section> : null}
+    {!loading && !filtered.length ? <p className="rounded-[18px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">Chưa có dữ liệu đối tác phù hợp.</p> : null}
 
-    {showForm ? <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-5"><button className="absolute inset-0" onClick={()=>setShowForm(false)} aria-label="Đóng" /><form onSubmit={createPartner} className="modal-panel relative w-full max-w-3xl rounded-t-[24px] bg-white p-5 shadow-2xl sm:rounded-[24px]"><div className="flex items-center justify-between"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-orange-600">Partner</p><h2 className="mt-1 text-lg font-black text-slate-900">Thêm đối tác</h2></div><button type="button" onClick={()=>setShowForm(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold">Đóng</button></div><BulkImportPanel className="mt-4" compact fields={[{ name: "partner_code", label: "Mã đối tác", placeholder: "DT-001" },{ name: "partner_name", label: "Tên đối tác", placeholder: "Công ty ABC", required: true },{ name: "category", label: "Lĩnh vực", placeholder: "Nhà cung cấp" },{ name: "region", label: "Khu vực", placeholder: "Miền Bắc" },{ name: "rating", label: "Điểm đánh giá", placeholder: "5" },{ name: "projects", label: "Số dự án", placeholder: "0" },{ name: "safety", label: "HSE score", placeholder: "100" },{ name: "status", label: "Trạng thái", placeholder: "Đạt chuẩn" }]} onImport={importPartners} />
-      <div className="mt-5 grid gap-3 md:grid-cols-2"><label className="text-xs font-bold text-slate-600 md:col-span-2">Tên đối tác<input required value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Lĩnh vực<input value={form.category} onChange={(e)=>setForm({...form,category:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Khu vực<input value={form.region} onChange={(e)=>setForm({...form,region:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Đánh giá<input type="number" min="0" max="5" step="0.1" value={form.rating} onChange={(e)=>setForm({...form,rating:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Số dự án<input type="number" min="0" value={form.projects} onChange={(e)=>setForm({...form,projects:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">HSE score<input type="number" min="0" max="100" value={form.safety} onChange={(e)=>setForm({...form,safety:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Trạng thái<input value={form.status} onChange={(e)=>setForm({...form,status:e.target.value})} className="input-field mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm" /></label></div><div className="mt-5 flex justify-end gap-3"><button type="button" onClick={()=>setShowForm(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold">Hủy</button><button disabled={saving} className="rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-extrabold text-white disabled:bg-slate-300">{saving ? "Đang lưu..." : "Lưu đối tác"}</button></div></form></div> : null}
+    {showForm ? <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-5"><button className="absolute inset-0" onClick={()=>setShowForm(false)} aria-label="Đóng" /><form onSubmit={createPartner} className="modal-panel licogi-scroll relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-t-[22px] bg-white p-5 shadow-2xl sm:rounded-[20px]"><div className="flex items-center justify-between"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-orange-600">Partner</p><h2 className="mt-1 text-lg font-black text-slate-900">Thêm đối tác</h2></div><button type="button" onClick={()=>setShowForm(false)} className="licogi-btn licogi-btn-secondary">Đóng</button></div><BulkImportPanel className="mt-4" compact fields={[{ name: "partner_code", label: "Mã đối tác", placeholder: "DT-001" },{ name: "partner_name", label: "Tên đối tác", placeholder: "Công ty ABC", required: true },{ name: "category", label: "Lĩnh vực", placeholder: "Nhà cung cấp" },{ name: "region", label: "Khu vực", placeholder: "Miền Bắc" },{ name: "rating", label: "Điểm đánh giá", placeholder: "5" },{ name: "projects", label: "Số dự án", placeholder: "0" },{ name: "safety", label: "HSE score", placeholder: "100" },{ name: "status", label: "Trạng thái", placeholder: "Đạt chuẩn" }]} onImport={importPartners} />
+      <div className="mt-5 grid gap-3 md:grid-cols-2"><label className="text-xs font-bold text-slate-600 md:col-span-2">Tên đối tác<input required value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Lĩnh vực<input value={form.category} onChange={(e)=>setForm({...form,category:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Khu vực<input value={form.region} onChange={(e)=>setForm({...form,region:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Đánh giá<input type="number" min="0" max="5" step="0.1" value={form.rating} onChange={(e)=>setForm({...form,rating:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Số dự án<input type="number" min="0" value={form.projects} onChange={(e)=>setForm({...form,projects:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">HSE score<input type="number" min="0" max="100" value={form.safety} onChange={(e)=>setForm({...form,safety:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label><label className="text-xs font-bold text-slate-600">Trạng thái<input value={form.status} onChange={(e)=>setForm({...form,status:e.target.value})} className="input-field mt-1.5 w-full rounded-[12px] px-3.5 py-2.5 text-sm" /></label></div><div className="mt-5 flex justify-end gap-3"><button type="button" onClick={()=>setShowForm(false)} className="licogi-btn licogi-btn-secondary">Hủy</button><button disabled={saving} className="licogi-btn licogi-btn-primary">{saving ? "Đang lưu..." : "Lưu đối tác"}</button></div></form></div> : null}
   </div>;
 }
