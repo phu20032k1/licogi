@@ -1,0 +1,415 @@
+/* Homepage density and capability overview refinements. Loaded after production/map styles. */
+
+.public-site-v2 .public-header-inner {
+  height: 76px;
+}
+
+.public-site-v2 .public-nav a {
+  padding-block: 27px;
+}
+
+.public-site-v2 .public-section {
+  padding-block: 82px;
+}
+
+.public-site-v2 .public-section-heading {
+  gap: 44px;
+  margin-bottom: 36px;
+}
+
+.public-site-v2 .public-section-heading h2,
+.public-site-v2 .public-about-copy h2,
+.public-site-v2 .public-video-copy h2 {
+  font-size: clamp(32px, 3.6vw, 50px);
+  line-height: 1.08;
+}
+
+.public-site-v2 .public-hero-v2 {
+  min-height: 760px;
+}
+
+.public-site-v2 .public-hero-content-v2 {
+  grid-template-columns: minmax(0, .95fr) minmax(390px, .72fr);
+  gap: 38px;
+  padding-top: 96px;
+  padding-bottom: 52px;
+}
+
+.public-site-v2 .public-hero h1 {
+  max-width: 680px;
+  margin-top: 18px;
+  font-size: clamp(40px, 4.2vw, 60px);
+  line-height: 1.01;
+  letter-spacing: -.045em;
+}
+
+.public-site-v2 .public-hero-copy > p {
+  max-width: 650px;
+  margin-top: 21px;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.public-site-v2 .public-hero-actions {
+  margin-top: 25px;
+}
+
+.public-site-v2 .public-hero-trust {
+  gap: 12px 16px;
+  margin-top: 22px;
+  font-size: 10px;
+}
+
+.public-hero-media {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+}
+
+.public-hero-media .public-live-overview {
+  order: 1;
+}
+
+.public-hero-media .public-hero-video-frame {
+  order: 2;
+}
+
+.public-live-overview {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(15,23,42,.84), rgba(2,6,23,.68));
+  box-shadow: 0 26px 70px rgba(0,0,0,.3);
+  color: #fff;
+  backdrop-filter: blur(20px);
+}
+
+.public-live-overview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 17px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+
+.public-live-overview-head > div {
+  display: grid;
+  gap: 4px;
+}
+
+.public-live-overview-head > div > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fdba74;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.public-live-overview-head > div > span i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34,197,94,.12);
+}
+
+.public-live-overview-head strong {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -.02em;
+}
+
+.public-live-overview-head small {
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.public-live-overview-head > button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(251,146,60,.35);
+  border-radius: 9px;
+  padding: 8px 10px;
+  background: rgba(249,115,22,.12);
+  color: #fed7aa;
+  font-size: 9px;
+  font-weight: 900;
+  transition: .18s ease;
+}
+
+.public-live-overview-head > button:hover {
+  border-color: #fb923c;
+  background: #ea580c;
+  color: #fff;
+}
+
+.public-live-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
+.public-live-overview-grid > button {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 13px;
+  padding: 11px 12px;
+  background: rgba(255,255,255,.045);
+  color: #fff;
+  text-align: left;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.public-live-overview-grid > button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(251,146,60,.45);
+  background: rgba(249,115,22,.11);
+}
+
+.public-live-overview-grid > button > svg {
+  width: 19px;
+  flex: 0 0 auto;
+  color: #fb923c;
+}
+
+.public-live-overview-grid > button > span {
+  display: grid;
+  gap: 2px;
+}
+
+.public-live-overview-grid strong {
+  color: #fff;
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.public-live-overview-grid small {
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.public-live-overview-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.08);
+}
+
+.public-live-overview-links > button {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 10px 9px;
+  background: #071426;
+  color: #cbd5e1;
+  text-align: left;
+}
+
+.public-live-overview-links > button:hover {
+  background: #0f2744;
+  color: #fff;
+}
+
+.public-live-overview-links svg {
+  width: 13px;
+  color: #fb923c;
+}
+
+.public-live-overview-links > button > svg:last-child {
+  width: 11px;
+  color: #64748b;
+}
+
+.public-live-overview-links span {
+  overflow: hidden;
+  font-size: 8px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-live-overview-links b {
+  color: #fff;
+  font-size: 11px;
+}
+
+/* Keep the requested video in the hero, but make data the primary right-side content. */
+.public-site-v2 .public-hero-video-frame {
+  border-radius: 16px;
+}
+
+.public-site-v2 .public-hero-video-head {
+  padding: 9px 12px;
+  font-size: 8px;
+}
+
+.public-site-v2 .public-hero-video-frame video {
+  height: 130px;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
+.public-site-v2 .public-hero-video-caption {
+  align-items: center;
+  padding: 9px 12px 10px;
+}
+
+.public-site-v2 .public-hero-video-caption strong {
+  font-size: 9px;
+}
+
+.public-site-v2 .public-hero-video-caption small {
+  display: none;
+}
+
+/* Reduce the feeling that the public site is browser-zoomed in. */
+.public-site-v2 .public-primary-button,
+.public-site-v2 .public-secondary-button,
+.public-site-v2 .public-outline-button {
+  min-height: 46px;
+  padding-inline: 16px;
+  border-radius: 11px;
+  font-size: 12px;
+}
+
+.public-site-v2 .public-sector-grid {
+  gap: 18px;
+}
+
+.public-site-v2 .public-sector-card {
+  border-radius: 18px;
+}
+
+.public-site-v2 .public-sector-image {
+  height: 150px;
+}
+
+.public-site-v2 .public-project-section {
+  padding-top: 76px;
+}
+
+.public-site-v2 .public-map-shell {
+  border-radius: 18px;
+}
+
+@media (min-width: 760px) and (max-width: 920px) {
+  .public-site-v2 .public-hero-v2 {
+    min-height: 690px;
+  }
+
+  .public-site-v2 .public-hero-content-v2 {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 24px;
+    padding-top: 94px;
+    padding-bottom: 46px;
+  }
+
+  .public-site-v2 .public-hero h1 {
+    max-width: 470px;
+    font-size: clamp(36px, 5.4vw, 46px);
+  }
+
+  .public-site-v2 .public-hero-copy > p {
+    font-size: 12px;
+  }
+
+  .public-site-v2 .public-hero-trust {
+    display: none;
+  }
+
+  .public-live-overview-head small {
+    display: none;
+  }
+
+  .public-live-overview-links {
+    grid-template-columns: 1fr;
+  }
+
+  .public-live-overview-links > button {
+    padding-block: 7px;
+  }
+
+  .public-site-v2 .public-hero-video-frame video {
+    height: 105px;
+  }
+}
+
+@media (max-width: 759px) {
+  .public-site-v2 .public-section {
+    padding-block: 64px;
+  }
+
+  .public-site-v2 .public-hero-content-v2 {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-top: 104px;
+    padding-bottom: 58px;
+  }
+
+  .public-site-v2 .public-hero h1 {
+    max-width: 600px;
+    font-size: clamp(37px, 9vw, 52px);
+  }
+
+  .public-hero-media {
+    max-width: none;
+  }
+
+  .public-live-overview-head {
+    align-items: center;
+  }
+
+  .public-live-overview-links {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .public-live-overview-links > button:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .public-site-v2 .public-hero h1 {
+    font-size: clamp(34px, 10.5vw, 46px);
+  }
+
+  .public-site-v2 .public-hero-copy > p {
+    font-size: 13px;
+  }
+
+  .public-live-overview-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .public-live-overview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .public-live-overview-grid > button {
+    min-height: 66px;
+    padding: 9px;
+  }
+
+  .public-live-overview-grid strong {
+    font-size: 20px;
+  }
+}
