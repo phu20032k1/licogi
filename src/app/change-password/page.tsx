@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { KeyRound, ShieldCheck } from "lucide-react";
+import { refreshServerSession } from "../../lib/authSession";
+import { roleDefaultRoute } from "../../lib/rbac";
 
 export default function ChangePasswordPage() {
-  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,12 +22,17 @@ export default function ChangePasswordPage() {
       const response = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        cache: "no-store",
         body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
       });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.message || "Không đổi được mật khẩu");
+
       setMessage("Đã đổi mật khẩu thành công. Đang vào hệ thống...");
-      setTimeout(() => router.replace("/admin"), 900);
+      const session = await refreshServerSession();
+      if (!session) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      window.location.replace(roleDefaultRoute(session));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không đổi được mật khẩu");
     } finally {
