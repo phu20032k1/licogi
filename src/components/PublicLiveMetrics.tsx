@@ -19,17 +19,37 @@ type ProjectRow = {
   province: string;
   projectCountry?: string;
   type?: string;
+  progress?: number;
+  contractValueVnd?: number | null;
 };
 
-function dispatchProjectFilter(status: "all" | ProjectStatus = "all") {
+type FilterInput = {
+  status?: "all" | ProjectStatus;
+  type?: string;
+};
+
+const sectorColors = ["#f97316", "#0ea5e9", "#22c55e", "#8b5cf6", "#eab308", "#06b6d4"];
+
+function dispatchProjectFilter({ status = "all", type = "all" }: FilterInput = {}) {
   window.dispatchEvent(new CustomEvent("licogi-public-project-filter", {
-    detail: { search: "", type: "all", status, projectId: null },
+    detail: { search: "", type, status, projectId: null },
   }));
   document.getElementById("du-an")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function openCapabilityOverview() {
   document.getElementById("quy-mo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function formatPortfolioValue(value: number) {
+  if (!value) return "Chưa đủ dữ liệu";
+  if (value >= 1_000_000_000_000) {
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(value / 1_000_000_000_000)} nghìn tỷ`;
+  }
+  if (value >= 1_000_000_000) {
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(value / 1_000_000_000)} tỷ`;
+  }
+  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(value);
 }
 
 export default function PublicLiveMetrics() {
@@ -46,50 +66,119 @@ export default function PublicLiveMetrics() {
     return () => controller.abort();
   }, []);
 
-  const metrics = useMemo(() => ({
-    total: projects.length,
-    ongoing: projects.filter((project) => project.status === "ongoing").length,
-    completed: projects.filter((project) => project.status === "completed").length,
-    warranty: projects.filter((project) => project.status === "warranty").length,
-    provinces: new Set(projects.map((project) => project.province).filter(Boolean)).size,
-    countries: new Set(projects.map((project) => project.projectCountry || "Việt Nam").filter(Boolean)).size,
-    sectors: new Set(projects.map((project) => project.type).filter(Boolean)).size,
-  }), [projects]);
+  const metrics = useMemo(() => {
+    const total = projects.length;
+    const ongoing = projects.filter((project) => project.status === "ongoing").length;
+    const completed = projects.filter((project) => project.status === "completed").length;
+    const warranty = projects.filter((project) => project.status === "warranty").length;
+    const progressValues = projects
+      .map((project) => Number(project.progress))
+      .filter((value) => Number.isFinite(value));
+    const averageProgress = progressValues.length
+      ? Math.round(progressValues.reduce((sum, value) => sum + value, 0) / progressValues.length)
+      : 0;
+    const exactContractRows = projects.filter((project) => typeof project.contractValueVnd === "number" && Number.isFinite(project.contractValueVnd) && Number(project.contractValueVnd) > 0);
+    const contractValue = exactContractRows.reduce((sum, project) => sum + Number(project.contractValueVnd || 0), 0);
+
+    return {
+      total,
+      ongoing,
+      completed,
+      warranty,
+      provinces: new Set(projects.map((project) => project.province).filter(Boolean)).size,
+      countries: new Set(projects.map((project) => project.projectCountry || "Việt Nam").filter(Boolean)).size,
+      sectors: new Set(projects.map((project) => project.type).filter(Boolean)).size,
+      averageProgress,
+      completionRate: total ? Math.round((completed / total) * 100) : 0,
+      contractValue,
+      contractCount: exactContractRows.length,
+    };
+  }, [projects]);
+
+  const sectorStats = useMemo(() => {
+    const counts = new Map<string, number>();
+    projects.forEach((project) => {
+      const key = String(project.type || "Chưa phân loại").trim() || "Chưa phân loại";
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .map(([name, count], index) => ({ name, count, color: sectorColors[index % sectorColors.length] }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "vi"))
+      .slice(0, 5);
+  }, [projects]);
+
+  const maxSectorCount = Math.max(1, ...sectorStats.map((item) => item.count));
+  const statusTotal = Math.max(1, metrics.total);
 
   return (
     <section className="public-live-overview" aria-live="polite">
       <div className="public-live-overview-head">
         <div>
-          <span><i /> Dữ liệu năng lực trực tiếp</span>
-          <strong>Tổng quan danh mục dự án</strong>
-          <small>Bấm từng chỉ số để mở đúng nhóm dữ liệu.</small>
+          <span><i /> Năng lực từ dữ liệu dự án</span>
+          <strong>Tổng quan hoạt động</strong>
+          <small>Số liệu lấy trực tiếp từ danh mục dự án công khai.</small>
         </div>
-        <button type="button" onClick={openCapabilityOverview}>Xem tổng quan <ArrowRight size={14} /></button>
+        <button type="button" onClick={openCapabilityOverview}>Tổng quan chi tiết <ArrowRight size={14} /></button>
       </div>
 
-      <div className="public-live-overview-grid">
-        <button type="button" onClick={() => dispatchProjectFilter("all")}>
-          <PanelsTopLeft />
-          <span><strong>{loaded ? metrics.total : "—"}</strong><small>Tổng dự án</small></span>
+      <div className="public-live-dashboard">
+        <button type="button" className="public-live-total" onClick={() => dispatchProjectFilter()}>
+          <span>Danh mục dự án</span>
+          <strong>{loaded ? metrics.total : "—"}</strong>
+          <small>{loaded ? `${metrics.provinces} tỉnh/thành · ${metrics.sectors} lĩnh vực` : "Đang tải dữ liệu"}</small>
+          <em>Xem toàn bộ dự án <ArrowRight size={13} /></em>
         </button>
-        <button type="button" onClick={() => dispatchProjectFilter("ongoing")}>
-          <Clock3 />
-          <span><strong>{loaded ? metrics.ongoing : "—"}</strong><small>Đang thi công</small></span>
-        </button>
-        <button type="button" onClick={() => dispatchProjectFilter("completed")}>
-          <CheckCircle2 />
-          <span><strong>{loaded ? metrics.completed : "—"}</strong><small>Đã hoàn thành</small></span>
-        </button>
-        <button type="button" onClick={() => dispatchProjectFilter("warranty")}>
-          <ShieldCheck />
-          <span><strong>{loaded ? metrics.warranty : "—"}</strong><small>Đang bảo hành</small></span>
-        </button>
+
+        <div className="public-live-progress-card">
+          <div
+            className="public-live-progress-ring"
+            style={{ background: `conic-gradient(#f97316 ${metrics.averageProgress}%, rgba(148,163,184,.18) 0)` }}
+            aria-label={`Tiến độ bình quân ${metrics.averageProgress}%`}
+          >
+            <span><strong>{loaded ? metrics.averageProgress : "—"}</strong><small>%</small></span>
+          </div>
+          <div><small>Tiến độ bình quân</small><strong>{loaded ? `${metrics.completionRate}%` : "—"}</strong><span>tỷ lệ dự án đã hoàn thành</span></div>
+        </div>
+
+        <div className="public-live-contract-card">
+          <small>Giá trị hợp đồng đã ghi nhận</small>
+          <strong>{loaded ? formatPortfolioValue(metrics.contractValue) : "—"}</strong>
+          <span>{loaded ? `${metrics.contractCount}/${metrics.total || 0} dự án có giá trị chính xác` : "Đang tổng hợp"}</span>
+        </div>
+      </div>
+
+      <div className="public-live-status-block">
+        <div className="public-live-block-title"><span>Cơ cấu trạng thái</span><small>Bấm để xem trên bản đồ</small></div>
+        <div className="public-live-status-bar" aria-label="Cơ cấu trạng thái dự án">
+          <button type="button" className="is-ongoing" style={{ width: `${(metrics.ongoing / statusTotal) * 100}%` }} onClick={() => dispatchProjectFilter({ status: "ongoing" })} title={`${metrics.ongoing} dự án đang thi công`} />
+          <button type="button" className="is-completed" style={{ width: `${(metrics.completed / statusTotal) * 100}%` }} onClick={() => dispatchProjectFilter({ status: "completed" })} title={`${metrics.completed} dự án đã hoàn thành`} />
+          <button type="button" className="is-warranty" style={{ width: `${(metrics.warranty / statusTotal) * 100}%` }} onClick={() => dispatchProjectFilter({ status: "warranty" })} title={`${metrics.warranty} dự án đang bảo hành`} />
+        </div>
+        <div className="public-live-status-legend">
+          <button type="button" onClick={() => dispatchProjectFilter({ status: "ongoing" })}><i className="is-ongoing" /><span><Clock3 /> Đang thi công</span><strong>{loaded ? metrics.ongoing : "—"}</strong></button>
+          <button type="button" onClick={() => dispatchProjectFilter({ status: "completed" })}><i className="is-completed" /><span><CheckCircle2 /> Đã hoàn thành</span><strong>{loaded ? metrics.completed : "—"}</strong></button>
+          <button type="button" onClick={() => dispatchProjectFilter({ status: "warranty" })}><i className="is-warranty" /><span><ShieldCheck /> Bảo hành</span><strong>{loaded ? metrics.warranty : "—"}</strong></button>
+        </div>
+      </div>
+
+      <div className="public-live-sector-block">
+        <div className="public-live-block-title"><span>Phân bổ lĩnh vực</span><small>{loaded ? `${metrics.sectors} nhóm năng lực` : "Đang tải"}</small></div>
+        <div className="public-live-sector-list">
+          {sectorStats.length ? sectorStats.map((item) => (
+            <button key={item.name} type="button" onClick={() => dispatchProjectFilter({ type: item.name })}>
+              <span><i style={{ background: item.color }} />{item.name}</span>
+              <em><i style={{ width: `${Math.max(8, (item.count / maxSectorCount) * 100)}%`, background: item.color }} /></em>
+              <strong>{item.count}</strong>
+            </button>
+          )) : <p>Chưa có dữ liệu lĩnh vực.</p>}
+        </div>
       </div>
 
       <div className="public-live-overview-links">
         <button type="button" onClick={openCapabilityOverview}><MapPin /><span><b>{loaded ? metrics.provinces : "—"}</b> tỉnh / thành</span><ArrowRight /></button>
         <button type="button" onClick={openCapabilityOverview}><Layers3 /><span><b>{loaded ? metrics.sectors : "—"}</b> lĩnh vực</span><ArrowRight /></button>
         <button type="button" onClick={openCapabilityOverview}><Globe2 /><span><b>{loaded ? metrics.countries : "—"}</b> quốc gia dự án</span><ArrowRight /></button>
+        <button type="button" onClick={() => dispatchProjectFilter()}><PanelsTopLeft /><span>Danh sách dự án</span><ArrowRight /></button>
       </div>
     </section>
   );
