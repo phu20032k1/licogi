@@ -1,4 +1,4 @@
-import { ProjectStatus, ProjectType, provinceCoordinates } from "../data/projects";
+import { ProjectStatus, ProjectType, legacyProvinceCoordinates, normalizeProvinceName, provinceCoordinates } from "../data/projects";
 
 export type MarkerVisual = {
   color: string;
@@ -10,18 +10,18 @@ export type MarkerVisual = {
 };
 
 export const projectTypeVisuals: Record<ProjectType, { color: string; softColor: string; label: string }> = {
-  "Công nghiệp": { color: "#ea580c", softColor: "#ffedd5", label: "CN" },
-  "Nông nghiệp": { color: "#16a34a", softColor: "#dcfce7", label: "NN" },
-  "Dân dụng": { color: "#7c3aed", softColor: "#ede9fe", label: "DD" },
-  "Hạ tầng": { color: "#2563eb", softColor: "#dbeafe", label: "HT" },
-  "Giao thông": { color: "#0891b2", softColor: "#cffafe", label: "GT" },
-  "Điện năng": { color: "#ca8a04", softColor: "#fef9c3", label: "ĐN" },
+  "Công nghiệp": { color: "#e36a2e", softColor: "#fff1e8", label: "CN" },
+  "Nông nghiệp": { color: "#2f8f69", softColor: "#e7f5ef", label: "NN" },
+  "Dân dụng": { color: "#7968c4", softColor: "#f0edff", label: "DD" },
+  "Hạ tầng": { color: "#3678b8", softColor: "#e9f3fb", label: "HT" },
+  "Giao thông": { color: "#2a8b9f", softColor: "#e8f7fa", label: "GT" },
+  "Điện năng": { color: "#b78a28", softColor: "#fbf5df", label: "ĐN" },
 };
 
 export const projectStatusVisuals: Record<ProjectStatus, { color: string; symbol: string }> = {
-  completed: { color: "#059669", symbol: "✓" },
-  ongoing: { color: "#f97316", symbol: "•" },
-  warranty: { color: "#0284c7", symbol: "B" },
+  completed: { color: "#23835b", symbol: "✓" },
+  ongoing: { color: "#e36a2e", symbol: "•" },
+  warranty: { color: "#3b78a8", symbol: "B" },
 };
 
 const TYPE_KEYWORDS: Array<{ type: ProjectType; keywords: string[] }> = [
@@ -47,13 +47,23 @@ export function normalizeProjectStatus(value?: string | null): ProjectStatus {
   return "ongoing";
 }
 
+function cleanProvincePrefix(value: string) {
+  return value.trim().replace(/^(tỉnh|thành phố|tp\.?|city)\s+/i, "").trim();
+}
+
 export function resolveProvinceCoordinates(province?: string | null) {
   const fallback = provinceCoordinates["Hà Nội"];
   const raw = String(province || "").trim();
   if (!raw) return fallback;
-  if (provinceCoordinates[raw]) return provinceCoordinates[raw];
 
-  const normalized = raw.toLocaleLowerCase("vi").replace(/^(tỉnh|thành phố|tp\.?|city)\s+/i, "").trim();
+  const cleaned = cleanProvincePrefix(raw);
+  const legacyExact = legacyProvinceCoordinates[raw] || legacyProvinceCoordinates[cleaned];
+  if (legacyExact) return legacyExact;
+
+  const canonical = normalizeProvinceName(raw);
+  if (provinceCoordinates[canonical]) return provinceCoordinates[canonical];
+
+  const normalized = canonical.toLocaleLowerCase("vi");
   const match = Object.entries(provinceCoordinates).find(([name]) => {
     const candidate = name.toLocaleLowerCase("vi").replace(/^tp\.\s*/, "");
     return normalized.includes(candidate) || candidate.includes(normalized);
@@ -76,6 +86,6 @@ export function getMarkerVisual(type: ProjectType, status: ProjectStatus): Marke
 
 export function markerHtml(type: ProjectType, status: ProjectStatus, selected = false) {
   const visual = getMarkerVisual(type, status);
-  const scale = selected ? 1.16 : 1;
+  const scale = selected ? 1.14 : 1;
   return `<div class="licogi-map-marker licogi-waterdrop-marker status-${status}${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};--status-color:${visual.statusColor};transform:translate(-50%,-100%) scale(${scale})" title="${visual.typeLabel}"><span class="licogi-waterdrop-body"><b>${visual.label}</b></span><em class="licogi-marker-status" aria-hidden="true">${visual.statusSymbol}</em></div>`;
 }
