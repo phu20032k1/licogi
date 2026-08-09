@@ -5,21 +5,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowRight, Building2, CheckCircle2, ChevronRight, CircuitBoard, Factory, HardHat,
-  Landmark, LogIn, Mail, Map, MapPin, MapPinned, Menu, Newspaper, Phone, Play, Power, Quote,
+  Landmark, LogIn, Mail, MapPin, MapPinned, Menu, Newspaper, Phone, Play, Power, Quote,
   Route, ShieldCheck, Sparkles, Users, X, Zap,
 } from "lucide-react";
 import BrandLogo from "../components/BrandLogo";
 import PublicAIAssistant from "../components/PublicAIAssistant";
+import PublicCapabilityExplorer from "../components/PublicCapabilityExplorer";
 import PublicLiveMetrics from "../components/PublicLiveMetrics";
 
-const PublicProjectMap = dynamic(() => import("../components/PublicProjectMap"), { ssr: false, loading: () => <div className="public-map-skeleton">Đang khởi tạo bản đồ dự án...</div> });
+const PublicProjectMap = dynamic(() => import("../components/PublicProjectMap"), { ssr: false, loading: () => <div className="public-map-skeleton">Đang khởi tạo dữ liệu dự án...</div> });
 
 const navItems = [
   ["Trang chủ", "#trang-chu"],
-  ["Danh sách ngành hàng", "#nganh-hang"],
+  ["Dự án", "#du-an"],
+  ["Quy mô", "#quy-mo"],
+  ["Năng lực", "#nganh-hang"],
   ["Giới thiệu", "#gioi-thieu"],
-  ["Bản đồ", "#ban-do"],
-  ["Video", "#video"],
   ["Tin tức", "#tin-tuc"],
 ] as const;
 
@@ -49,7 +50,7 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  return <div className="public-site">
+  return <div className="public-site public-site-v2">
     <header className={`public-header ${scrolled ? "is-scrolled" : ""}`}>
       <div className="public-container public-header-inner">
         <BrandLogo />
@@ -65,44 +66,63 @@ export default function HomePage() {
     </header>
 
     <main>
-      <section id="trang-chu" className="public-hero">
-        <div className="public-hero-bg"><img src="/media/hero-construction.svg" alt="Minh họa công trình công nghiệp và bản đồ dữ liệu" /></div>
+      <section id="trang-chu" className="public-hero public-hero-v2">
+        <div className="public-hero-bg"><img src="/media/hero-construction.svg" alt="Công trình công nghiệp LICOGI 18.3" /></div>
         <div className="public-hero-grid" />
-        <div className="public-container public-hero-content">
+        <div className="public-container public-hero-content public-hero-content-v2">
           <div className="public-hero-copy">
-            <span className="public-kicker public-kicker-light"><Sparkles size={15} /> Tổng thầu số · Dữ liệu sống · Năng lực thực chiến</span>
-            <h1>Kiến tạo hạ tầng.<br/><em>Dẫn dắt phát triển.</em></h1>
-            <p>Nền tảng giúp LICOGI 18.3 chứng minh năng lực bằng dữ liệu dự án, bản đồ GIS, video công trường và hệ điều hành quản trị số thay vì các chỉ số trình diễn cố định.</p>
+            <span className="public-kicker public-kicker-light"><Sparkles size={15} /> Năng lực xây dựng được chứng minh bằng dữ liệu</span>
+            <h1>Quy mô thật.<br/><em>Dự án thật.</em><br/>Năng lực nhìn thấy được.</h1>
+            <p>Trang chủ LICOGI 18.3 tổng hợp trực tiếp dữ liệu dự án để thể hiện phạm vi hoạt động theo tỉnh/thành, quốc gia, lĩnh vực, chủ đầu tư, quy mô và tiến độ. Mỗi con số đều có thể mở ra danh sách dự án đứng phía sau.</p>
             <div className="public-hero-actions">
-              <a href="#ban-do" className="public-primary-button"><Map size={18} /> Khám phá bản đồ dự án <ArrowRight size={17} /></a>
-              <a href="#gioi-thieu" className="public-secondary-button">Về LICOGI 18.3 <ChevronRight size={17} /></a>
+              <a href="#du-an" className="public-primary-button"><MapPinned size={18} /> Khám phá dự án <ArrowRight size={17} /></a>
+              <a href="#quy-mo" className="public-secondary-button">Xem quy mô năng lực <ChevronRight size={17} /></a>
             </div>
             <div className="public-hero-trust">
-              <span><CheckCircle2 /> Bề dày hệ sinh thái LICOGI</span>
-              <span><CheckCircle2 /> Năng lực đa ngành</span>
-              <span><CheckCircle2 /> Số hóa quản trị EPC</span>
+              <span><CheckCircle2 /> Dữ liệu cập nhật từ Data Center</span>
+              <span><CheckCircle2 /> Theo dõi đa tỉnh/thành</span>
+              <span><CheckCircle2 /> Liên kết GIS và hồ sơ dự án</span>
             </div>
           </div>
 
-          <PublicLiveMetrics />
+          <div className="public-hero-media">
+            <div className="public-hero-video-frame">
+              <div className="public-hero-video-head"><span><i /> Video năng lực</span><b>LICOGI 18.3</b></div>
+              <video controls poster="/media/hero-construction.svg" preload="metadata"><source src="/videos/licogi183-digital-intro.mp4" type="video/mp4" /></video>
+              <div className="public-hero-video-caption"><Play size={15} /><span><strong>Công trường · Thiết bị · Quy trình</strong><small>Khung video nằm ngay đầu trang để khách hàng nhìn thấy năng lực thi công trước khi đi sâu vào dữ liệu.</small></span></div>
+            </div>
+            <PublicLiveMetrics />
+          </div>
         </div>
-        <a href="#nganh-hang" className="public-scroll-cue"><span /> Khám phá năng lực</a>
+        <a href="#du-an" className="public-scroll-cue"><span /> Xem mạng lưới dự án</a>
       </section>
 
-      <section className="public-logo-strip">
+      <section id="du-an" className="public-section public-map-section public-project-section">
+        <div className="public-container">
+          <div className="public-section-heading public-section-heading-light">
+            <div><span className="public-kicker public-kicker-light"><MapPinned size={14}/> Dự án</span><h2>Mạng lưới dự án tập trung tại Việt Nam.</h2></div>
+            <p>Marker được tạo từ dữ liệu tọa độ thực hoặc tọa độ tỉnh/thành. Bấm vào từng điểm để xem dự án, chủ đầu tư, quốc gia, lĩnh vực, quy mô, giá trị và tiến độ; dùng tìm kiếm để chuyển tới dữ liệu ngoài Việt Nam khi có.</p>
+          </div>
+          <PublicProjectMap />
+        </div>
+      </section>
+
+      <PublicCapabilityExplorer />
+
+      <section className="public-logo-strip public-capability-strip">
         <div className="public-container"><span>LICOGI 18.3</span><i /> <b>Công nghiệp</b><i /><b>Hạ tầng</b><i /><b>Giao thông</b><i /><b>Điện năng</b><i /><b>Vật liệu xây dựng</b></div>
       </section>
 
       <section id="nganh-hang" className="public-section public-sectors">
         <div className="public-container">
           <div className="public-section-heading">
-            <div><span className="public-kicker"><Zap size={14} /> Danh sách ngành hàng</span><h2>Năng lực thi công đa lĩnh vực</h2></div>
-            <p>Từ công trình công nghiệp đến hạ tầng kỹ thuật, mỗi nhóm ngành hàng được trình bày trực quan và liên kết với dữ liệu dự án trên bản đồ.</p>
+            <div><span className="public-kicker"><Zap size={14} /> Năng lực thi công</span><h2>Đa lĩnh vực, liên kết trực tiếp với dữ liệu dự án.</h2></div>
+            <p>Mỗi nhóm năng lực là một cửa vào dữ liệu thực tế. Khách hàng có thể xem dự án liên quan thay vì chỉ đọc mô tả năng lực chung.</p>
           </div>
           <div className="public-sector-grid">
             {sectors.map((sector) => { const Icon = sector.icon; return <article key={sector.title} className="public-sector-card">
               <div className="public-sector-image"><img src={sector.image} alt=""/><span>{sector.code}</span></div>
-              <div className="public-sector-content"><span className="public-sector-icon"><Icon size={21} /></span><h3>{sector.title}</h3><p>{sector.desc}</p><a href="#ban-do">Xem dự án liên quan <ArrowRight size={15}/></a></div>
+              <div className="public-sector-content"><span className="public-sector-icon"><Icon size={21} /></span><h3>{sector.title}</h3><p>{sector.desc}</p><a href="#quy-mo">Xem dữ liệu năng lực <ArrowRight size={15}/></a></div>
             </article>; })}
           </div>
         </div>
@@ -113,16 +133,16 @@ export default function HomePage() {
           <div className="public-about-visual">
             <img src="/media/hero-construction.svg" alt="Công trường và năng lực thi công LICOGI 18.3" />
             <div className="public-about-badge"><strong>18.3</strong><span>Thành viên hệ sinh thái<br/>LICOGI 18</span></div>
-            <div className="public-about-quote"><Quote size={19}/><p>Chuyển từ “giới thiệu công ty” sang “chứng minh năng lực thực chiến”.</p></div>
+            <div className="public-about-quote"><Quote size={19}/><p>Năng lực không chỉ được mô tả — năng lực được mở ra từ từng dự án, từng địa phương và từng dữ liệu thi công.</p></div>
           </div>
           <div className="public-about-copy">
             <span className="public-kicker"><Building2 size={14}/> Giới thiệu LICOGI 18.3</span>
-            <h2>Đơn vị xây dựng trưởng thành từ nền tảng thi công và quản trị của LICOGI 18</h2>
+            <h2>Nền tảng thi công của LICOGI 18, được mở rộng bằng quản trị dữ liệu hiện đại.</h2>
             <p className="public-about-lead">Công ty Cổ phần Đầu tư và Xây dựng số 18.3 được chuyển đổi từ Chi nhánh Hưng Yên của LICOGI 18, kế thừa năng lực tổ chức thi công, kinh nghiệm và hệ sinh thái ngành xây dựng.</p>
-            <p>Định hướng website mới tập trung vào minh bạch dữ liệu, cập nhật dự án theo thời gian thực và kết nối năng lực công nghiệp, dân dụng, hạ tầng, giao thông, điện năng, vật liệu xây dựng trên một nền tảng thống nhất.</p>
+            <p>Website công khai được thiết kế như một hồ sơ năng lực sống: dữ liệu dự án, địa bàn, quốc gia, chủ đầu tư, quy mô và trạng thái được kết nối trên cùng một trải nghiệm để khách hàng có thể kiểm chứng sâu hơn.</p>
             <div className="public-about-values">
-              <div><ShieldCheck/><strong>Minh bạch</strong><span>Dữ liệu dự án rõ ràng</span></div>
-              <div><CircuitBoard/><strong>Thông minh</strong><span>AI hỗ trợ khai thác tri thức</span></div>
+              <div><ShieldCheck/><strong>Minh bạch</strong><span>Con số đi cùng dự án nguồn</span></div>
+              <div><CircuitBoard/><strong>Dữ liệu hóa</strong><span>Data Center đồng bộ toàn hệ thống</span></div>
               <div><Users/><strong>Kết nối</strong><span>Khách hàng, đối tác, nội bộ</span></div>
             </div>
             <div className="public-contact-card">
@@ -135,33 +155,7 @@ export default function HomePage() {
       </section>
 
       <section className="public-statement">
-        <div className="public-container"><span>LICOGI 18.3 INDUSTRIAL CONSTRUCTION OPERATING SYSTEM</span><h2>Biến dữ liệu dự án thành lợi thế cạnh tranh.</h2><p>Một nguồn dữ liệu, hai góc nhìn: trải nghiệm công khai thuyết phục khách hàng và bản đồ quản trị hỗ trợ điều hành nội bộ.</p></div>
-      </section>
-
-      <section id="ban-do" className="public-section public-map-section">
-        <div className="public-container">
-          <div className="public-section-heading public-section-heading-light">
-            <div><span className="public-kicker public-kicker-light"><MapPinned size={14}/> Bản đồ GIS</span><h2>Dự án hiện lên ngay sau khi import dữ liệu</h2></div>
-            <p>Mỗi marker có ký hiệu theo ngành hàng và màu theo trạng thái. Dữ liệu được dùng đồng thời cho trang chủ và trang quản trị.</p>
-          </div>
-          <PublicProjectMap />
-        </div>
-      </section>
-
-      <section id="video" className="public-section public-video-section">
-        <div className="public-container public-video-grid">
-          <div className="public-video-copy">
-            <span className="public-kicker"><Play size={14}/> Video năng lực</span>
-            <h2>Kể câu chuyện công trình bằng hình ảnh chuyển động</h2>
-            <p>Khu vực video giới thiệu công trường, quy trình thi công, thiết bị và những dấu mốc dự án. Có thể thay tệp mẫu bằng video doanh nghiệp thực tế mà không đổi bố cục trang.</p>
-            <ul><li><CheckCircle2/> Video giới thiệu thương hiệu</li><li><CheckCircle2/> Nhật ký công trường theo dự án</li><li><CheckCircle2/> Hình ảnh trước – trong – sau thi công</li></ul>
-            <a href="#tin-tuc" className="public-text-link">Xem hoạt động mới nhất <ArrowRight size={16}/></a>
-          </div>
-          <div className="public-video-player">
-            <video controls poster="/media/hero-construction.svg" preload="metadata"><source src="/videos/licogi183-digital-intro.mp4" type="video/mp4"/></video>
-            <span className="public-video-label"><i/> LICOGI 18.3 · DIGITAL INTRO</span>
-          </div>
-        </div>
+        <div className="public-container"><span>LICOGI 18.3 · DATA-DRIVEN CONSTRUCTION CAPABILITY</span><h2>Từ hồ sơ năng lực tĩnh thành một hệ thống chứng minh năng lực.</h2><p>Một nguồn dữ liệu được dùng để giới thiệu quy mô ra bên ngoài và đồng thời hỗ trợ quản trị dự án bên trong doanh nghiệp.</p></div>
       </section>
 
       <section id="tin-tuc" className="public-section public-news">

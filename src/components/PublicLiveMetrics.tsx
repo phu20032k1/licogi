@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CircuitBoard, MapPin, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Globe2, MapPin, PanelsTopLeft } from "lucide-react";
 
-type ProjectRow = { status: "ongoing" | "completed" | "warranty"; province: string };
+type ProjectRow = {
+  status: "ongoing" | "completed" | "warranty";
+  province: string;
+  projectCountry?: string;
+};
 
 export default function PublicLiveMetrics() {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
@@ -19,28 +23,19 @@ export default function PublicLiveMetrics() {
     return () => controller.abort();
   }, []);
 
-  const metrics = useMemo(() => {
-    const total = projects.length;
-    const ongoing = projects.filter((project) => project.status === "ongoing").length;
-    const completed = projects.filter((project) => project.status === "completed").length;
-    const warranty = projects.filter((project) => project.status === "warranty").length;
-    const provinces = new Set(projects.map((project) => project.province).filter(Boolean)).size;
-    const percent = (value: number) => total ? Math.round((value / total) * 100) : 0;
-    return { total, ongoing, completed, warranty, provinces, percent };
-  }, [projects]);
+  const metrics = useMemo(() => ({
+    total: projects.length,
+    provinces: new Set(projects.map((project) => project.province).filter(Boolean)).size,
+    countries: new Set(projects.map((project) => project.projectCountry || "Việt Nam").filter(Boolean)).size,
+    completed: projects.filter((project) => project.status === "completed").length,
+  }), [projects]);
 
   return (
-    <div className="public-hero-dashboard" aria-live="polite">
-      <div className="public-dashboard-head"><span><i /> Dữ liệu dự án</span><b>{loaded ? "LIVE" : "SYNC"}</b></div>
-      <div className="public-dashboard-number"><strong>{loaded ? metrics.total : "—"}</strong><span>Dự án đang có<br/>trong hệ thống dữ liệu</span></div>
-      <div className="public-dashboard-bars">
-        <div><span>Đang thi công · {metrics.ongoing}</span><b>{metrics.percent(metrics.ongoing)}%</b><i><em style={{ width: `${metrics.percent(metrics.ongoing)}%` }} /></i></div>
-        <div><span>Đã hoàn thành · {metrics.completed}</span><b>{metrics.percent(metrics.completed)}%</b><i><em style={{ width: `${metrics.percent(metrics.completed)}%` }} /></i></div>
-        <div><span>Đang bảo hành · {metrics.warranty}</span><b>{metrics.percent(metrics.warranty)}%</b><i><em style={{ width: `${metrics.percent(metrics.warranty)}%` }} /></i></div>
-      </div>
-      <div className="public-dashboard-modules">
-        <span><MapPin /> {metrics.provinces} tỉnh/thành</span><span><CircuitBoard /> Data Center</span><span><ShieldCheck /> GIS đồng bộ</span>
-      </div>
+    <div className="public-live-metrics" aria-live="polite">
+      <div><PanelsTopLeft /><strong>{loaded ? metrics.total : "—"}</strong><span>Dự án</span></div>
+      <div><MapPin /><strong>{loaded ? metrics.provinces : "—"}</strong><span>Tỉnh / thành</span></div>
+      <div><Globe2 /><strong>{loaded ? metrics.countries : "—"}</strong><span>Quốc gia dự án</span></div>
+      <div><CheckCircle2 /><strong>{loaded ? metrics.completed : "—"}</strong><span>Đã hoàn thành</span></div>
     </div>
   );
 }
