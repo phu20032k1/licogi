@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../../../lib/prisma";
+import { normalizeProvinceName } from "../../../../data/projects";
 import { normalizeProjectStatus, normalizeProjectType, resolveProvinceCoordinates } from "../../../../lib/projectMapVisuals";
 
 const PUBLIC_CACHE = "public, s-maxage=30, stale-while-revalidate=300";
@@ -32,7 +33,7 @@ export async function GET() {
 
     if (!organization) {
       return NextResponse.json(
-        { ok: true, total: 0, projects: [], generatedAt: new Date().toISOString() },
+        { ok: true, total: 0, projects: [], generatedAt: new Date().toISOString(), administrativeModel: "34 tỉnh/thành" },
         { headers: { "Cache-Control": PUBLIC_CACHE } },
       );
     }
@@ -78,8 +79,9 @@ export async function GET() {
     });
 
     const projects = rows.map((row, index) => {
-      const province = row.province || metadataValue(row.metadata, "province") || "Hà Nội";
-      const fallback = resolveProvinceCoordinates(province);
+      const legacyProvince = row.province || metadataValue(row.metadata, "province") || "Hà Nội";
+      const province = normalizeProvinceName(legacyProvince);
+      const fallback = resolveProvinceCoordinates(legacyProvince);
       const metadataLat = Number(metadataValue(row.metadata, "lat"));
       const metadataLng = Number(metadataValue(row.metadata, "lng"));
       const lat = validCoordinate(row.lat, -90, 90)
@@ -124,6 +126,7 @@ export async function GET() {
         investorCountry: row.customer?.country || firstMetadataValue(row.metadata, ["investor_country", "investorCountry"]) || "",
         projectCountry,
         province,
+        legacyProvince: province !== legacyProvince ? legacyProvince : "",
         contractValueVnd,
         valueRange: row.valueRange || firstMetadataValue(row.metadata, ["value_range", "valueRange"]) || "Chưa cập nhật",
         constructionArea: row.constructionArea || firstMetadataValue(row.metadata, ["construction_area", "constructionArea"]),
@@ -150,7 +153,7 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      { ok: true, total: projects.length, projects, generatedAt: new Date().toISOString() },
+      { ok: true, total: projects.length, projects, generatedAt: new Date().toISOString(), administrativeModel: "34 tỉnh/thành" },
       {
         headers: {
           "Cache-Control": PUBLIC_CACHE,
