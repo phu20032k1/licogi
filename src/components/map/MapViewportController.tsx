@@ -36,6 +36,15 @@ export default function MapViewportController({
     const invalidate = () => map.invalidateSize({ animate: false });
     const frame = window.requestAnimationFrame(invalidate);
     const timer = window.setTimeout(invalidate, 180);
+
+    // Public map used to disable wheel zoom. Enable it explicitly here so both
+    // mouse-wheel and trackpad zoom work even when MapContainer was initialized
+    // with scrollWheelZoom={false}.
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoom.enable();
+    map.getContainer().setAttribute("title", "Lăn chuột hoặc dùng bàn di chuột để phóng to, thu nhỏ bản đồ");
+
     window.addEventListener("resize", invalidate);
     return () => {
       window.cancelAnimationFrame(frame);

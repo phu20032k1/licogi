@@ -5,6 +5,7 @@ import "./globals.css";
 import "./production.css";
 import "./map-professional.css";
 import "./home-overview.css";
+import "./vietnamese-typography.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
