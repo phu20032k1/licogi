@@ -2,6 +2,7 @@ export type ProjectStatus = "completed" | "ongoing" | "warranty";
 
 export type ProjectType =
   | "Công nghiệp"
+  | "Nông nghiệp"
   | "Dân dụng"
   | "Hạ tầng"
   | "Giao thông"
@@ -55,6 +56,7 @@ export type Project = {
 
 export const projectTypes: ProjectType[] = [
   "Công nghiệp",
+  "Nông nghiệp",
   "Dân dụng",
   "Hạ tầng",
   "Giao thông",
