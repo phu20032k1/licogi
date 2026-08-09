@@ -2,17 +2,15 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 import { systemAccounts } from "../../data/dataCenter";
-import { saveSession, UserSession } from "../../lib/authSession";
+import { refreshServerSession, saveSession, UserSession } from "../../lib/authSession";
 import { roleDefaultRoute } from "../../lib/rbac";
 
 const demoAccount = systemAccounts.find((account) => account.email === "admin@licogi183.vn") ?? systemAccounts[0];
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +25,8 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        cache: "no-store",
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
       const data = await response.json();
@@ -35,14 +35,20 @@ export default function LoginPage() {
       const user = data.user as UserSession;
       saveSession(user);
 
+      // Confirm the HttpOnly server session before leaving the auth page. This avoids
+      // a client navigation racing the Set-Cookie response and showing stale auth UI.
+      const verifiedSession = await refreshServerSession();
+      if (!verifiedSession) throw new Error("Phiên đăng nhập chưa sẵn sàng. Vui lòng thử lại.");
+
       const requested = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
       const safeRequested = requested && requested.startsWith("/") && !requested.startsWith("//") ? requested : null;
       const target = data.mustChangePassword
         ? "/change-password"
-        : safeRequested || data.redirectTo || roleDefaultRoute(user);
+        : safeRequested || data.redirectTo || roleDefaultRoute(verifiedSession);
 
-      router.replace(target);
-      router.refresh();
+      // A document navigation is intentional here: it gives protected Server
+      // Components/middleware a fresh request carrying the new session cookie.
+      window.location.replace(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không đăng nhập được.");
     } finally {

@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
-import { saveSession, UserSession } from "../../lib/authSession";
+import { refreshServerSession, saveSession, UserSession } from "../../lib/authSession";
 import { roleDefaultRoute } from "../../lib/rbac";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,6 +30,8 @@ export default function RegisterPage() {
       const registerResponse = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        cache: "no-store",
         body: JSON.stringify({ name, email, password }),
       });
       const registerData = await registerResponse.json();
@@ -40,6 +40,8 @@ export default function RegisterPage() {
       const loginResponse = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        cache: "no-store",
         body: JSON.stringify({ email, password }),
       });
       const loginData = await loginResponse.json();
@@ -47,8 +49,14 @@ export default function RegisterPage() {
 
       const user = loginData.user as UserSession;
       saveSession(user);
-      router.replace(loginData.redirectTo || roleDefaultRoute(user));
-      router.refresh();
+
+      const verifiedSession = await refreshServerSession();
+      if (!verifiedSession) throw new Error("Tài khoản đã tạo nhưng phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại.");
+
+      const target = loginData.mustChangePassword
+        ? "/change-password"
+        : loginData.redirectTo || roleDefaultRoute(verifiedSession);
+      window.location.replace(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tạo được tài khoản.");
     } finally {

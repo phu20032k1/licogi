@@ -7,6 +7,8 @@ import Topbar from "./Topbar";
 import { readSession, refreshServerSession } from "../lib/authSession";
 import { canViewModule, moduleFromPath, roleDefaultRoute } from "../lib/rbac";
 
+type SyncSource = "initial" | "local-auth" | "storage";
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -19,7 +21,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isChangePasswordPage = pathname === "/change-password";
 
   useEffect(() => {
-    const sync = () => {
+    const sync = (source: SyncSource = "initial") => {
       if (isPublicPage) {
         setChecked(true);
         setLoggedIn(false);
@@ -29,6 +31,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       const session = readSession();
       setLoggedIn(Boolean(session));
       setChecked(true);
+
+      // Login/register/logout actions own their navigation. The local auth event is
+      // only for synchronizing visible client state. Redirecting here as well used
+      // to race router.replace/router.refresh and could leave the previous RSC tree
+      // mounted until a manual browser refresh.
+      if (source === "local-auth") return;
 
       if (!session && !isAuthPage) {
         void refreshServerSession().then((serverSession) => {
@@ -49,12 +57,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }
     };
 
-    sync();
-    window.addEventListener("licogi-auth-updated", sync);
-    window.addEventListener("storage", sync);
+    sync("initial");
+    const onLocalAuth = () => sync("local-auth");
+    const onStorage = () => sync("storage");
+    window.addEventListener("licogi-auth-updated", onLocalAuth);
+    window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener("licogi-auth-updated", sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("licogi-auth-updated", onLocalAuth);
+      window.removeEventListener("storage", onStorage);
     };
   }, [isPublicPage, isAuthPage, isChangePasswordPage, pathname, router]);
 
