@@ -5,10 +5,28 @@ export type MarkerVisual = {
   softColor: string;
   label: string;
   typeLabel: string;
+  statusColor: string;
+  statusSymbol: string;
+};
+
+export const projectTypeVisuals: Record<ProjectType, { color: string; softColor: string; label: string }> = {
+  "Công nghiệp": { color: "#ea580c", softColor: "#ffedd5", label: "CN" },
+  "Nông nghiệp": { color: "#16a34a", softColor: "#dcfce7", label: "NN" },
+  "Dân dụng": { color: "#7c3aed", softColor: "#ede9fe", label: "DD" },
+  "Hạ tầng": { color: "#2563eb", softColor: "#dbeafe", label: "HT" },
+  "Giao thông": { color: "#0891b2", softColor: "#cffafe", label: "GT" },
+  "Điện năng": { color: "#ca8a04", softColor: "#fef9c3", label: "ĐN" },
+};
+
+export const projectStatusVisuals: Record<ProjectStatus, { color: string; symbol: string }> = {
+  completed: { color: "#059669", symbol: "✓" },
+  ongoing: { color: "#f97316", symbol: "•" },
+  warranty: { color: "#0284c7", symbol: "B" },
 };
 
 const TYPE_KEYWORDS: Array<{ type: ProjectType; keywords: string[] }> = [
   { type: "Công nghiệp", keywords: ["công nghiệp", "industrial", "nhà máy", "factory", "kho", "warehouse", "kcn"] },
+  { type: "Nông nghiệp", keywords: ["nông nghiệp", "agriculture", "agri", "nông trại", "farm", "chăn nuôi", "trang trại", "nhà kính", "greenhouse"] },
   { type: "Dân dụng", keywords: ["dân dụng", "civil", "chung cư", "residential", "khách sạn", "hotel", "đô thị"] },
   { type: "Hạ tầng", keywords: ["hạ tầng", "infrastructure", "cấp thoát", "water", "khu công nghiệp", "logistics"] },
   { type: "Giao thông", keywords: ["giao thông", "transport", "đường", "road", "cầu", "bridge", "cao tốc"] },
@@ -44,20 +62,20 @@ export function resolveProvinceCoordinates(province?: string | null) {
 }
 
 export function getMarkerVisual(type: ProjectType, status: ProjectStatus): MarkerVisual {
-  const color = status === "completed" ? "#059669" : status === "warranty" ? "#0284c7" : "#ea580c";
-  const softColor = status === "completed" ? "#d1fae5" : status === "warranty" ? "#e0f2fe" : "#ffedd5";
-  const labels: Record<ProjectType, string> = {
-    "Công nghiệp": "CN",
-    "Dân dụng": "DD",
-    "Hạ tầng": "HT",
-    "Giao thông": "GT",
-    "Điện năng": "ĐN",
+  const typeVisual = projectTypeVisuals[type];
+  const statusVisual = projectStatusVisuals[status];
+  return {
+    color: typeVisual.color,
+    softColor: typeVisual.softColor,
+    label: typeVisual.label,
+    typeLabel: type,
+    statusColor: statusVisual.color,
+    statusSymbol: statusVisual.symbol,
   };
-  return { color, softColor, label: labels[type], typeLabel: type };
 }
 
 export function markerHtml(type: ProjectType, status: ProjectStatus, selected = false) {
   const visual = getMarkerVisual(type, status);
-  const scale = selected ? 1.15 : 1;
-  return `<div class="licogi-map-marker${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};transform:translate(-50%,-100%) scale(${scale})"><span>${visual.label}</span><i></i></div>`;
+  const scale = selected ? 1.16 : 1;
+  return `<div class="licogi-map-marker licogi-waterdrop-marker status-${status}${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};--status-color:${visual.statusColor};transform:translate(-50%,-100%) scale(${scale})" title="${visual.typeLabel}"><span class="licogi-waterdrop-body"><b>${visual.label}</b></span><em class="licogi-marker-status" aria-hidden="true">${visual.statusSymbol}</em></div>`;
 }
