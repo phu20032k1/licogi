@@ -54,6 +54,7 @@ type PublicProject = {
   investorCountry?: string;
   projectCountry?: string;
   province: string;
+  legacyProvince?: string;
   contractValueVnd?: number | null;
   valueRange: string;
   constructionArea?: string;
@@ -116,6 +117,10 @@ function InfoRow({ label, value, note }: { label: string; value?: string | numbe
   return <div className="public-project-info-row"><span>{label}</span><strong>{value}</strong>{note ? <small>{note}</small> : null}</div>;
 }
 
+function RelatedItem({ value = 0, label, icon }: { value?: number; label: string; icon: React.ReactNode }) {
+  return <div>{icon}<strong>{value}</strong><span>{label}</span></div>;
+}
+
 export default function PublicProjectMap() {
   const [projects, setProjects] = useState<PublicProject[]>([]);
   const [search, setSearch] = useState("");
@@ -128,6 +133,7 @@ export default function PublicProjectMap() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
@@ -178,6 +184,7 @@ export default function PublicProjectMap() {
       const haystack = [
         project.name,
         project.province,
+        project.legacyProvince || "",
         project.projectCountry || "Việt Nam",
         project.investor,
         project.customerCode || "",
@@ -275,7 +282,7 @@ export default function PublicProjectMap() {
       </div>
 
       <div className="public-map-controls">
-        <label aria-label="Tìm dự án"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm dự án, địa phương, chủ đầu tư, hợp đồng..." /></label>
+        <label aria-label="Tìm dự án"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm dự án, tỉnh mới/cũ, chủ đầu tư, hợp đồng..." /></label>
         <select aria-label="Lọc lĩnh vực" value={type} onChange={(event) => setType(event.target.value as "all" | ProjectType)}><option value="all">Tất cả lĩnh vực</option>{projectTypes.map((item) => <option key={item} value={item}>{item}</option>)}</select>
         <select aria-label="Lọc trạng thái" value={status} onChange={(event) => setStatus(event.target.value as "all" | ProjectStatus)}><option value="all">Tất cả trạng thái</option><option value="ongoing">Đang thi công</option><option value="completed">Hoàn thành</option><option value="warranty">Bảo hành</option></select>
       </div>
@@ -289,9 +296,10 @@ export default function PublicProjectMap() {
 
       <div className="public-map-workspace">
         <div className="public-map-canvas">
-          <div className="public-map-zoom-hint"><CircleDot size={12} /> Lăn chuột để phóng to / thu nhỏ</div>
-          <div className="public-map-overlay-legend" aria-label="Chú thích bản đồ">
-            <div className="public-map-overlay-title"><Layers3 size={13} /><span>Chú thích</span></div>
+          <div className="public-map-zoom-hint"><CircleDot size={12} /> Lăn chuột để zoom</div>
+          <button type="button" className={`public-map-legend-toggle ${legendOpen ? "is-open" : ""}`} onClick={() => setLegendOpen((value) => !value)}><Layers3 size={13} /> Chú thích</button>
+          {legendOpen ? <div className="public-map-overlay-legend" aria-label="Chú thích bản đồ">
+            <div className="public-map-overlay-title"><Layers3 size={13} /><span>Màu theo lĩnh vực</span><button type="button" onClick={() => setLegendOpen(false)} aria-label="Đóng chú thích"><X size={12} /></button></div>
             <div className="public-map-overlay-types">
               {projectTypes.filter((projectType) => typeCounts[projectType] > 0).map((projectType) => {
                 const visual = projectTypeVisuals[projectType];
@@ -306,9 +314,9 @@ export default function PublicProjectMap() {
                 return <button key={projectStatus} type="button" onClick={() => toggleStatus(projectStatus)} className={hidden ? "is-muted" : ""}><i style={{ background: visual.color }}>{visual.symbol === "•" ? "" : visual.symbol}</i><span>{statusLabels[projectStatus]}</span></button>;
               })}
             </div>
-          </div>
+          </div> : null}
 
-          <MapContainer center={[16.15, 106.2]} zoom={5.4} minZoom={3} maxZoom={18} zoomSnap={0.25} zoomDelta={0.5} wheelPxPerZoomLevel={80} scrollWheelZoom preferCanvas worldCopyJump className={expanded ? "h-[78vh] w-full" : "public-map-leaflet-size w-full"}>
+          <MapContainer center={[16.15, 106.4]} zoom={5.45} minZoom={3} maxZoom={18} zoomSnap={0.25} zoomDelta={0.5} wheelPxPerZoomLevel={80} scrollWheelZoom preferCanvas worldCopyJump className={expanded ? "h-[78vh] w-full" : "public-map-leaflet-size w-full"}>
             <TileLayer attribution={siteConfig.map.attribution} url={siteConfig.map.tileUrl} />
             <ScaleControl position="bottomleft" imperial={false} metric />
             <MapViewportController
@@ -325,10 +333,10 @@ export default function PublicProjectMap() {
               return <Marker
                 key={project.id}
                 position={[project.lat, project.lng]}
-                icon={L.divIcon({ html: markerHtml(project.type, project.status, selected), className: "licogi-div-icon", iconSize: selected ? [52, 62] : [44, 54], iconAnchor: selected ? [26, 60] : [22, 52], popupAnchor: [0, -46] })}
+                icon={L.divIcon({ html: markerHtml(project.type, project.status, selected), className: "licogi-div-icon", iconSize: selected ? [50, 60] : [42, 52], iconAnchor: selected ? [25, 58] : [21, 50], popupAnchor: [0, -44] })}
                 eventHandlers={{ click: () => selectProject(project) }}
               >
-                <Tooltip direction="top" offset={[0, -40]} opacity={0.98}>
+                <Tooltip direction="top" offset={[0, -38]} opacity={0.98}>
                   <div className="public-map-tooltip"><span style={{ background: visual.color }} /><b>{project.name}</b><small>{project.province} · {project.type}</small></div>
                 </Tooltip>
                 <Popup minWidth={270} maxWidth={330}>
@@ -362,20 +370,32 @@ export default function PublicProjectMap() {
                 <span>{selectedProject.code} · {selectedProject.type}</span>
                 <h4>{selectedProject.name}</h4>
                 <p><MapPin size={13} /> {selectedProject.province}, {selectedProject.projectCountry || "Việt Nam"}</p>
+                {selectedProject.legacyProvince ? <small className="public-project-legacy-province">Dữ liệu lịch sử: {selectedProject.legacyProvince} → {selectedProject.province}</small> : null}
               </div>
 
-              <div className="public-project-key-metrics">
+              <div className="public-project-key-metrics public-project-key-metrics-four">
                 <div><small>Giá trị hợp đồng</small><strong>{formatContractValue(selectedProject.contractValueVnd, selectedProject.valueRange)}</strong></div>
-                <div><small>Tiến độ</small><strong>{selectedProject.progress}%</strong><span><i style={{ width: `${selectedProject.progress}%` }} /></span></div>
-                <div><small>Sức khỏe dữ liệu</small><strong>{selectedProject.healthScore ?? "—"}<em>/100</em></strong><span>{selectedProject.dataCompleteness ?? 0}% dữ liệu chính đã có</span></div>
+                <div><small>Tiến độ</small><strong>{selectedProject.progress}%</strong><span className="is-progress"><i style={{ width: `${selectedProject.progress}%` }} /></span></div>
+                <div><small>Sức khỏe dự án</small><strong>{selectedProject.healthScore ?? "—"}<em>/100</em></strong></div>
+                <div><small>Độ đầy đủ dữ liệu</small><strong>{selectedProject.dataCompleteness ?? 0}%</strong></div>
               </div>
+
+              <section className="public-project-info-section">
+                <h5><Globe2 size={14} /> Nhận diện dự án</h5>
+                <InfoRow label="Mã dự án" value={selectedProject.code} />
+                <InfoRow label="Lĩnh vực" value={selectedProject.rawType || selectedProject.type} />
+                <InfoRow label="Tỉnh/thành hiện hành" value={selectedProject.province} note={selectedProject.legacyProvince ? `Tên trong dữ liệu cũ: ${selectedProject.legacyProvince}` : undefined} />
+                <InfoRow label="Quốc gia dự án" value={selectedProject.projectCountry || "Việt Nam"} />
+                <InfoRow label="Tọa độ" value={`${selectedProject.lat.toFixed(5)}, ${selectedProject.lng.toFixed(5)}`} />
+              </section>
 
               <section className="public-project-info-section">
                 <h5><Building2 size={14} /> Chủ đầu tư & hợp đồng</h5>
                 <InfoRow label="Chủ đầu tư" value={selectedProject.investor} note={[selectedProject.customerCode, selectedProject.customerIndustry, selectedProject.investorCountry].filter(Boolean).join(" · ")} />
                 <InfoRow label="Số hợp đồng" value={selectedProject.contractNumber} />
                 <InfoRow label="Gói thầu" value={selectedProject.packageName} />
-                <InfoRow label="Vai trò" value={selectedProject.contractorRole} />
+                <InfoRow label="Vai trò nhà thầu" value={selectedProject.contractorRole} />
+                <InfoRow label="Giá trị" value={formatContractValue(selectedProject.contractValueVnd, selectedProject.valueRange)} />
               </section>
 
               <section className="public-project-info-section">
@@ -387,20 +407,26 @@ export default function PublicProjectMap() {
               </section>
 
               <section className="public-project-info-section">
-                <h5><CalendarDays size={14} /> Tiến độ & dữ liệu</h5>
+                <h5><CalendarDays size={14} /> Tiến độ & quản trị</h5>
+                <InfoRow label="Trạng thái" value={statusLabels[selectedProject.status]} />
+                <InfoRow label="Tiến độ" value={`${selectedProject.progress}%`} />
                 <InfoRow label="Thời gian" value={selectedProject.startDate || selectedProject.endDate ? `${formatDate(selectedProject.startDate)} — ${formatDate(selectedProject.endDate)}` : ""} />
                 <InfoRow label="Mức rủi ro" value={riskLabel(selectedProject.risk)} />
                 <InfoRow label="Nguồn dữ liệu" value={selectedProject.source} />
+                <InfoRow label="Ngày tạo" value={formatDate(selectedProject.createdAt)} />
                 <InfoRow label="Cập nhật gần nhất" value={formatDate(selectedProject.updatedAt)} />
               </section>
 
               {relatedTotal > 0 ? <section className="public-project-info-section">
                 <h5><Activity size={14} /> Dữ liệu liên quan</h5>
-                <div className="public-project-related-grid">
-                  <div><FileText /><strong>{related.documents || 0}</strong><span>Hồ sơ</span></div>
-                  <div><Wrench /><strong>{related.equipment || 0}</strong><span>Thiết bị</span></div>
-                  <div><Check /><strong>{related.tasks || 0}</strong><span>Công việc</span></div>
-                  <div><ShieldCheck /><strong>{related.warranties || 0}</strong><span>Bảo hành</span></div>
+                <div className="public-project-related-grid public-project-related-grid-seven">
+                  <RelatedItem icon={<Building2 />} value={related.contracts} label="Hợp đồng" />
+                  <RelatedItem icon={<FileText />} value={related.documents} label="Hồ sơ" />
+                  <RelatedItem icon={<Wrench />} value={related.equipment} label="Thiết bị" />
+                  <RelatedItem icon={<Check />} value={related.tasks} label="Công việc" />
+                  <RelatedItem icon={<ShieldCheck />} value={related.warranties} label="Bảo hành" />
+                  <RelatedItem icon={<CalendarDays />} value={related.dailyReports} label="Nhật ký" />
+                  <RelatedItem icon={<Layers3 />} value={related.bimModels} label="BIM" />
                 </div>
               </section> : null}
 
@@ -408,16 +434,16 @@ export default function PublicProjectMap() {
             </div>
             <div className="public-project-sidepanel-actions">
               <a href={mapHref} target="_blank" rel="noreferrer"><MapPin size={14} /> Mở vị trí</a>
-              <button type="button" onClick={() => { setSearch(selectedProject.code); setType("all"); setStatus("all"); }}><Search size={14} /> Lọc dự án này</button>
+              <button type="button" onClick={() => { setSearch(selectedProject.code); setType("all"); setStatus("all"); }}><Search size={14} /> Chỉ xem dự án này</button>
             </div>
           </> : <>
             <div className="public-project-sidepanel-head"><strong>Dự án đang hiển thị</strong><span>{filtered.length}</span></div>
             <div className="public-project-list-panel">
-              {filtered.slice(0, 50).map((project) => {
+              {filtered.slice(0, 80).map((project) => {
                 const visual = projectTypeVisuals[project.type];
                 return <button key={project.id} type="button" onClick={() => selectProject(project)}>
                   <i style={{ background: visual.color }} />
-                  <span><b>{project.name}</b><small>{project.province} · {project.type}</small></span>
+                  <span><b>{project.name}</b><small>{project.province} · {project.type} · {formatContractValue(project.contractValueVnd, project.valueRange)}</small></span>
                   <em>{project.status === "completed" ? <Check size={13} /> : `${project.progress}%`}</em>
                   <ChevronRight size={14} />
                 </button>;

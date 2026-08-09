@@ -1,7 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
-
 :root {
-  --font-vn-sans: "Be Vietnam Pro", "Aptos", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-vn-sans: var(--font-licogi), "Noto Sans", "Segoe UI", Arial, sans-serif;
   --font-vn-mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
@@ -17,7 +15,7 @@ textarea {
 }
 
 body {
-  line-height: 1.55;
+  line-height: 1.58;
   font-weight: 400;
   font-feature-settings: "kern" 1, "liga" 1;
   text-rendering: optimizeLegibility;
@@ -63,21 +61,21 @@ nav,
 .public-site h5,
 .public-site h6 {
   font-weight: 700;
-  letter-spacing: -.015em;
+  letter-spacing: -.018em;
   line-height: 1.18;
   text-wrap: balance;
 }
 
 .public-site-v2 .public-hero h1 {
   font-weight: 700;
-  letter-spacing: -.022em;
-  line-height: 1.08;
+  letter-spacing: -.032em;
+  line-height: 1.04;
 }
 
 .public-site-v2 .public-kicker,
 .public-site-v2 .public-kicker-light {
   font-weight: 600;
-  letter-spacing: .015em;
+  letter-spacing: .01em;
   text-transform: none;
 }
 
@@ -96,7 +94,7 @@ nav,
 .public-site-v2 .public-statement h2,
 .public-site-v2 .public-cta h2 {
   font-weight: 700;
-  letter-spacing: -.018em;
+  letter-spacing: -.024em;
 }
 
 .public-site-v2 .public-sector-card h3,
@@ -105,7 +103,7 @@ nav,
 .public-site-v2 .public-scale-projects-head h3,
 .public-site-v2 .public-project-title-block h4 {
   font-weight: 600;
-  letter-spacing: -.008em;
+  letter-spacing: -.012em;
 }
 
 .public-site-v2 p,
@@ -123,7 +121,8 @@ nav,
 
 .public-site-v2 .public-live-total > strong,
 .public-site-v2 .public-live-progress-ring strong,
-.public-site-v2 .public-project-key-metrics strong {
+.public-site-v2 .public-project-key-metrics strong,
+.public-site-v2 .public-scale-kpis strong {
   font-weight: 700;
 }
 
