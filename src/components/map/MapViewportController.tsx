@@ -9,14 +9,25 @@ type MapPoint = { lat: number; lng: number };
 type Props = {
   points: MapPoint[];
   selected?: MapPoint | null;
+  focusVietnam?: boolean;
   maxZoom?: number;
   selectedZoom?: number;
   singlePointZoom?: number;
 };
 
 const VIETNAM_BOUNDS = L.latLngBounds([
-  [8.05, 102.0],
-  [23.6, 109.75],
+  [8.1, 102.1],
+  [23.45, 109.65],
+]);
+
+const VIETNAM_NAV_BOUNDS = L.latLngBounds([
+  [6.4, 100.2],
+  [25.4, 111.5],
+]);
+
+const WORLD_BOUNDS = L.latLngBounds([
+  [-84, -179.5],
+  [84, 179.5],
 ]);
 
 function validPoint(point: MapPoint) {
@@ -26,6 +37,7 @@ function validPoint(point: MapPoint) {
 export default function MapViewportController({
   points,
   selected,
+  focusVietnam = false,
   maxZoom = 7,
   selectedZoom = 6.5,
   singlePointZoom = 6,
@@ -37,9 +49,6 @@ export default function MapViewportController({
     const frame = window.requestAnimationFrame(invalidate);
     const timer = window.setTimeout(invalidate, 180);
 
-    // Public map used to disable wheel zoom. Enable it explicitly here so both
-    // mouse-wheel and trackpad zoom work even when MapContainer was initialized
-    // with scrollWheelZoom={false}.
     map.scrollWheelZoom.enable();
     map.doubleClickZoom.enable();
     map.touchZoom.enable();
@@ -55,26 +64,25 @@ export default function MapViewportController({
 
   useEffect(() => {
     map.stop();
+    map.setMaxBounds(focusVietnam ? VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
+    map.setMinZoom(focusVietnam ? 4.25 : 3);
 
     if (selected && validPoint(selected)) {
       map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), {
-        duration: 0.45,
-        easeLinearity: 0.3,
+        duration: 0.38,
+        easeLinearity: 0.28,
       });
       return;
     }
 
-    const mapShell = map.getContainer().closest(".public-project-map-shell");
-    const publicOverviewMode = Boolean(mapShell && !mapShell.querySelector(".public-map-reset"));
-
-    if (publicOverviewMode) {
+    if (focusVietnam) {
       const size = map.getSize();
-      const horizontalPadding = Math.max(34, Math.min(80, Math.round(size.x * 0.06)));
-      const verticalPadding = Math.max(30, Math.min(62, Math.round(size.y * 0.055)));
+      const horizontalPadding = Math.max(18, Math.min(54, Math.round(size.x * 0.04)));
+      const verticalPadding = Math.max(18, Math.min(42, Math.round(size.y * 0.045)));
       map.fitBounds(VIETNAM_BOUNDS, {
         paddingTopLeft: [horizontalPadding, verticalPadding],
         paddingBottomRight: [horizontalPadding, verticalPadding],
-        maxZoom: 5.25,
+        maxZoom: 5.6,
         animate: false,
       });
       return;
@@ -82,32 +90,31 @@ export default function MapViewportController({
 
     const valid = points.filter(validPoint);
     if (!valid.length) {
-      map.setView([16.2, 106], 5, { animate: false });
+      map.setView([16.15, 106.2], 5.25, { animate: false });
       return;
     }
 
     if (valid.length === 1) {
       map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, singlePointZoom), {
-        duration: 0.4,
-        easeLinearity: 0.3,
+        duration: 0.34,
+        easeLinearity: 0.28,
       });
       return;
     }
 
-    const rawBounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number]));
-    const bounds = rawBounds.pad(0.14);
+    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(0.1);
     const size = map.getSize();
-    const horizontalPadding = Math.max(32, Math.min(72, Math.round(size.x * 0.055)));
-    const verticalPadding = Math.max(32, Math.min(64, Math.round(size.y * 0.07)));
+    const horizontalPadding = Math.max(22, Math.min(60, Math.round(size.x * 0.045)));
+    const verticalPadding = Math.max(22, Math.min(52, Math.round(size.y * 0.055)));
 
     map.fitBounds(bounds, {
       paddingTopLeft: [horizontalPadding, verticalPadding],
       paddingBottomRight: [horizontalPadding, verticalPadding],
       maxZoom,
       animate: true,
-      duration: 0.45,
+      duration: 0.38,
     });
-  }, [map, maxZoom, points, selected, selectedZoom, singlePointZoom]);
+  }, [focusVietnam, map, maxZoom, points, selected, selectedZoom, singlePointZoom]);
 
   return null;
 }
