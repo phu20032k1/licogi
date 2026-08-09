@@ -11,6 +11,14 @@ function metadataValue(metadata: Prisma.JsonValue | null, key: string) {
   return value === null || value === undefined ? "" : String(value);
 }
 
+function firstMetadataValue(metadata: Prisma.JsonValue | null, keys: string[]) {
+  for (const key of keys) {
+    const value = metadataValue(metadata, key);
+    if (value) return value;
+  }
+  return "";
+}
+
 function validCoordinate(value: number | null | undefined, min: number, max: number) {
   return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 }
@@ -38,11 +46,15 @@ export async function GET() {
         type: true,
         status: true,
         province: true,
+        contractValueVnd: true,
         valueRange: true,
+        constructionArea: true,
+        floorArea: true,
         scale: true,
         progress: true,
         lat: true,
         lng: true,
+        mapsUrl: true,
         metadata: true,
         updatedAt: true,
         customer: { select: { name: true, country: true } },
@@ -62,7 +74,9 @@ export async function GET() {
       const lng = validCoordinate(row.lng, -180, 180)
         ? row.lng as number
         : validCoordinate(metadataLng, -180, 180) ? metadataLng : fallback.lng;
-      const projectCountry = metadataValue(row.metadata, "project_country") || metadataValue(row.metadata, "projectCountry") || "Việt Nam";
+      const projectCountry = firstMetadataValue(row.metadata, ["project_country", "projectCountry", "country"]) || "Việt Nam";
+      const metadataContractValue = Number(firstMetadataValue(row.metadata, ["contract_value_vnd", "contractValueVnd", "contract_value"]));
+      const contractValueVnd = row.contractValueVnd ?? (Number.isFinite(metadataContractValue) && metadataContractValue > 0 ? metadataContractValue : null);
 
       return {
         id: row.id,
@@ -72,11 +86,18 @@ export async function GET() {
         type: normalizeProjectType(row.type),
         status: normalizeProjectStatus(row.status),
         investor: row.customer?.name || metadataValue(row.metadata, "investor") || "Chưa cập nhật",
-        investorCountry: row.customer?.country || metadataValue(row.metadata, "investor_country") || "",
+        investorCountry: row.customer?.country || firstMetadataValue(row.metadata, ["investor_country", "investorCountry"]) || "",
         projectCountry,
         province,
-        valueRange: row.valueRange || metadataValue(row.metadata, "value_range") || "Chưa cập nhật",
+        contractValueVnd,
+        valueRange: row.valueRange || firstMetadataValue(row.metadata, ["value_range", "valueRange"]) || "Chưa cập nhật",
+        constructionArea: row.constructionArea || firstMetadataValue(row.metadata, ["construction_area", "constructionArea"]),
+        floorArea: row.floorArea || firstMetadataValue(row.metadata, ["floor_area", "floorArea"]),
         scale: row.scale || metadataValue(row.metadata, "scale") || "",
+        contractorRole: firstMetadataValue(row.metadata, ["role", "contractor_role", "contractorRole"]),
+        startDate: firstMetadataValue(row.metadata, ["start_date", "startDate"]),
+        endDate: firstMetadataValue(row.metadata, ["end_date", "endDate"]),
+        mapsUrl: row.mapsUrl || firstMetadataValue(row.metadata, ["maps_url", "mapsUrl"]),
         progress: Math.max(0, Math.min(100, Number.isFinite(row.progress) ? row.progress : 0)),
         lat,
         lng,
