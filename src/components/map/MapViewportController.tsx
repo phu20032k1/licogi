@@ -65,7 +65,6 @@ export default function MapViewportController({
   useEffect(() => {
     map.stop();
     map.setMaxBounds(focusVietnam ? VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
-    map.options.maxBoundsViscosity = focusVietnam ? 0.88 : 0;
     map.setMinZoom(focusVietnam ? 4.55 : 3);
 
     if (selected && validPoint(selected)) {
