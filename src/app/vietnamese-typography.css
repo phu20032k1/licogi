@@ -1,7 +1,7 @@
-/* Vietnamese-first typography. Uses native/system fonts with full Vietnamese coverage. */
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
 
 :root {
-  --font-vn-sans: "Segoe UI Variable Text", "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-vn-sans: "Be Vietnam Pro", "Aptos", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-vn-mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
@@ -12,13 +12,17 @@ input,
 select,
 textarea {
   font-family: var(--font-vn-sans);
-  font-synthesis: none;
   font-kerning: normal;
+  font-synthesis: none;
 }
 
 body {
   line-height: 1.55;
+  font-weight: 400;
   font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 code,
@@ -28,11 +32,27 @@ samp {
   font-family: var(--font-vn-mono);
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b {
+  font-family: var(--font-vn-sans);
+}
+
 .public-site,
 .public-site button,
 .public-site input,
 .public-site select,
-.public-site textarea {
+.public-site textarea,
+main,
+aside,
+header,
+nav,
+[role="dialog"] {
   font-family: var(--font-vn-sans);
 }
 
@@ -42,30 +62,22 @@ samp {
 .public-site h4,
 .public-site h5,
 .public-site h6 {
-  font-family: var(--font-vn-sans);
-  font-weight: 750;
-  font-kerning: normal;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.18;
   text-wrap: balance;
 }
 
-.public-site p,
-.public-site li,
-.public-site span,
-.public-site a,
-.public-site button {
-  text-rendering: optimizeLegibility;
-}
-
-/* Reduce over-styled display typography and improve Vietnamese diacritic readability. */
 .public-site-v2 .public-hero h1 {
-  font-weight: 780;
-  letter-spacing: -.028em;
+  font-weight: 700;
+  letter-spacing: -.022em;
+  line-height: 1.08;
 }
 
 .public-site-v2 .public-kicker,
 .public-site-v2 .public-kicker-light {
-  font-weight: 650;
-  letter-spacing: .035em;
+  font-weight: 600;
+  letter-spacing: .015em;
   text-transform: none;
 }
 
@@ -73,38 +85,46 @@ samp {
 .public-site-v2 .public-primary-button,
 .public-site-v2 .public-secondary-button,
 .public-site-v2 .public-outline-button,
-.public-site-v2 .public-text-link {
-  font-weight: 650;
+.public-site-v2 .public-text-link,
+.public-site-v2 button {
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .public-site-v2 .public-section-heading h2,
 .public-site-v2 .public-about-copy h2,
 .public-site-v2 .public-statement h2,
 .public-site-v2 .public-cta h2 {
-  font-weight: 740;
-  letter-spacing: -.022em;
+  font-weight: 700;
+  letter-spacing: -.018em;
 }
 
 .public-site-v2 .public-sector-card h3,
 .public-site-v2 .public-news-card h3,
 .public-site-v2 .public-map-selected-head h4,
-.public-site-v2 .public-scale-projects-head h3 {
-  font-weight: 700;
-  letter-spacing: -.012em;
+.public-site-v2 .public-scale-projects-head h3,
+.public-site-v2 .public-project-title-block h4 {
+  font-weight: 600;
+  letter-spacing: -.008em;
+}
+
+.public-site-v2 p,
+.public-site-v2 li,
+.public-site-v2 span,
+.public-site-v2 a,
+.public-site-v2 small {
+  font-weight: 400;
 }
 
 .public-site-v2 strong,
 .public-site-v2 b {
-  font-family: inherit;
+  font-weight: 600;
 }
 
-/* Admin/application UI keeps the same Vietnamese-safe family without changing information density. */
-main,
-aside,
-header,
-nav,
-[role="dialog"] {
-  font-family: var(--font-vn-sans);
+.public-site-v2 .public-live-total > strong,
+.public-site-v2 .public-live-progress-ring strong,
+.public-site-v2 .public-project-key-metrics strong {
+  font-weight: 700;
 }
 
 @media (max-width: 640px) {
