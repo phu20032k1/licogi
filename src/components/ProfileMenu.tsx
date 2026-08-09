@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ChevronDown, ExternalLink, LayoutDashboard, LogOut, Settings, ShieldCheck, UsersRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { logoutSession, readSession, UserSession } from "../lib/authSession";
 import { canViewModule, roleDefaultRoute } from "../lib/rbac";
 
 export default function ProfileMenu() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<UserSession | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -40,8 +38,7 @@ export default function ProfileMenu() {
   async function signOut() {
     setOpen(false);
     await logoutSession();
-    router.replace("/login");
-    router.refresh();
+    window.location.replace("/login");
   }
 
   return <div ref={ref} className="relative">
