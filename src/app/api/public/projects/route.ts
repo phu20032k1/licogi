@@ -75,6 +75,8 @@ export async function GET() {
         ? row.lng as number
         : validCoordinate(metadataLng, -180, 180) ? metadataLng : fallback.lng;
       const projectCountry = firstMetadataValue(row.metadata, ["project_country", "projectCountry", "country"]) || "Việt Nam";
+      const metadataContractValue = Number(firstMetadataValue(row.metadata, ["contract_value_vnd", "contractValueVnd", "contract_value"]));
+      const contractValueVnd = row.contractValueVnd ?? (Number.isFinite(metadataContractValue) && metadataContractValue > 0 ? metadataContractValue : null);
 
       return {
         id: row.id,
@@ -87,7 +89,7 @@ export async function GET() {
         investorCountry: row.customer?.country || firstMetadataValue(row.metadata, ["investor_country", "investorCountry"]) || "",
         projectCountry,
         province,
-        contractValueVnd: row.contractValueVnd ?? Number(firstMetadataValue(row.metadata, ["contract_value_vnd", "contractValueVnd", "contract_value"])) || null,
+        contractValueVnd,
         valueRange: row.valueRange || firstMetadataValue(row.metadata, ["value_range", "valueRange"]) || "Chưa cập nhật",
         constructionArea: row.constructionArea || firstMetadataValue(row.metadata, ["construction_area", "constructionArea"]),
         floorArea: row.floorArea || firstMetadataValue(row.metadata, ["floor_area", "floorArea"]),
