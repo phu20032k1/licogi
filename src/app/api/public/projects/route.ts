@@ -62,6 +62,7 @@ export async function GET() {
       const lng = validCoordinate(row.lng, -180, 180)
         ? row.lng as number
         : validCoordinate(metadataLng, -180, 180) ? metadataLng : fallback.lng;
+      const projectCountry = metadataValue(row.metadata, "project_country") || metadataValue(row.metadata, "projectCountry") || "Việt Nam";
 
       return {
         id: row.id,
@@ -72,6 +73,7 @@ export async function GET() {
         status: normalizeProjectStatus(row.status),
         investor: row.customer?.name || metadataValue(row.metadata, "investor") || "Chưa cập nhật",
         investorCountry: row.customer?.country || metadataValue(row.metadata, "investor_country") || "",
+        projectCountry,
         province,
         valueRange: row.valueRange || metadataValue(row.metadata, "value_range") || "Chưa cập nhật",
         scale: row.scale || metadataValue(row.metadata, "scale") || "",
