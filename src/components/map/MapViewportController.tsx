@@ -14,6 +14,11 @@ type Props = {
   singlePointZoom?: number;
 };
 
+const VIETNAM_BOUNDS = L.latLngBounds([
+  [8.05, 102.0],
+  [23.6, 109.75],
+]);
+
 function validPoint(point: MapPoint) {
   return Number.isFinite(point.lat) && Number.isFinite(point.lng) && point.lat >= -90 && point.lat <= 90 && point.lng >= -180 && point.lng <= 180;
 }
@@ -46,6 +51,22 @@ export default function MapViewportController({
       map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), {
         duration: 0.45,
         easeLinearity: 0.3,
+      });
+      return;
+    }
+
+    const mapShell = map.getContainer().closest(".public-project-map-shell");
+    const publicOverviewMode = Boolean(mapShell && !mapShell.querySelector(".public-map-reset"));
+
+    if (publicOverviewMode) {
+      const size = map.getSize();
+      const horizontalPadding = Math.max(34, Math.min(80, Math.round(size.x * 0.06)));
+      const verticalPadding = Math.max(30, Math.min(62, Math.round(size.y * 0.055)));
+      map.fitBounds(VIETNAM_BOUNDS, {
+        paddingTopLeft: [horizontalPadding, verticalPadding],
+        paddingBottomRight: [horizontalPadding, verticalPadding],
+        maxZoom: 5.25,
+        animate: false,
       });
       return;
     }
