@@ -1,8 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import PublicProjectMap from "./PublicProjectMap";
+
+const PublicProjectMap = dynamic(() => import("./PublicProjectMap"), {
+  ssr: false,
+  loading: () => <div className="public-page-loading">Đang khởi tạo bản đồ dự án...</div>,
+});
 
 export default function PublicProjectsWorkspace() {
   const searchParams = useSearchParams();
