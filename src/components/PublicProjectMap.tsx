@@ -178,37 +178,62 @@ export default function PublicProjectMap() {
     return () => window.removeEventListener("licogi-public-project-filter", applyFilter);
   }, []);
 
-  const selectedProject = useMemo(() => projects.find((project) => project.id === selectedId) || null, [projects, selectedId]);
-  const hasExplicitFilter = Boolean(search || type !== "all" || status !== "all");
   const searchAndTypeFiltered = useMemo(() => {
-    const needle = search.trim().toLocaleLowerCase("vi");
+    const keyword = search.trim().toLocaleLowerCase("vi");
     return projects.filter((project) => {
-      if (type !== "all" && project.type !== type) return false;
-      if (!needle) return true;
-      return [project.name, project.code, project.province, project.legacyProvince, project.projectCountry, project.investor, project.customerCode, project.contractNumber, project.packageName]
-        .filter(Boolean)
-        .some((value) => String(value).toLocaleLowerCase("vi").includes(needle));
+      const haystack = [
+        project.name,
+        project.province,
+        project.legacyProvince || "",
+        project.projectCountry || "Việt Nam",
+        project.investor,
+        project.customerCode || "",
+        project.customerIndustry || "",
+        project.investorCountry || "",
+        project.type,
+        project.rawType || "",
+        project.code,
+        project.valueRange,
+        project.contractValueVnd ? String(project.contractValueVnd) : "",
+        project.scale || "",
+        project.constructionArea || "",
+        project.floorArea || "",
+        project.contractorRole || "",
+        project.contractNumber || "",
+        project.packageName || "",
+        project.source || "",
+        project.description || "",
+      ].join(" ").toLocaleLowerCase("vi");
+      return (!keyword || haystack.includes(keyword))
+        && (type === "all" || project.type === type)
+        && !hiddenTypes.has(project.type);
     });
-  }, [projects, search, type]);
-  const filtered = useMemo(() => searchAndTypeFiltered.filter((project) => status === "all" || project.status === status), [searchAndTypeFiltered, status]);
-  const mapProjects = useMemo(() => filtered.filter((project) => !hiddenTypes.has(project.type) && !hiddenStatuses.has(project.status)), [filtered, hiddenStatuses, hiddenTypes]);
-  const statusCounts = useMemo(() => ({
-    ongoing: searchAndTypeFiltered.filter((project) => project.status === "ongoing").length,
-    completed: searchAndTypeFiltered.filter((project) => project.status === "completed").length,
-    warranty: searchAndTypeFiltered.filter((project) => project.status === "warranty").length,
-  }), [searchAndTypeFiltered]);
-  const typeCounts = useMemo(() => Object.fromEntries(projectTypes.map((projectType) => [projectType, filtered.filter((project) => project.type === projectType).length])) as Record<ProjectType, number>, [filtered]);
+  }, [projects, search, type, hiddenTypes]);
 
-  const toggleType = (projectType: ProjectType) => setHiddenTypes((current) => {
-    const next = new Set(current);
-    if (next.has(projectType)) next.delete(projectType); else next.add(projectType);
-    return next;
-  });
-  const toggleStatus = (projectStatus: ProjectStatus) => setHiddenStatuses((current) => {
-    const next = new Set(current);
-    if (next.has(projectStatus)) next.delete(projectStatus); else next.add(projectStatus);
-    return next;
-  });
+  const filtered = useMemo(
+    () => searchAndTypeFiltered.filter((project) => (status === "all" || project.status === status) && !hiddenStatuses.has(project.status)),
+    [searchAndTypeFiltered, status, hiddenStatuses],
+  );
+
+  const statusCounts = useMemo(() => ({
+    ongoing: searchAndTypeFiltered.filter((item) => item.status === "ongoing").length,
+    completed: searchAndTypeFiltered.filter((item) => item.status === "completed").length,
+    warranty: searchAndTypeFiltered.filter((item) => item.status === "warranty").length,
+  }), [searchAndTypeFiltered]);
+
+  const typeCounts = useMemo(() => Object.fromEntries(projectTypes.map((projectType) => [
+    projectType,
+    projects.filter((project) => project.type === projectType).length,
+  ])) as Record<ProjectType, number>, [projects]);
+
+  const selectedProject = selectedId ? projects.find((project) => project.id === selectedId) || null : null;
+  const hasExplicitFilter = Boolean(search.trim()) || type !== "all" || status !== "all" || hiddenTypes.size > 0 || hiddenStatuses.size > 0;
+  const vietnamProjects = useMemo(() => filtered.filter(isVietnamProject), [filtered]);
+  const mapProjects = !hasExplicitFilter && !selectedProject && vietnamProjects.length ? vietnamProjects : filtered;
+
+  useEffect(() => {
+    if (selectedId && hasExplicitFilter && !filtered.some((project) => project.id === selectedId)) setSelectedId(null);
+  }, [filtered, selectedId, hasExplicitFilter]);
 
   function resetFilters() {
     setSearch("");
@@ -217,6 +242,24 @@ export default function PublicProjectMap() {
     setHiddenTypes(new Set());
     setHiddenStatuses(new Set());
     setSelectedId(null);
+  }
+
+  function toggleType(projectType: ProjectType) {
+    setType("all");
+    setHiddenTypes((current) => {
+      const next = new Set(current);
+      if (next.has(projectType)) next.delete(projectType); else next.add(projectType);
+      return next;
+    });
+  }
+
+  function toggleStatus(projectStatus: ProjectStatus) {
+    setStatus("all");
+    setHiddenStatuses((current) => {
+      const next = new Set(current);
+      if (next.has(projectStatus)) next.delete(projectStatus); else next.add(projectStatus);
+      return next;
+    });
   }
 
   function selectProject(project: PublicProject) {
@@ -398,14 +441,14 @@ export default function PublicProjectMap() {
             <div className="public-project-list-panel">
               {filtered.slice(0, 80).map((project) => {
                 const visual = projectTypeVisuals[project.type];
-                return <button type="button" key={project.id} onClick={() => selectProject(project)} className={selectedId === project.id ? "is-selected" : ""}>
-                  <span className="public-project-list-dot" style={{ background: visual.color }} />
-                  <span><strong>{project.name}</strong><small>{project.code} · {project.province}</small><em>{formatContractValue(project.contractValueVnd, project.valueRange)}</em></span>
-                  <b>{project.progress}%</b>
+                return <button key={project.id} type="button" onClick={() => selectProject(project)}>
+                  <i style={{ background: visual.color }} />
+                  <span><b>{project.name}</b><small>{project.province} · {project.type} · {formatContractValue(project.contractValueVnd, project.valueRange)}</small></span>
+                  <em>{project.status === "completed" ? <Check size={13} /> : `${project.progress}%`}</em>
                   <ChevronRight size={14} />
                 </button>;
               })}
-              {!filtered.length ? <div className="public-project-list-empty">Không có dự án trong bộ lọc.</div> : null}
+              {!filtered.length ? <p>Không có dự án phù hợp.</p> : null}
             </div>
           </>}
         </aside>
