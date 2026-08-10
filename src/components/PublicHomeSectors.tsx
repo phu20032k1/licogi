@@ -27,13 +27,13 @@ export default function PublicHomeSectors() {
 
   return <section id="nganh-hang" className="public-section public-sectors public-home-sector-data">
     <div className="public-container">
-      <div className="public-section-heading" data-reveal="left">
+      <div className="public-section-heading">
         <div><span className="public-kicker"><Layers3 size={14}/> Năng lực theo dữ liệu dự án</span><h2>Lĩnh vực đang triển khai</h2></div>
         <Link href="/portfolio/capabilities" className="public-outline-button">Xem toàn bộ lĩnh vực <ArrowRight size={15}/></Link>
       </div>
 
       <div className="public-home-sector-data-grid">
-        {groups.map((group) => <Link key={group.type} href={`/portfolio/projects?type=${encodeURIComponent(group.type)}`} className="public-home-sector-data-card" data-reveal="card">
+        {groups.map((group) => <Link key={group.type} href={`/portfolio/projects?type=${encodeURIComponent(group.type)}`} className="public-home-sector-data-card">
           <div className="public-home-sector-data-accent" style={{ background: group.visual.color }}/>
           <div className="public-home-sector-data-head">
             <span style={{ color: group.visual.color, background: group.visual.softColor }}><Factory size={18}/></span>
