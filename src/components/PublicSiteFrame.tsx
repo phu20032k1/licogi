@@ -35,6 +35,33 @@ export default function PublicSiteFrame({ children }: { children: ReactNode }) {
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+      if (!("IntersectionObserver" in window)) {
+        nodes.forEach((node) => node.classList.add("is-revealed"));
+        return;
+      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          (entry.target as HTMLElement).classList.add("is-revealed");
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.12, rootMargin: "0px 0px -7% 0px" });
+      nodes.forEach((node, index) => {
+        node.style.setProperty("--reveal-delay", `${Math.min(index % 5, 4) * 42}ms`);
+        observer.observe(node);
+      });
+      (window as typeof window & { __licogiRevealObserver?: IntersectionObserver }).__licogiRevealObserver?.disconnect();
+      (window as typeof window & { __licogiRevealObserver?: IntersectionObserver }).__licogiRevealObserver = observer;
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      (window as typeof window & { __licogiRevealObserver?: IntersectionObserver }).__licogiRevealObserver?.disconnect();
+    };
+  }, [pathname]);
+
   return <div className="public-site public-site-v2 public-multipage-site">
     <header className={`public-header public-header-pages ${scrolled ? "is-scrolled" : ""}`}>
       <div className="public-container public-header-inner">
