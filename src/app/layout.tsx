@@ -11,6 +11,7 @@ import "./public-enterprise.css";
 import "./public-refresh.css";
 import "./public-pages.css";
 import "./homepage-restore.css";
+import "./homepage-overview-upgrade.css";
 
 const notoSans = Noto_Sans({
   subsets: ["latin", "vietnamese"],

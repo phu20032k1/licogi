@@ -133,7 +133,7 @@ export default function PublicProjectMap() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [legendOpen, setLegendOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(true);
 
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
