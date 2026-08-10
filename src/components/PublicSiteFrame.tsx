@@ -9,11 +9,11 @@ import PublicAIAssistant from "./PublicAIAssistant";
 
 export const publicNavItems = [
   { label: "Trang chủ", href: "/" },
-  { label: "Dự án", href: "/projects" },
-  { label: "Tổng quan", href: "/overview" },
-  { label: "Lĩnh vực", href: "/capabilities" },
-  { label: "Địa bàn", href: "/locations" },
-  { label: "Giới thiệu", href: "/about" },
+  { label: "Dự án", href: "/portfolio/projects" },
+  { label: "Tổng quan", href: "/portfolio/overview" },
+  { label: "Lĩnh vực", href: "/portfolio/capabilities" },
+  { label: "Địa bàn", href: "/portfolio/locations" },
+  { label: "Giới thiệu", href: "/portfolio/about" },
 ] as const;
 
 function isActive(pathname: string, href: string) {
