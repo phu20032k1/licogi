@@ -15,14 +15,16 @@ type Props = {
   singlePointZoom?: number;
 };
 
-const VIETNAM_BOUNDS = L.latLngBounds([
-  [8.15, 102.15],
-  [23.45, 109.65],
+// Trang public ưu tiên thể hiện vùng hoạt động chính ở miền Bắc.
+// Khi người dùng lọc/chọn dự án cụ thể, viewport vẫn tự động đi tới dữ liệu đó.
+const NORTHERN_VIETNAM_BOUNDS = L.latLngBounds([
+  [19.05, 102.75],
+  [23.55, 108.35],
 ]);
 
-const VIETNAM_NAV_BOUNDS = L.latLngBounds([
-  [7.35, 101.35],
-  [24.15, 110.45],
+const NORTHERN_VIETNAM_NAV_BOUNDS = L.latLngBounds([
+  [18.15, 101.55],
+  [24.15, 109.25],
 ]);
 
 const WORLD_BOUNDS = L.latLngBounds([
@@ -64,8 +66,8 @@ export default function MapViewportController({
 
   useEffect(() => {
     map.stop();
-    map.setMaxBounds(focusVietnam ? VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
-    map.setMinZoom(focusVietnam ? 4.55 : 3);
+    map.setMaxBounds(focusVietnam ? NORTHERN_VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
+    map.setMinZoom(focusVietnam ? 5.55 : 3);
 
     if (selected && validPoint(selected)) {
       map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), {
@@ -79,19 +81,19 @@ export default function MapViewportController({
       const size = map.getSize();
       const horizontalPadding = Math.max(14, Math.min(42, Math.round(size.x * 0.035)));
       const verticalPadding = Math.max(12, Math.min(30, Math.round(size.y * 0.035)));
-      map.fitBounds(VIETNAM_BOUNDS, {
+      map.fitBounds(NORTHERN_VIETNAM_BOUNDS, {
         paddingTopLeft: [horizontalPadding, verticalPadding],
         paddingBottomRight: [horizontalPadding, verticalPadding],
-        maxZoom: 5.7,
+        maxZoom: 6.65,
         animate: false,
       });
-      map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
+      map.panInsideBounds(NORTHERN_VIETNAM_NAV_BOUNDS, { animate: false });
       return;
     }
 
     const valid = points.filter(validPoint);
     if (!valid.length) {
-      map.setView([16.15, 106.4], 5.35, { animate: false });
+      map.setView([21.05, 105.75], 6.2, { animate: false });
       return;
     }
 
