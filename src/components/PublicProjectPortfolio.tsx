@@ -10,7 +10,7 @@ function ProjectCard({ project, mode }: { project: PublicProjectRecord; mode: "c
   const outstanding = Number(project.financial?.outstandingReceivableVnd || 0);
   const contract = projectMoney(project);
 
-  return <Link href={`/projects/${encodeURIComponent(project.id)}`} className="public-project-portfolio-card">
+  return <Link href={`/portfolio/projects/${encodeURIComponent(project.id)}`} className="public-project-portfolio-card">
     <div className="public-project-portfolio-card-head">
       <span className={mode === "completed" ? "is-completed" : "is-ongoing"}>{mode === "completed" ? <CheckCircle2 size={15}/> : <Factory size={15}/>} {mode === "completed" ? "Hoàn thành" : "Đang thi công"}</span>
       <ArrowRight size={17}/>
@@ -39,15 +39,15 @@ export default function PublicProjectPortfolio() {
     <div className="public-container">
       <div className="public-home-sector-links">
         <span>Lĩnh vực</span>
-        {sectors.map((sector) => <Link key={sector} href={`/capabilities?type=${encodeURIComponent(sector)}`}>{sector}</Link>)}
-        <Link href="/capabilities" className="is-all">Tất cả <ArrowRight size={14}/></Link>
+        {sectors.map((sector) => <Link key={sector} href={`/portfolio/capabilities?type=${encodeURIComponent(sector)}`}>{sector}</Link>)}
+        <Link href="/portfolio/capabilities" className="is-all">Tất cả <ArrowRight size={14}/></Link>
       </div>
 
       <div className="public-portfolio-section public-portfolio-completed">
         <div className="public-portfolio-heading">
           <div><span><CheckCircle2 size={16}/> Công trình đã hoàn thành</span><h2>{completed.length}</h2></div>
           <div className="public-portfolio-total"><WalletCards size={19}/><span>Tổng giá trị hợp đồng</span><strong>{formatVnd(sumProjectMoney(completed), "0 đồng")}</strong></div>
-          <Link href="/projects?status=completed">Xem toàn bộ <ArrowRight size={15}/></Link>
+          <Link href="/portfolio/projects?status=completed">Xem toàn bộ <ArrowRight size={15}/></Link>
         </div>
         <div className="public-project-portfolio-grid">
           {completed.slice(0, 6).map((project) => <ProjectCard key={project.id} project={project} mode="completed" />)}
@@ -59,7 +59,7 @@ export default function PublicProjectPortfolio() {
         <div className="public-portfolio-heading">
           <div><span><Building2 size={16}/> Công trình đang thi công</span><h2>{ongoing.length}</h2></div>
           <div className="public-portfolio-total"><WalletCards size={19}/><span>Tổng giá trị hợp đồng</span><strong>{formatVnd(sumProjectMoney(ongoing), "0 đồng")}</strong></div>
-          <Link href="/projects?status=ongoing">Xem toàn bộ <ArrowRight size={15}/></Link>
+          <Link href="/portfolio/projects?status=ongoing">Xem toàn bộ <ArrowRight size={15}/></Link>
         </div>
         <div className="public-project-portfolio-grid">
           {ongoing.slice(0, 6).map((project) => <ProjectCard key={project.id} project={project} mode="ongoing" />)}
