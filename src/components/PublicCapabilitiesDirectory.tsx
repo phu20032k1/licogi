@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, CheckCircle2, Factory, WalletCards } from "lucide-react";
+import { ArrowRight, CheckCircle2, Factory } from "lucide-react";
 import usePublicProjects from "../hooks/usePublicProjects";
 import { formatVnd, projectMoney } from "../lib/publicProject";
 
