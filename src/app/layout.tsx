@@ -9,6 +9,7 @@ import "./home-overview.css";
 import "./vietnamese-typography.css";
 import "./public-enterprise.css";
 import "./public-refresh.css";
+import "./public-pages.css";
 
 const notoSans = Noto_Sans({
   subsets: ["latin", "vietnamese"],

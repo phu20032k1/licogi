@@ -24,6 +24,11 @@ function validCoordinate(value: number | null | undefined, min: number, max: num
   return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 }
 
+function isPaidStatus(status: string | null | undefined) {
+  const normalized = String(status || "").trim().toUpperCase();
+  return ["PAID", "COMPLETED", "DONE", "SETTLED", "ĐÃ THANH TOÁN"].some((value) => normalized.includes(value));
+}
+
 export async function GET() {
   try {
     const organization = await prisma.organization.findFirst({
@@ -62,12 +67,17 @@ export async function GET() {
         createdAt: true,
         updatedAt: true,
         customer: { select: { code: true, name: true, country: true, industry: true } },
+        contracts: { select: { valueVnd: true, status: true } },
+        paymentRequests: { select: { amountVnd: true, status: true, paidDate: true } },
+        debtLedgers: { select: { type: true, amountVnd: true, paidVnd: true, status: true } },
         _count: {
           select: {
             documents: true,
             equipment: true,
             tasks: true,
             contracts: true,
+            paymentRequests: true,
+            debtLedgers: true,
             warranties: true,
             dailyReports: true,
             bimModels: true,
@@ -94,6 +104,17 @@ export async function GET() {
       const metadataContractValue = Number(firstMetadataValue(row.metadata, ["contract_value_vnd", "contractValueVnd", "contract_value"]));
       const contractValueVnd = row.contractValueVnd ?? (Number.isFinite(metadataContractValue) && metadataContractValue > 0 ? metadataContractValue : null);
 
+      const contractsValueVnd = row.contracts.reduce((sum, contract) => sum + Math.max(0, Number(contract.valueVnd || 0)), 0);
+      const paymentRequestedVnd = row.paymentRequests.reduce((sum, payment) => sum + Math.max(0, Number(payment.amountVnd || 0)), 0);
+      const paymentPaidVnd = row.paymentRequests
+        .filter((payment) => Boolean(payment.paidDate) || isPaidStatus(payment.status))
+        .reduce((sum, payment) => sum + Math.max(0, Number(payment.amountVnd || 0)), 0);
+      const receivables = row.debtLedgers.filter((item) => String(item.type || "").trim().toUpperCase() === "RECEIVABLE");
+      const receivableVnd = receivables.reduce((sum, item) => sum + Math.max(0, Number(item.amountVnd || 0)), 0);
+      const receivablePaidVnd = receivables.reduce((sum, item) => sum + Math.max(0, Number(item.paidVnd || 0)), 0);
+      const outstandingReceivableVnd = Math.max(0, receivableVnd - receivablePaidVnd);
+      const effectiveContractValueVnd = contractsValueVnd > 0 ? contractsValueVnd : Number(contractValueVnd || 0);
+
       const publicFields = [
         row.code,
         row.name,
@@ -101,7 +122,7 @@ export async function GET() {
         row.status,
         province,
         row.customer?.name,
-        contractValueVnd,
+        effectiveContractValueVnd || contractValueVnd,
         row.valueRange,
         row.constructionArea,
         row.floorArea,
@@ -127,7 +148,7 @@ export async function GET() {
         projectCountry,
         province,
         legacyProvince: province !== legacyProvince ? legacyProvince : "",
-        contractValueVnd,
+        contractValueVnd: effectiveContractValueVnd || contractValueVnd,
         valueRange: row.valueRange || firstMetadataValue(row.metadata, ["value_range", "valueRange"]) || "Chưa cập nhật",
         constructionArea: row.constructionArea || firstMetadataValue(row.metadata, ["construction_area", "constructionArea"]),
         floorArea: row.floorArea || firstMetadataValue(row.metadata, ["floor_area", "floorArea"]),
@@ -146,6 +167,17 @@ export async function GET() {
         lng,
         description: firstMetadataValue(row.metadata, ["description", "project_description", "scope_description"]),
         dataCompleteness,
+        financial: {
+          contractValueVnd: effectiveContractValueVnd || Number(contractValueVnd || 0),
+          paymentRequestedVnd,
+          paymentPaidVnd,
+          receivableVnd,
+          receivablePaidVnd,
+          outstandingReceivableVnd,
+          contractCount: row._count.contracts,
+          paymentRequestCount: row._count.paymentRequests,
+          debtLedgerCount: row._count.debtLedgers,
+        },
         related: row._count,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),

@@ -16,7 +16,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const isPublicPage = pathname === "/";
+  const isPublicPage = pathname === "/" || pathname === "/portfolio" || pathname.startsWith("/portfolio/");
   const isAuthPage = pathname === "/login" || pathname === "/register";
   const isChangePasswordPage = pathname === "/change-password";
 
