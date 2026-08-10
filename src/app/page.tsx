@@ -4,12 +4,12 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect } from "react";
 import {
-  ArrowRight, Building2, CircuitBoard, Factory, HardHat, Landmark, Mail,
-  MapPin, MapPinned, Newspaper, Power, Quote, Route, ShieldCheck, Sparkles,
-  Users, Zap,
+  ArrowRight, Building2, CircuitBoard, Mail, MapPin, MapPinned, Newspaper,
+  Quote, ShieldCheck, Sparkles, Users,
 } from "lucide-react";
 import PublicCapabilityExplorer from "../components/PublicCapabilityExplorer";
 import PublicHomeOpeningPortfolio from "../components/PublicHomeOpeningPortfolio";
+import PublicHomeSectors from "../components/PublicHomeSectors";
 import PublicSiteFrame from "../components/PublicSiteFrame";
 import PublicVideoRail from "../components/PublicVideoRail";
 
@@ -17,15 +17,6 @@ const PublicProjectMap = dynamic(() => import("../components/PublicProjectMap"),
   ssr: false,
   loading: () => <div className="public-map-skeleton">Đang khởi tạo dữ liệu dự án...</div>,
 });
-
-const sectors = [
-  { title: "Công nghiệp & nhà máy", icon: Factory, code: "01", image: "/media/industrial.svg" },
-  { title: "Dân dụng", icon: Building2, code: "02", image: "/media/infrastructure.svg" },
-  { title: "Hạ tầng kỹ thuật", icon: Landmark, code: "03", image: "/media/infrastructure.svg" },
-  { title: "Giao thông", icon: Route, code: "04", image: "/media/transport.svg" },
-  { title: "Điện năng", icon: Power, code: "05", image: "/media/industrial.svg" },
-  { title: "Vật liệu & thiết bị", icon: HardHat, code: "06", image: "/media/transport.svg" },
-];
 
 const news = [
   { date: "07.2026", title: "LICOGI 18 tổ chức Hội nghị giao ban tháng 6 năm 2026", href: "https://licogi18.com.vn/licogi-18-to-chuc-hoi-nghi-giao-ban-thang-6-nam-2026-10055410/", image: "/media/industrial.svg" },
@@ -86,23 +77,10 @@ export default function HomePage() {
       <div data-reveal="up"><PublicCapabilityExplorer /></div>
 
       <section className="public-logo-strip public-capability-strip" data-reveal="up">
-        <div className="public-container"><span>LICOGI 18.3</span><i/><b>Công nghiệp</b><i/><b>Hạ tầng</b><i/><b>Giao thông</b><i/><b>Điện năng</b><i/><b>Vật liệu xây dựng</b></div>
+        <div className="public-container"><span>LICOGI 18.3</span><i/><b>Công nghiệp</b><i/><b>Nông nghiệp</b><i/><b>Dân dụng</b><i/><b>Hạ tầng</b><i/><b>Giao thông</b><i/><b>Điện năng</b></div>
       </section>
 
-      <section id="nganh-hang" className="public-section public-sectors">
-        <div className="public-container">
-          <div className="public-section-heading" data-reveal="left">
-            <div><span className="public-kicker"><Zap size={14}/> Năng lực thi công</span><h2>Các lĩnh vực triển khai</h2></div>
-            <Link href="/portfolio/capabilities" className="public-outline-button">Xem theo lĩnh vực <ArrowRight size={15}/></Link>
-          </div>
-          <div className="public-sector-grid">
-            {sectors.map((sector) => { const Icon = sector.icon; return <article key={sector.title} className="public-sector-card" data-reveal="card">
-              <div className="public-sector-image"><img src={sector.image} alt=""/><span>{sector.code}</span></div>
-              <div className="public-sector-content"><span className="public-sector-icon"><Icon size={21}/></span><h3>{sector.title}</h3><Link href={`/portfolio/capabilities?type=${encodeURIComponent(sector.title.split(" & ")[0].replace(" kỹ thuật", ""))}`}>Xem dự án liên quan <ArrowRight size={15}/></Link></div>
-            </article>; })}
-          </div>
-        </div>
-      </section>
+      <PublicHomeSectors />
 
       <section id="gioi-thieu" className="public-section public-about">
         <div className="public-container public-about-grid">
