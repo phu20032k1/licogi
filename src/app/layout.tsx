@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import AppShell from "../components/AppShell";
 import { siteConfig } from "../lib/siteConfig";
 import "./globals.css";
@@ -12,10 +12,11 @@ import "./public-refresh.css";
 import "./public-pages.css";
 import "./homepage-restore.css";
 import "./homepage-overview-upgrade.css";
+import "./public-typography-upgrade.css";
 
-const notoSans = Noto_Sans({
+const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   display: "swap",
   variable: "--font-licogi",
 });
@@ -60,7 +61,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={notoSans.variable}>
+      <body className={beVietnamPro.variable}>
         <AppShell>{children}</AppShell>
       </body>
     </html>
