@@ -2,22 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogIn, Mail, Menu, Phone, X } from "lucide-react";
+import { Mail, Menu, X } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import BrandLogo from "./BrandLogo";
 import PublicAIAssistant from "./PublicAIAssistant";
+import PublicLanguageSwitcher from "./PublicLanguageSwitcher";
 
 export const publicNavItems = [
   { label: "Trang chủ", href: "/" },
-  { label: "Dự án", href: "/portfolio/projects" },
-  { label: "Tổng quan", href: "/portfolio/overview" },
-  { label: "Lĩnh vực", href: "/portfolio/capabilities" },
-  { label: "Địa bàn", href: "/portfolio/locations" },
+  { label: "Công trình", href: "/portfolio/projects" },
+  { label: "Dự án đầu tư", href: "/portfolio/overview" },
   { label: "Giới thiệu", href: "/portfolio/about" },
+  { label: "Quan hệ cổ đông", href: "/#quan-he-co-dong" },
+  { label: "Tin tức", href: "/#tin-tuc" },
+  { label: "Liên hệ", href: "/#lien-he" },
 ] as const;
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
+  if (href.startsWith("/#")) return false;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -70,8 +73,7 @@ export default function PublicSiteFrame({ children }: { children: ReactNode }) {
           {publicNavItems.map((item) => <Link key={item.href} href={item.href} className={isActive(pathname, item.href) ? "is-active" : ""}>{item.label}</Link>)}
         </nav>
         <div className="public-header-actions">
-          <a className="public-header-phone" href="tel:+842213942550"><Phone size={15} /> 0221 3942 550</a>
-          <Link href="/login" className="public-login"><LogIn size={16} /> Đăng nhập</Link>
+          <PublicLanguageSwitcher />
           <button type="button" className="public-menu-button" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? "Đóng menu" : "Mở menu"} aria-expanded={menuOpen}>{menuOpen ? <X /> : <Menu />}</button>
         </div>
       </div>
