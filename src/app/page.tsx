@@ -5,13 +5,12 @@ import Link from "next/link";
 import { useEffect } from "react";
 import {
   ArrowRight, Building2, CircuitBoard, Mail, MapPin, MapPinned, Newspaper,
-  Quote, ShieldCheck, Sparkles, Users,
+  Quote, ShieldCheck, Users,
 } from "lucide-react";
 import PublicCapabilityExplorer from "../components/PublicCapabilityExplorer";
-import PublicHomeOpeningPortfolio from "../components/PublicHomeOpeningPortfolio";
+import PublicHomepageDashboard from "../components/PublicHomepageDashboard";
 import PublicHomeSectors from "../components/PublicHomeSectors";
 import PublicSiteFrame from "../components/PublicSiteFrame";
-import PublicVideoRail from "../components/PublicVideoRail";
 
 const PublicProjectMap = dynamic(() => import("../components/PublicProjectMap"), {
   ssr: false,
@@ -48,21 +47,7 @@ export default function HomePage() {
 
   return <PublicSiteFrame>
     <main>
-      <section id="trang-chu" className="public-home-hero public-home-hero-restored">
-        <div className="public-container public-home-hero-grid public-home-opening-grid">
-          <div className="public-home-hero-copy" data-reveal="left">
-            <span className="public-kicker"><Sparkles size={15}/> LICOGI 18.3 · Hồ sơ năng lực số</span>
-            <h1>Năng lực xây dựng<br/><em>LICOGI 18.3</em></h1>
-            <div className="public-hero-indexline"><span>Dự án</span><span>Địa bàn</span><span>Năng lực thi công</span></div>
-            <div className="public-home-hero-actions">
-              <a href="#du-an" className="public-primary-button"><MapPinned size={18}/> Xem bản đồ dự án <ArrowRight size={16}/></a>
-              <Link href="/portfolio/overview" className="public-secondary-button">Tổng quan dữ liệu <ArrowRight size={16}/></Link>
-            </div>
-            <div className="public-home-video-wrap"><PublicVideoRail /></div>
-          </div>
-          <div className="public-home-opening-data" data-reveal="right"><PublicHomeOpeningPortfolio /></div>
-        </div>
-      </section>
+      <PublicHomepageDashboard />
 
       <section id="du-an" className="public-section public-map-section public-project-section" data-reveal="up">
         <div className="public-container">
@@ -106,7 +91,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-statement" data-reveal="up">
+      <section id="quan-he-co-dong" className="public-statement" data-reveal="up">
         <div className="public-container"><span>LICOGI 18.3</span><h2>Hồ sơ năng lực được cập nhật từ dữ liệu vận hành.</h2></div>
       </section>
 
@@ -122,7 +107,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-cta" data-reveal="up">
+      <section id="lien-he" className="public-cta" data-reveal="up">
         <div className="public-container public-cta-inner"><div><span>Kết nối</span><h2>Trao đổi về dự án và năng lực thi công.</h2></div><div><a href="mailto:jsclicogi18.3@gmail.com" className="public-primary-button"><Mail size={18}/> Liên hệ hợp tác</a><Link href="/login" className="public-secondary-button">Đăng nhập quản trị</Link></div></div>
       </section>
     </main>
