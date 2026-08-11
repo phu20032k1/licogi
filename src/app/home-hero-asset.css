@@ -1,7 +1,7 @@
-/* Homepage hero asset override. The generated industrial image already contains the Vietnam outline and glowing project markers. */
+/* Homepage hero asset override. Uses the exact user-uploaded industrial Vietnam hero image. */
 .public-site main > section:first-child [class*="heroBg"] {
   background-color: #d9e0e6 !important;
-  background-image: url("/media/home-hero-generated.svg") !important;
+  background-image: url("/media/home-hero-uploaded.svg") !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
   background-position: 58% center !important;
@@ -18,7 +18,7 @@
     linear-gradient(90deg, rgba(255,255,255,.10), transparent 22%) !important;
 }
 
-/* Do not draw the previous SVG Vietnam map on top: the new hero artwork already includes it. */
+/* The uploaded hero already contains the Vietnam outline and glowing project markers. */
 .public-site main > section:first-child [class*="mapVisual"] {
   display: none !important;
 }
