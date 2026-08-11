@@ -1,0 +1,169 @@
+/* Public website typography upgrade: larger, cleaner, Vietnamese-friendly. */
+.public-site,
+.public-site * {
+  font-family: var(--font-licogi), "Segoe UI", system-ui, -apple-system, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.public-site .public-header-inner {
+  height: 88px;
+}
+
+.public-site .public-nav {
+  gap: 25px;
+}
+
+.public-site .public-nav a {
+  padding-top: 33px;
+  padding-bottom: 33px;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: .015em;
+}
+
+.public-site .public-nav a::after {
+  bottom: 24px;
+}
+
+.public-site .public-kicker {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.public-site .public-primary-button,
+.public-site .public-secondary-button,
+.public-site .public-outline-button {
+  min-height: 52px;
+  padding-inline: 21px;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+/* Homepage hero: enlarge the exact opening composition without changing layout. */
+.public-site main > section:first-child h1 {
+  font-size: clamp(54px, 5.25vw, 82px) !important;
+  font-weight: 900 !important;
+  line-height: .99 !important;
+  letter-spacing: -.045em !important;
+}
+
+.public-site main > section:first-child h1 + p {
+  max-width: 590px !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  line-height: 1.72 !important;
+}
+
+/* KPI cards, countries, CTA and nationwide badge inside the hero. */
+.public-site main > section:first-child a strong {
+  font-size: clamp(28px, 2.2vw, 36px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -.035em !important;
+}
+
+.public-site main > section:first-child a span {
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  line-height: 1.45 !important;
+}
+
+.public-site main > section:first-child a b {
+  font-weight: 800 !important;
+}
+
+/* "Khám phá dữ liệu ... chỉ với 1 click" block. */
+.public-site main > section:nth-child(2) h2 {
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.015em !important;
+}
+
+.public-site main > section:nth-child(2) a > small {
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+  letter-spacing: .02em !important;
+}
+
+.public-site main > section:nth-child(2) a > strong {
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  line-height: 1.55 !important;
+}
+
+.public-site main > section:nth-child(2) a span,
+.public-site main > section:nth-child(2) a b {
+  font-size: 10.5px !important;
+  font-weight: 750 !important;
+}
+
+/* Dark capability strip under the screenshot-style opening. */
+.public-site main > section:nth-child(3) strong {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+
+.public-site main > section:nth-child(3) span {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+}
+
+/* Rest of public site: raise the baseline so text never feels miniature. */
+.public-site .public-section-heading h2,
+.public-site .public-about-copy h2,
+.public-site .public-video-copy h2 {
+  font-weight: 850 !important;
+}
+
+.public-site .public-section-heading > p,
+.public-site .public-about-lead,
+.public-site .public-video-copy > p {
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+}
+
+.public-site .public-sector-content h3,
+.public-site .public-news-card h3 {
+  font-weight: 800 !important;
+}
+
+.public-site .public-sector-content p,
+.public-site .public-news-card > div > span {
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+}
+
+.public-site .public-footer-grid strong {
+  font-size: 13px !important;
+}
+
+.public-site .public-footer-grid a,
+.public-site .public-footer-grid span,
+.public-site .public-footer-grid p {
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+}
+
+@media (max-width: 1100px) {
+  .public-site .public-nav a {
+    padding: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 620px) {
+  .public-site main > section:first-child h1 {
+    font-size: 44px !important;
+  }
+
+  .public-site main > section:first-child h1 + p {
+    font-size: 15px !important;
+  }
+
+  .public-site main > section:first-child a strong {
+    font-size: 30px !important;
+  }
+}
