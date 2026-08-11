@@ -9,13 +9,13 @@ import PublicAIAssistant from "./PublicAIAssistant";
 import PublicLanguageSwitcher from "./PublicLanguageSwitcher";
 
 export const publicNavItems = [
-  { label: "Trang chủ", href: "/" },
-  { label: "Công trình", href: "/portfolio/projects" },
-  { label: "Dự án đầu tư", href: "/portfolio/overview" },
-  { label: "Giới thiệu", href: "/portfolio/about" },
-  { label: "Quan hệ cổ đông", href: "/#quan-he-co-dong" },
-  { label: "Tin tức", href: "/#tin-tuc" },
-  { label: "Liên hệ", href: "/#lien-he" },
+  { label: "TRANG CHỦ", href: "/" },
+  { label: "CÔNG TRÌNH", href: "/portfolio/projects" },
+  { label: "DỰ ÁN ĐẦU TƯ", href: "/portfolio/overview" },
+  { label: "GIỚI THIỆU", href: "/portfolio/about" },
+  { label: "QUAN HỆ CỔ ĐÔNG", href: "/#quan-he-co-dong" },
+  { label: "TIN TỨC", href: "/#tin-tuc" },
+  { label: "LIÊN HỆ", href: "/#lien-he" },
 ] as const;
 
 function isActive(pathname: string, href: string) {
