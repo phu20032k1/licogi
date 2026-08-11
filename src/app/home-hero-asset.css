@@ -1,7 +1,7 @@
-/* Homepage hero asset override. Uses the exact user-uploaded industrial Vietnam hero image. */
+/* Homepage hero asset override. Use a direct WebP file instead of an SVG-wrapped raster image so browsers render it sharply and reliably. */
 .public-site main > section:first-child [class*="heroBg"] {
   background-color: #d9e0e6 !important;
-  background-image: url("/media/home-hero-uploaded.svg") !important;
+  background-image: url("/media/home-hero-exact.webp") !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
   background-position: 58% center !important;
@@ -14,11 +14,11 @@
 
 .public-site main > section:first-child [class*="heroBg"]::after {
   background:
-    linear-gradient(180deg, rgba(255,255,255,.015), rgba(6,18,32,.08)),
-    linear-gradient(90deg, rgba(255,255,255,.10), transparent 22%) !important;
+    linear-gradient(180deg, rgba(255,255,255,.015), rgba(6,18,32,.06)),
+    linear-gradient(90deg, rgba(255,255,255,.08), transparent 20%) !important;
 }
 
-/* The uploaded hero already contains the Vietnam outline and glowing project markers. */
+/* The hero image already contains the Vietnam outline and glowing project markers. */
 .public-site main > section:first-child [class*="mapVisual"] {
   display: none !important;
 }
