@@ -1,0 +1,63 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 205px;
+  color: #b42418;
+}
+
+.symbol {
+  width: 42px;
+  height: 48px;
+  flex: 0 0 auto;
+}
+
+.symbol path,
+.symbol line,
+.symbol polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wordmark {
+  min-width: 0;
+  line-height: 1;
+}
+
+.wordmark strong {
+  display: block;
+  color: #b42418;
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -.035em;
+  white-space: nowrap;
+}
+
+.wordmark span {
+  display: block;
+  margin-top: 7px;
+  color: #243246;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.inverse {
+  color: #fff;
+}
+
+.inverse .wordmark strong,
+.inverse .wordmark span {
+  color: #fff;
+}
+
+@media (max-width: 620px) {
+  .brand { min-width: auto; gap: 7px; }
+  .symbol { width: 34px; height: 40px; }
+  .wordmark strong { font-size: 17px; }
+  .wordmark span { display: none; }
+}
