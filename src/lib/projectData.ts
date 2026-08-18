@@ -1,4 +1,5 @@
 import { Project, ProjectStatus, ProjectType } from "../data/projects";
+import type { PublicProjectRecord, PublicProjectsResponse } from "./publicProject";
 import { normalizeProjectStatus, normalizeProjectType, resolveProvinceCoordinates } from "./projectMapVisuals";
 import { mergeServerAndClientRows, readClientRows } from "./clientDataStore";
 
@@ -73,13 +74,67 @@ export function projectToRow(project: ProjectWithRowId): Record<string, string> 
   return row;
 }
 
+function normalizePublicRole(value?: string): Project["role"] {
+  return value === "EPC" || value === "Tổng thầu" || value === "Nhà thầu chính" || value === "Nhà thầu phụ"
+    ? value
+    : "Tổng thầu";
+}
+
+function publicProjectToProject(project: PublicProjectRecord, index: number): ProjectWithRowId {
+  const risk = project.risk === "high" || project.risk === "medium" || project.risk === "low" ? project.risk : "low";
+  return {
+    id: project.numericId || index + 1,
+    code: project.code || `LCG-${String(index + 1).padStart(4, "0")}`,
+    name: project.name || "Dự án chưa đặt tên",
+    type: normalizeProjectType(project.type),
+    status: normalizeProjectStatus(project.status),
+    investor: project.investor || "Chưa cập nhật",
+    investorCountry: project.investorCountry || "",
+    province: project.province || "Hà Nội",
+    valueRange: project.valueRange || "Chưa cập nhật",
+    scale: project.scale || "",
+    role: normalizePublicRole(project.contractorRole),
+    progress: Math.max(0, Math.min(100, Number(project.progress) || 0)),
+    plannedProgress: Math.max(0, Math.min(100, Number(project.progress) || 0)),
+    lat: Number(project.lat) || 0,
+    lng: Number(project.lng) || 0,
+    description: project.description || "",
+    manager: "Chưa phân công",
+    startDate: project.startDate || "",
+    endDate: project.endDate || "",
+    healthScore: Math.max(0, Math.min(100, Number(project.healthScore) || 0)),
+    risk,
+    photos: 0,
+    videos: 0,
+    documents: Number(project.related?.documents) || 0,
+    customerRating: 0,
+  };
+}
+
+async function fetchPublicProjectFallback() {
+  const response = await fetch("/api/public/projects", {
+    cache: "no-store",
+    credentials: "same-origin",
+  });
+  const data = await response.json() as PublicProjectsResponse;
+  if (!response.ok || !data.ok) throw new Error(data.message ?? "Không tải được dữ liệu dự án công khai.");
+  return (Array.isArray(data.projects) ? data.projects : []).map(publicProjectToProject);
+}
+
 export async function fetchProjectsFromDataCenter(): Promise<ProjectWithRowId[]> {
   try {
-    const response = await fetch("/api/data/projects", { cache: "no-store" });
+    const response = await fetch("/api/data/projects", { cache: "no-store", credentials: "same-origin" });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.message ?? "Không tải được danh mục dự án.");
     return mergeServerAndClientRows("projects", data.rows as StoredRow[]).map(rowToProject);
   } catch {
+    try {
+      const publicProjects = await fetchPublicProjectFallback();
+      if (publicProjects.length > 0) return publicProjects;
+    } catch {
+      // Fall through to the device cache only when both server sources are unavailable.
+    }
+
     return readClientRows("projects").map((row, index) => rowToProject(row as StoredRow, index));
   }
 }

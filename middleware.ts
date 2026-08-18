@@ -4,11 +4,13 @@ const SESSION_COOKIE = "licogi_session";
 const PUBLIC_PREFIXES = ["/_next", "/favicon.ico", "/file.svg", "/globe.svg", "/next.svg", "/vercel.svg", "/window.svg", "/templates"];
 const PUBLIC_API_PATHS = new Set(["/api/health", "/api/ready"]);
 const PUBLIC_PAGES = new Set(["/", "/login", "/register", "/change-password"]);
+const PUBLIC_PAGE_PREFIXES = ["/portfolio"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return NextResponse.next();
   if (PUBLIC_PAGES.has(pathname)) return NextResponse.next();
+  if (PUBLIC_PAGE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return NextResponse.next();
   if (pathname.startsWith("/api/auth")) return NextResponse.next();
   if (pathname.startsWith("/api/public")) return NextResponse.next();
   if (PUBLIC_API_PATHS.has(pathname)) return NextResponse.next();
