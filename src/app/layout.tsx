@@ -16,6 +16,7 @@ import "./public-typography-upgrade.css";
 import "./home-hero-asset.css";
 import "./mobile-polish.css";
 import "./mobile-icons.css";
+import "./mobile-floating.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
