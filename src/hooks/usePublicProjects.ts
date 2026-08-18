@@ -102,5 +102,7 @@ export default function usePublicProjects() {
     };
   }, [load]);
 
-  return { projects, loading, error, reload: load };
+  const reload = useCallback(() => load(false), [load]);
+
+  return { projects, loading, error, reload };
 }
