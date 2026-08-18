@@ -41,9 +41,9 @@ export default function ProfileMenu() {
     window.location.replace("/login");
   }
 
-  return <div ref={ref} className="relative">
-    <button type="button" onClick={() => setOpen((value) => !value)} className="group flex max-w-[230px] items-center gap-2 rounded-xl p-1.5 pr-2 transition hover:bg-slate-100" aria-expanded={open}>
-      <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-950 text-xs font-black text-white">
+  return <div ref={ref} className="licogi-profile-menu relative">
+    <button type="button" onClick={() => setOpen((value) => !value)} className="licogi-profile-trigger group flex max-w-[230px] items-center gap-2 rounded-xl p-1.5 pr-2 transition hover:bg-slate-100" aria-expanded={open} aria-label="Mở menu tài khoản">
+      <span className="licogi-profile-avatar relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-950 text-xs font-black text-white">
         {initials}
         <i className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
       </span>
@@ -54,7 +54,7 @@ export default function ProfileMenu() {
       <ChevronDown size={14} className={`hidden shrink-0 text-slate-400 transition xl:block ${open ? "rotate-180" : ""}`} />
     </button>
 
-    {open ? <div className="absolute right-0 top-[calc(100%+10px)] w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+    {open ? <div className="licogi-profile-dropdown absolute right-0 top-[calc(100%+10px)] w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
       <div className="p-3">
         <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-950 text-sm font-black text-white">{initials}</span>

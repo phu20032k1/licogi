@@ -34,10 +34,10 @@ export default function NotificationPanel({ open, onClose }: { open: boolean; on
   return (
     <div className="fixed inset-0 z-[90]">
       <button type="button" aria-label="Đóng thông báo" onClick={onClose} className="absolute inset-0 bg-slate-950/30 backdrop-blur-[2px]" />
-      <aside className="absolute inset-y-0 right-0 w-full max-w-md overflow-y-auto bg-white shadow-[-20px_0_70px_rgba(15,23,42,0.18)]">
+      <aside className="licogi-notification-panel absolute inset-y-0 right-0 w-full max-w-md overflow-y-auto bg-white shadow-[-20px_0_70px_rgba(15,23,42,0.18)]">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-5 backdrop-blur">
-          <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-orange-50 text-orange-600"><BellRing size={20} /></span><div><h2 className="text-base font-black text-slate-900">Trung tâm thông báo</h2><p className="mt-0.5 text-xs text-slate-500">{visibleNotifications.filter((item) => item.unread).length} mục chưa đọc</p></div></div>
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X size={19} /></button>
+          <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-600"><BellRing size={20} /></span><div className="min-w-0"><h2 className="truncate text-base font-black text-slate-900">Trung tâm thông báo</h2><p className="mt-0.5 text-xs text-slate-500">{visibleNotifications.filter((item) => item.unread).length} mục chưa đọc</p></div></div>
+          <button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Đóng"><X size={19} /></button>
         </header>
         <div className="space-y-2 p-4">
           {visibleNotifications.map((item) => {
