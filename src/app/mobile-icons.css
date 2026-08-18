@@ -1,0 +1,105 @@
+@media (max-width: 767px) {
+  /* Account avatar */
+  .licogi-profile-trigger {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    border-radius: 14px !important;
+    padding: 3px !important;
+  }
+
+  .licogi-profile-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    background: linear-gradient(145deg, #f97316, #c2410c) !important;
+    box-shadow: 0 7px 16px rgba(234, 88, 12, .24), inset 0 1px 0 rgba(255,255,255,.25);
+    ring: none;
+  }
+
+  .licogi-profile-avatar i {
+    width: 10px !important;
+    height: 10px !important;
+    border-width: 2px !important;
+    box-shadow: 0 0 0 1px rgba(16,185,129,.12);
+  }
+
+  .licogi-profile-dropdown {
+    position: fixed !important;
+    top: 68px !important;
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .2) !important;
+  }
+
+  .licogi-profile-dropdown nav a,
+  .licogi-profile-dropdown button {
+    min-height: 46px;
+    border-radius: 13px !important;
+  }
+
+  .licogi-profile-dropdown nav svg,
+  .licogi-profile-dropdown button svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 2.25;
+  }
+
+  /* Sidebar icon tiles */
+  .app-shell > aside nav a > span:first-child {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    place-items: center;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .055);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    transition: background .18s ease, transform .18s ease;
+  }
+
+  .app-shell > aside nav a[class*="from-orange-500"] > span:first-child {
+    background: rgba(255, 255, 255, .16);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.13), 0 5px 12px rgba(0,0,0,.08);
+  }
+
+  .app-shell > aside nav a:active > span:first-child {
+    transform: scale(.94);
+  }
+
+  .app-shell > aside nav a svg {
+    width: 19px !important;
+    height: 19px !important;
+    stroke-width: 2.15;
+  }
+
+  /* Topbar icon buttons already have dedicated geometry; refine depth. */
+  .app-shell header.sticky button[aria-label="Mở menu"] {
+    box-shadow: 0 9px 20px rgba(234, 88, 12, .24) !important;
+  }
+
+  .app-shell header.sticky button[aria-label="Tìm kiếm"],
+  .app-shell header.sticky button[aria-label="Thông báo"] {
+    box-shadow: 0 5px 14px rgba(15, 23, 42, .07) !important;
+  }
+
+  .app-shell header.sticky button[aria-label="Tìm kiếm"] svg,
+  .app-shell header.sticky button[aria-label="Thông báo"] svg {
+    stroke-width: 2.35;
+  }
+
+  /* Notification icon cards */
+  .licogi-notification-panel a span[class*="place-items-center"] {
+    box-shadow: inset 0 0 0 1px rgba(15,23,42,.035), 0 5px 12px rgba(15,23,42,.045);
+  }
+
+  /* Public menu button and CTA icons */
+  .public-header-pages .public-menu-button svg,
+  #trang-chu a svg,
+  .public-page-main a svg,
+  .public-page-main button svg {
+    flex: 0 0 auto;
+  }
+}
