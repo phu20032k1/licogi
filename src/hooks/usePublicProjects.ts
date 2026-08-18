@@ -6,6 +6,7 @@ import type { PublicProjectRecord, PublicProjectsResponse } from "../lib/publicP
 const CACHE_KEY = "licogi-public-projects-cache-v1";
 const CACHE_MAX_AGE = 1000 * 60 * 60 * 24;
 const REQUEST_TIMEOUT = 10000;
+const PREVIEW_TIMEOUT = 6500;
 
 type CachedProjects = {
   savedAt: number;
@@ -41,11 +42,11 @@ function cacheProjects(projects: PublicProjectRecord[]) {
   }, 0);
 }
 
-async function fetchPublicProjects() {
+async function fetchProjectPayload(endpoint: string, timeout: number) {
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+  const timer = window.setTimeout(() => controller.abort(), timeout);
   try {
-    const response = await fetch("/api/public/projects", {
+    const response = await fetch(endpoint, {
       cache: "default",
       credentials: "same-origin",
       signal: controller.signal,
@@ -67,7 +68,7 @@ export default function usePublicProjects() {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const nextProjects = await fetchPublicProjects();
+      const nextProjects = await fetchProjectPayload("/api/public/projects", REQUEST_TIMEOUT);
       setProjects(nextProjects);
       cacheProjects(nextProjects);
       setError("");
@@ -83,13 +84,28 @@ export default function usePublicProjects() {
   }, []);
 
   useEffect(() => {
+    let disposed = false;
     const cachedProjects = readCachedProjects();
+
     if (cachedProjects.length > 0) {
       setProjects(cachedProjects);
       setLoading(false);
       void load(true);
     } else {
-      void load(false);
+      // On a fresh phone, render the lightweight map projection first. This avoids
+      // making Safari wait for the heavier financial/related-data query before it
+      // can show useful project counts and cards.
+      void fetchProjectPayload("/api/public/projects/map", PREVIEW_TIMEOUT)
+        .then((previewProjects) => {
+          if (disposed || previewProjects.length === 0) return;
+          setProjects(previewProjects);
+          setLoading(false);
+          setError("");
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          if (!disposed) void load(true);
+        });
     }
 
     const reloadWhenOnline = () => { void load(true); };
@@ -100,6 +116,7 @@ export default function usePublicProjects() {
     window.addEventListener("online", reloadWhenOnline);
     document.addEventListener("visibilitychange", reloadWhenVisible);
     return () => {
+      disposed = true;
       window.removeEventListener("online", reloadWhenOnline);
       document.removeEventListener("visibilitychange", reloadWhenVisible);
     };
