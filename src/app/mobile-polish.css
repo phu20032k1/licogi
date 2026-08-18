@@ -1,75 +1,333 @@
-/* Mobile-first usability overrides. Loaded last so phone-specific rules stay predictable. */
+/*
+ * LICOGI 18.3 mobile interface system.
+ * Loaded last so phone-specific rules can safely refine legacy/public/internal layers.
+ */
+
 @media (max-width: 767px) {
+  :root {
+    --mobile-page-x: 12px;
+    --mobile-radius: 18px;
+    --mobile-radius-sm: 14px;
+    --mobile-touch: 44px;
+  }
+
   html,
   body {
+    width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+
+  html {
+    scroll-padding-top: calc(76px + env(safe-area-inset-top));
   }
 
   body {
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
 
   button,
   a,
   input,
-  select {
+  select,
+  textarea {
     touch-action: manipulation;
   }
 
-  /* Internal operating system */
+  button,
+  a {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  img,
+  video,
+  svg,
+  canvas {
+    max-width: 100%;
+  }
+
+  /* ================================================================
+     Internal operating system
+     ================================================================ */
+
+  .app-shell {
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(249, 115, 22, .07), transparent 31%),
+      linear-gradient(180deg, #f8fafc 0%, #f4f6f8 100%);
+  }
+
+  .app-shell main {
+    padding-right: var(--mobile-page-x) !important;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom)) !important;
+    padding-left: var(--mobile-page-x) !important;
+    padding-top: 14px !important;
+  }
+
+  .app-shell main > div {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .app-shell main h1,
+  .app-shell main h2,
+  .app-shell main h3,
+  .app-shell main p {
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell main h1 {
+    line-height: 1.12;
+  }
+
+  .glass-card,
+  .enterprise-card,
+  .dark-glass {
+    border-radius: var(--mobile-radius) !important;
+  }
+
+  .enterprise-card {
+    box-shadow: 0 8px 28px rgba(15, 23, 42, .055) !important;
+  }
+
+  .dark-glass {
+    box-shadow: 0 14px 34px rgba(7, 20, 38, .16) !important;
+  }
+
+  /* Shared page header */
+  .licogi-page-header {
+    border-radius: 20px !important;
+    padding: 16px !important;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, .055) !important;
+  }
+
+  .licogi-page-header h1 {
+    margin-top: 5px !important;
+    font-size: 21px !important;
+    line-height: 1.18 !important;
+  }
+
+  .licogi-page-header p:first-child {
+    letter-spacing: .17em !important;
+  }
+
+  .licogi-page-header-actions {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .licogi-page-header-actions > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Buttons and icon controls */
   .app-shell .licogi-btn {
-    min-height: 44px;
+    min-height: var(--mobile-touch);
     border-radius: 14px;
+    padding-right: 14px;
+    padding-left: 14px;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .045);
+  }
+
+  .app-shell .licogi-btn-primary {
+    box-shadow: 0 8px 18px rgba(234, 88, 12, .18);
   }
 
   .app-shell .licogi-icon-btn {
     display: inline-grid;
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
     place-items: center;
     border-radius: 13px;
   }
 
-  .app-shell .licogi-table-scroll {
+  .app-shell button:active,
+  .app-shell a:active {
+    transform: scale(.985);
+  }
+
+  /* Form controls: 16px avoids Safari auto zoom. */
+  .app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .app-shell select,
+  .app-shell textarea {
+    min-height: 44px;
+    font-size: 16px !important;
+    line-height: 1.4;
+  }
+
+  .app-shell textarea {
+    min-height: 108px;
+  }
+
+  .app-shell input[type="checkbox"],
+  .app-shell input[type="radio"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Tables stay usable instead of squeezing unreadably. */
+  .app-shell .licogi-table-scroll,
+  .app-shell [class*="overflow-auto"],
+  .app-shell [class*="overflow-x-auto"] {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
   }
 
-  .app-shell input,
-  .app-shell select,
-  .app-shell textarea {
-    font-size: 16px;
+  .app-shell .licogi-table-scroll {
+    border-radius: 0 0 var(--mobile-radius) var(--mobile-radius);
+    scroll-snap-type: x proximity;
   }
 
-  /* Public header: compact, touch-friendly, and safe for phone notches. */
+  .app-shell table {
+    font-size: 12.5px;
+  }
+
+  .app-shell table th {
+    padding-top: 11px !important;
+    padding-bottom: 11px !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .app-shell table td {
+    padding-top: 11px !important;
+    padding-bottom: 11px !important;
+  }
+
+  /* Main dashboard becomes a compact mobile control center. */
+  .app-shell main .dark-glass.rounded-\[34px\] {
+    border-radius: 22px !important;
+    padding: 20px 17px !important;
+  }
+
+  .app-shell main .dark-glass.rounded-\[34px\] h1 {
+    margin-top: 14px !important;
+    font-size: clamp(28px, 8.7vw, 36px) !important;
+    line-height: 1.07 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .app-shell main .dark-glass.rounded-\[34px\] p {
+    line-height: 1.65 !important;
+  }
+
+  .app-shell main .dark-glass.rounded-\[34px\] a {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    border-radius: 14px !important;
+  }
+
+  /* Revenue chart: horizontal scroll gives every month enough breathing room. */
+  .app-shell main .h-64.items-end {
+    min-width: 660px;
+  }
+
+  .app-shell main article:has(.h-64.items-end) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile sidebar: feels like a drawer, not a shrunk desktop rail. */
+  .app-shell > aside {
+    width: min(88vw, 330px) !important;
+    max-width: 330px;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-right: 1px solid rgba(255, 255, 255, .12) !important;
+    box-shadow: 22px 0 70px rgba(2, 6, 23, .28) !important;
+  }
+
+  .app-shell > aside nav a,
+  .app-shell > aside > div a {
+    min-height: 46px;
+    border-radius: 14px !important;
+  }
+
+  .app-shell > aside nav a svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Notification drawer */
+  .licogi-notification-panel {
+    width: calc(100% - 12px) !important;
+    max-width: none !important;
+    top: 6px !important;
+    right: 6px !important;
+    bottom: 6px !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px 0 0 22px;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: -18px 0 55px rgba(15, 23, 42, .22) !important;
+  }
+
+  .licogi-notification-panel > header {
+    padding: calc(14px + env(safe-area-inset-top)) 14px 14px !important;
+  }
+
+  .licogi-notification-panel > div {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .licogi-notification-panel a {
+    border-radius: 16px !important;
+  }
+
+  /* ================================================================
+     Public website header/navigation
+     ================================================================ */
+
   .public-header-pages {
-    height: 72px !important;
+    height: calc(70px + env(safe-area-inset-top)) !important;
     padding-top: env(safe-area-inset-top);
+    border-bottom: 1px solid rgba(226, 232, 240, .82) !important;
     background: rgba(255, 255, 255, .985) !important;
-    box-shadow: 0 8px 28px rgba(15, 23, 42, .08) !important;
+    box-shadow: 0 7px 26px rgba(15, 23, 42, .07) !important;
+    backdrop-filter: blur(18px) saturate(1.2) !important;
   }
 
   .public-header-pages .public-container {
-    width: calc(100% - 24px) !important;
+    width: calc(100% - 20px) !important;
   }
 
   .public-header-pages .public-header-inner {
-    height: 72px !important;
-    min-height: 72px !important;
-    gap: 10px !important;
+    height: 70px !important;
+    min-height: 70px !important;
+    gap: 8px !important;
+  }
+
+  .public-header-pages .public-brand-link {
+    min-width: 0;
+    max-width: calc(100% - 112px);
+  }
+
+  .public-header-pages .public-header-actions {
+    gap: 5px !important;
   }
 
   .public-header-pages .public-menu-button {
+    display: inline-grid !important;
     width: 44px !important;
     height: 44px !important;
-    border: 1px solid #e2e8f0 !important;
+    flex: 0 0 44px !important;
+    place-items: center;
+    border: 1px solid #e1e6ec !important;
     border-radius: 14px !important;
-    background: linear-gradient(145deg, #fff, #f8fafc) !important;
+    padding: 0 !important;
+    background: linear-gradient(145deg, #ffffff, #f7f9fb) !important;
     color: #172033 !important;
-    box-shadow: 0 5px 16px rgba(15, 23, 42, .08) !important;
+    box-shadow: 0 5px 15px rgba(15, 23, 42, .075) !important;
   }
 
   .public-header-pages .public-menu-button:active {
@@ -83,47 +341,155 @@
   }
 
   .public-header-pages .public-page-nav {
-    top: calc(72px + env(safe-area-inset-top)) !important;
-    right: 12px !important;
-    left: 12px !important;
-    max-height: calc(100dvh - 92px - env(safe-area-inset-top)) !important;
+    top: calc(70px + env(safe-area-inset-top)) !important;
+    right: 10px !important;
+    left: 10px !important;
+    max-height: calc(100dvh - 84px - env(safe-area-inset-top)) !important;
     overflow-y: auto !important;
-    border-radius: 18px !important;
+    gap: 3px !important;
+    border: 1px solid #e1e6ec !important;
+    border-radius: 20px !important;
     padding: 8px !important;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, .2) !important;
+    background: rgba(255, 255, 255, .99) !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .19) !important;
     -webkit-overflow-scrolling: touch;
   }
 
   .public-header-pages .public-page-nav a {
-    min-height: 46px !important;
-    border-radius: 12px !important;
+    min-height: 48px !important;
+    justify-content: flex-start !important;
+    border-radius: 13px !important;
     padding: 0 14px !important;
     font-size: 13px !important;
+    font-weight: 780 !important;
+    letter-spacing: .01em !important;
   }
 
-  /* Public pages */
+  .public-header-pages .public-page-nav a.is-active {
+    background: #fff3ed !important;
+    color: #b94320 !important;
+    box-shadow: none !important;
+  }
+
+  /* ================================================================
+     Public homepage
+     ================================================================ */
+
+  #trang-chu {
+    min-height: auto !important;
+    padding-top: calc(70px + env(safe-area-inset-top)) !important;
+    padding-bottom: 22px !important;
+    background: linear-gradient(180deg, #f7f9fb 0%, #eef2f5 100%) !important;
+  }
+
+  #trang-chu h1 {
+    max-width: 100% !important;
+    font-size: clamp(33px, 10vw, 41px) !important;
+    line-height: 1.035 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  #trang-chu p {
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+  }
+
+  #trang-chu a {
+    min-height: 44px;
+  }
+
+  #trang-chu svg {
+    stroke-width: 2.2;
+  }
+
+  /* Main data card within the homepage hero. */
+  #trang-chu > div:nth-of-type(2) > div:first-child > div:first-of-type {
+    margin-top: 16px !important;
+    border-radius: 18px !important;
+    border-color: rgba(203, 213, 225, .9) !important;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, .1) !important;
+  }
+
+  #trang-chu > div:nth-of-type(2) > div:first-child > div:first-of-type > div:first-child > a {
+    min-height: 126px !important;
+    padding: 14px 12px !important;
+  }
+
+  #trang-chu > div:nth-of-type(2) > div:first-child > div:first-of-type > div:first-child > a strong {
+    font-size: clamp(24px, 8vw, 31px) !important;
+  }
+
+  #trang-chu > div:nth-of-type(2) > div:first-child > div:nth-of-type(2) {
+    margin-top: 12px !important;
+    gap: 8px !important;
+  }
+
+  #trang-chu > div:nth-of-type(2) > div:first-child > div:nth-of-type(2) > a {
+    min-height: 48px !important;
+    border-radius: 13px !important;
+  }
+
+  /* Homepage exploration cards are intentionally compact on a phone. */
+  .public-site section[aria-label] + section,
+  .public-site section[aria-label] {
+    scroll-margin-top: 84px;
+  }
+
+  /* ================================================================
+     Public inner pages
+     ================================================================ */
+
   .public-page-main {
-    padding-top: calc(72px + env(safe-area-inset-top)) !important;
+    min-height: 70dvh;
+    padding-top: calc(70px + env(safe-area-inset-top)) !important;
   }
 
   .public-page-hero-compact {
-    padding: 30px 0 25px !important;
+    padding: 28px 0 24px !important;
+  }
+
+  .public-page-hero span {
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    letter-spacing: .08em;
+    text-transform: uppercase;
   }
 
   .public-page-hero h1 {
-    font-size: clamp(29px, 8.5vw, 36px) !important;
-    line-height: 1.12 !important;
+    margin-top: 6px !important;
+    font-size: clamp(28px, 8.5vw, 36px) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.035em !important;
   }
 
   .public-page-section {
-    padding: 24px 0 48px !important;
+    padding: 22px 0 46px !important;
   }
 
+  .public-page-section > .public-container,
   .public-projects-page-section .public-container {
     width: calc(100% - 20px) !important;
   }
 
-  .public-project-portfolio-grid {
+  .public-page-block-head {
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .public-page-block-head h2 {
+    font-size: 20px !important;
+    line-height: 1.25 !important;
+  }
+
+  .public-page-loading,
+  .public-page-error {
+    border-radius: 16px !important;
+    padding: 24px 16px !important;
+  }
+
+  .public-project-portfolio-grid,
+  .public-location-grid,
+  .public-capability-group-grid {
     grid-template-columns: 1fr !important;
     gap: 10px !important;
   }
@@ -132,15 +498,40 @@
     min-height: 0 !important;
     border-radius: 16px !important;
     padding: 16px !important;
-    box-shadow: 0 8px 26px rgba(15, 23, 42, .055) !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .05) !important;
+  }
+
+  .public-project-portfolio-card h3 {
+    margin-top: 13px !important;
+    font-size: 16px !important;
   }
 
   .public-overview-kpi-grid,
   .public-finance-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    border-radius: 16px !important;
   }
 
-  /* Project map/data workspace: controls first, map then readable project data. */
+  .public-overview-kpi-grid > a,
+  .public-finance-overview article {
+    min-height: 118px !important;
+    padding: 14px !important;
+  }
+
+  .public-overview-kpi-grid strong {
+    font-size: 27px !important;
+  }
+
+  .public-project-detail-map {
+    height: 300px !important;
+    border-radius: 16px !important;
+  }
+
+  .public-detail-related-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Project map/data workspace: controls first, then a large readable map. */
   .public-project-map-shell {
     overflow: hidden;
     border-radius: 18px !important;
@@ -172,7 +563,8 @@
   }
 
   .public-map-toolbar-actions .public-icon-button,
-  .public-map-reset {
+  .public-map-reset,
+  .public-icon-button {
     min-width: 42px;
     min-height: 42px;
     border-radius: 13px !important;
@@ -192,6 +584,10 @@
     font-size: 16px !important;
   }
 
+  .public-map-controls input {
+    font-size: 16px !important;
+  }
+
   .public-map-stats {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -201,7 +597,7 @@
 
   .public-map-stats button {
     min-width: 0 !important;
-    min-height: 56px !important;
+    min-height: 58px !important;
     border-radius: 14px !important;
   }
 
@@ -210,13 +606,13 @@
   }
 
   .public-map-canvas {
-    min-height: 52dvh !important;
-    height: 52dvh !important;
+    min-height: 54dvh !important;
+    height: 54dvh !important;
   }
 
   .public-map-overlay-legend {
-    max-width: calc(100% - 24px) !important;
-    max-height: 42dvh;
+    max-width: calc(100% - 22px) !important;
+    max-height: 40dvh;
     overflow-y: auto;
     border-radius: 14px !important;
   }
@@ -226,22 +622,66 @@
     border-radius: 12px !important;
   }
 
-  /* The current homepage is already responsive; tighten typography/touch targets. */
-  #trang-chu h1 {
-    font-size: clamp(34px, 10vw, 42px) !important;
-    line-height: 1.04 !important;
+  /* ================================================================
+     Public footer
+     ================================================================ */
+
+  .public-page-footer {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  #trang-chu a {
-    min-height: 44px;
+  .public-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 26px !important;
+    padding-top: 34px !important;
+    padding-bottom: 30px !important;
   }
 
-  #trang-chu svg {
-    stroke-width: 2.2;
+  .public-footer-grid > div {
+    min-width: 0;
+  }
+
+  .public-footer-grid a,
+  .public-footer-grid span,
+  .public-footer-grid p {
+    line-height: 1.6 !important;
+  }
+
+  .public-footer-grid a {
+    min-height: 34px;
+    align-items: center;
+  }
+
+  .public-footer-bottom {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+    padding-top: 16px !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+    font-size: 10px !important;
+  }
+
+  /* ================================================================
+     Touch devices: remove desktop hover jumps that feel glitchy.
+     ================================================================ */
+
+  @media (hover: none) {
+    .app-shell a:hover,
+    .app-shell button:hover,
+    .public-site a:hover,
+    .public-site button:hover,
+    .enterprise-card:hover,
+    .public-project-portfolio-card:hover {
+      transform: none !important;
+    }
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 430px) {
+  :root {
+    --mobile-page-x: 10px;
+  }
+
   .public-overview-kpi-grid,
   .public-finance-overview {
     grid-template-columns: 1fr !important;
@@ -254,5 +694,38 @@
   .public-map-toolbar-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+
+  .public-page-block-head {
+    flex-direction: column !important;
+  }
+
+  .licogi-notification-panel {
+    width: calc(100% - 8px) !important;
+    top: 4px !important;
+    right: 4px !important;
+    bottom: 4px !important;
+    border-radius: 20px 0 0 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .public-map-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .public-detail-related-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #trang-chu h1 {
+    font-size: 32px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .public-site * {
+    scroll-behavior: auto !important;
   }
 }
