@@ -1,0 +1,258 @@
+/* Mobile-first usability overrides. Loaded last so phone-specific rules stay predictable. */
+@media (max-width: 767px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  a,
+  input,
+  select {
+    touch-action: manipulation;
+  }
+
+  /* Internal operating system */
+  .app-shell .licogi-btn {
+    min-height: 44px;
+    border-radius: 14px;
+  }
+
+  .app-shell .licogi-icon-btn {
+    display: inline-grid;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 13px;
+  }
+
+  .app-shell .licogi-table-scroll {
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .app-shell input,
+  .app-shell select,
+  .app-shell textarea {
+    font-size: 16px;
+  }
+
+  /* Public header: compact, touch-friendly, and safe for phone notches. */
+  .public-header-pages {
+    height: 72px !important;
+    padding-top: env(safe-area-inset-top);
+    background: rgba(255, 255, 255, .985) !important;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, .08) !important;
+  }
+
+  .public-header-pages .public-container {
+    width: calc(100% - 24px) !important;
+  }
+
+  .public-header-pages .public-header-inner {
+    height: 72px !important;
+    min-height: 72px !important;
+    gap: 10px !important;
+  }
+
+  .public-header-pages .public-menu-button {
+    width: 44px !important;
+    height: 44px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    background: linear-gradient(145deg, #fff, #f8fafc) !important;
+    color: #172033 !important;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .08) !important;
+  }
+
+  .public-header-pages .public-menu-button:active {
+    transform: scale(.96);
+  }
+
+  .public-header-pages .public-menu-button svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.4;
+  }
+
+  .public-header-pages .public-page-nav {
+    top: calc(72px + env(safe-area-inset-top)) !important;
+    right: 12px !important;
+    left: 12px !important;
+    max-height: calc(100dvh - 92px - env(safe-area-inset-top)) !important;
+    overflow-y: auto !important;
+    border-radius: 18px !important;
+    padding: 8px !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .2) !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .public-header-pages .public-page-nav a {
+    min-height: 46px !important;
+    border-radius: 12px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+  }
+
+  /* Public pages */
+  .public-page-main {
+    padding-top: calc(72px + env(safe-area-inset-top)) !important;
+  }
+
+  .public-page-hero-compact {
+    padding: 30px 0 25px !important;
+  }
+
+  .public-page-hero h1 {
+    font-size: clamp(29px, 8.5vw, 36px) !important;
+    line-height: 1.12 !important;
+  }
+
+  .public-page-section {
+    padding: 24px 0 48px !important;
+  }
+
+  .public-projects-page-section .public-container {
+    width: calc(100% - 20px) !important;
+  }
+
+  .public-project-portfolio-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .public-project-portfolio-card {
+    min-height: 0 !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, .055) !important;
+  }
+
+  .public-overview-kpi-grid,
+  .public-finance-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Project map/data workspace: controls first, map then readable project data. */
+  .public-project-map-shell {
+    overflow: hidden;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, .08);
+  }
+
+  .public-map-toolbar {
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  .public-map-toolbar > div:first-child {
+    min-width: 0;
+  }
+
+  .public-map-toolbar > div:first-child h3 {
+    font-size: 16px !important;
+  }
+
+  .public-map-toolbar > div:first-child p {
+    margin-top: 3px;
+    font-size: 10px !important;
+    line-height: 1.45;
+  }
+
+  .public-map-toolbar-actions {
+    gap: 6px !important;
+  }
+
+  .public-map-toolbar-actions .public-icon-button,
+  .public-map-reset {
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 13px !important;
+  }
+
+  .public-map-controls {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+  }
+
+  .public-map-controls label,
+  .public-map-controls select {
+    width: 100% !important;
+    min-height: 46px !important;
+    border-radius: 13px !important;
+    font-size: 16px !important;
+  }
+
+  .public-map-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+  }
+
+  .public-map-stats button {
+    min-width: 0 !important;
+    min-height: 56px !important;
+    border-radius: 14px !important;
+  }
+
+  .public-map-workspace {
+    min-width: 0;
+  }
+
+  .public-map-canvas {
+    min-height: 52dvh !important;
+    height: 52dvh !important;
+  }
+
+  .public-map-overlay-legend {
+    max-width: calc(100% - 24px) !important;
+    max-height: 42dvh;
+    overflow-y: auto;
+    border-radius: 14px !important;
+  }
+
+  .public-map-legend-toggle,
+  .public-map-zoom-hint {
+    border-radius: 12px !important;
+  }
+
+  /* The current homepage is already responsive; tighten typography/touch targets. */
+  #trang-chu h1 {
+    font-size: clamp(34px, 10vw, 42px) !important;
+    line-height: 1.04 !important;
+  }
+
+  #trang-chu a {
+    min-height: 44px;
+  }
+
+  #trang-chu svg {
+    stroke-width: 2.2;
+  }
+}
+
+@media (max-width: 390px) {
+  .public-overview-kpi-grid,
+  .public-finance-overview {
+    grid-template-columns: 1fr !important;
+  }
+
+  .public-map-toolbar {
+    flex-direction: column !important;
+  }
+
+  .public-map-toolbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
