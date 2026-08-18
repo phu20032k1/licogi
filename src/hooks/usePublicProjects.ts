@@ -5,6 +5,7 @@ import type { PublicProjectRecord, PublicProjectsResponse } from "../lib/publicP
 
 const CACHE_KEY = "licogi-public-projects-cache-v1";
 const CACHE_MAX_AGE = 1000 * 60 * 60 * 24;
+const REQUEST_TIMEOUT = 10000;
 
 type CachedProjects = {
   savedAt: number;
@@ -27,38 +28,35 @@ function readCachedProjects() {
 
 function cacheProjects(projects: PublicProjectRecord[]) {
   if (typeof window === "undefined" || projects.length === 0) return;
-  try {
-    const payload: CachedProjects = { savedAt: Date.now(), projects };
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-  } catch {
-    // Private browsing / storage quota must not prevent the live API from working.
-  }
+  const payload: CachedProjects = { savedAt: Date.now(), projects };
+
+  // localStorage is synchronous and can briefly block Safari on iOS for a large
+  // project list. Persist after paint instead of delaying the first useful render.
+  window.setTimeout(() => {
+    try {
+      window.localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+    } catch {
+      // Private browsing / storage quota must not prevent the live API from working.
+    }
+  }, 0);
 }
 
 async function fetchPublicProjects() {
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 12000);
-    try {
-      const response = await fetch("/api/public/projects", {
-        cache: "no-store",
-        credentials: "same-origin",
-        signal: controller.signal,
-      });
-      const data = await response.json() as PublicProjectsResponse;
-      if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được dữ liệu dự án.");
-      return Array.isArray(data.projects) ? data.projects : [];
-    } catch (error) {
-      lastError = error;
-      if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 350));
-    } finally {
-      window.clearTimeout(timer);
-    }
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+  try {
+    const response = await fetch("/api/public/projects", {
+      cache: "default",
+      credentials: "same-origin",
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+    const data = await response.json() as PublicProjectsResponse;
+    if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được dữ liệu dự án.");
+    return Array.isArray(data.projects) ? data.projects : [];
+  } finally {
+    window.clearTimeout(timer);
   }
-
-  throw lastError instanceof Error ? lastError : new Error("Không tải được dữ liệu dự án.");
 }
 
 export default function usePublicProjects() {
@@ -86,8 +84,13 @@ export default function usePublicProjects() {
 
   useEffect(() => {
     const cachedProjects = readCachedProjects();
-    if (cachedProjects.length > 0) setProjects(cachedProjects);
-    void load();
+    if (cachedProjects.length > 0) {
+      setProjects(cachedProjects);
+      setLoading(false);
+      void load(true);
+    } else {
+      void load(false);
+    }
 
     const reloadWhenOnline = () => { void load(true); };
     const reloadWhenVisible = () => {
