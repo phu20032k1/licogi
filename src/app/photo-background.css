@@ -1,0 +1,197 @@
+/*
+ * High-impact photo treatment for LICOGI public + mobile surfaces.
+ * Loaded last so the visual change is unmistakable on iOS, Android and desktop.
+ */
+
+/* Homepage: use the construction image as the actual full hero background,
+   instead of keeping it only on the right side of the desktop composition. */
+.public-site #trang-chu,
+.public-site main > section:first-child {
+  background-color: #071426 !important;
+  background-image:
+    linear-gradient(90deg, rgba(4, 14, 28, .91) 0%, rgba(4, 14, 28, .82) 36%, rgba(4, 14, 28, .58) 62%, rgba(4, 14, 28, .30) 100%),
+    url("/media/home-hero-exact.webp") !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  background-position: 58% center !important;
+}
+
+/* The previous layout used a second image layer only on the right. Hide it so
+   the new full-bleed background stays clean and predictable. */
+.public-site #trang-chu [class*="heroBg"],
+.public-site main > section:first-child [class*="heroBg"] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.public-site #trang-chu::before,
+.public-site main > section:first-child::before {
+  background:
+    linear-gradient(90deg, rgba(5, 17, 32, .30), rgba(5, 17, 32, .06) 62%, transparent) !important;
+}
+
+.public-site #trang-chu [class*="heroTitle"],
+.public-site main > section:first-child [class*="heroTitle"] {
+  color: #fff !important;
+  text-shadow: 0 3px 22px rgba(0, 0, 0, .28);
+}
+
+.public-site #trang-chu [class*="heroTitle"] span,
+.public-site main > section:first-child [class*="heroTitle"] span {
+  color: #ff9a62 !important;
+}
+
+.public-site #trang-chu [class*="heroLead"],
+.public-site main > section:first-child [class*="heroLead"] {
+  color: rgba(241, 245, 249, .93) !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .20);
+}
+
+.public-site #trang-chu [class*="dataPanel"],
+.public-site main > section:first-child [class*="dataPanel"] {
+  border-color: rgba(255, 255, 255, .46) !important;
+  background: rgba(255, 255, 255, .93) !important;
+  box-shadow: 0 20px 52px rgba(2, 6, 23, .26) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.18);
+  backdrop-filter: blur(18px) saturate(1.18);
+}
+
+.public-site #trang-chu [class*="secondaryButton"],
+.public-site main > section:first-child [class*="secondaryButton"] {
+  border-color: rgba(255, 255, 255, .55) !important;
+  background: rgba(255, 255, 255, .93) !important;
+}
+
+/* Inner public pages also get a construction-photo header so the visual system
+   feels consistent instead of falling back to a flat gradient. */
+.public-page-hero,
+.public-page-hero-compact {
+  position: relative;
+  isolation: isolate;
+  background-color: #071426 !important;
+  background-image:
+    linear-gradient(90deg, rgba(5, 18, 34, .88), rgba(5, 18, 34, .68) 54%, rgba(5, 18, 34, .45)),
+    url("/media/home-hero-exact.webp") !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  background-position: 60% 48% !important;
+}
+
+.public-page-hero h1,
+.public-page-hero-compact h1 {
+  color: #fff !important;
+  text-shadow: 0 3px 20px rgba(0, 0, 0, .26);
+}
+
+.public-page-hero p,
+.public-page-hero-compact p {
+  color: rgba(241, 245, 249, .90) !important;
+}
+
+.public-page-hero > .public-container > span,
+.public-page-hero-compact > .public-container > span {
+  color: #fdba74 !important;
+}
+
+/* Internal operating dashboard: the main control-center hero now uses the
+   same construction visual instead of a plain dark gradient. */
+.app-shell main .dark-glass.rounded-\[34px\] {
+  background-color: #071426 !important;
+  background-image:
+    linear-gradient(100deg, rgba(3, 12, 24, .94) 0%, rgba(3, 12, 24, .82) 52%, rgba(3, 12, 24, .46) 100%),
+    url("/media/home-hero-exact.webp") !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  background-position: 62% center !important;
+  border: 1px solid rgba(255, 255, 255, .10) !important;
+  box-shadow: 0 24px 62px rgba(2, 6, 23, .24) !important;
+}
+
+/* Compact tablets */
+@media (max-width: 1023px) {
+  .public-site #trang-chu,
+  .public-site main > section:first-child {
+    background-position: 66% center !important;
+  }
+
+  .public-page-hero,
+  .public-page-hero-compact {
+    background-position: 66% center !important;
+  }
+
+  .app-shell main .dark-glass.rounded-\[34px\] {
+    background-position: 66% center !important;
+  }
+}
+
+/* Phones: stronger overlay and image crop tuned for portrait screens. */
+@media (max-width: 767px) {
+  .public-site #trang-chu,
+  .public-site main > section:first-child {
+    background-image:
+      linear-gradient(180deg, rgba(4, 14, 28, .86) 0%, rgba(4, 14, 28, .78) 50%, rgba(4, 14, 28, .68) 100%),
+      url("/media/home-hero-exact.webp") !important;
+    background-position: 69% center !important;
+  }
+
+  .public-site #trang-chu::before,
+  .public-site main > section:first-child::before {
+    background: linear-gradient(180deg, rgba(4, 14, 28, .12), rgba(4, 14, 28, .28)) !important;
+  }
+
+  .public-site #trang-chu [class*="heroTitle"],
+  .public-site main > section:first-child [class*="heroTitle"] {
+    color: #fff !important;
+    font-size: clamp(34px, 10.2vw, 44px) !important;
+    line-height: 1.02 !important;
+  }
+
+  .public-site #trang-chu [class*="heroLead"],
+  .public-site main > section:first-child [class*="heroLead"] {
+    color: rgba(248, 250, 252, .92) !important;
+  }
+
+  .public-site #trang-chu [class*="dataPanel"],
+  .public-site main > section:first-child [class*="dataPanel"] {
+    border-radius: 21px !important;
+    background: rgba(255, 255, 255, .94) !important;
+    box-shadow: 0 18px 46px rgba(2, 6, 23, .30) !important;
+  }
+
+  .public-page-hero,
+  .public-page-hero-compact {
+    background-image:
+      linear-gradient(180deg, rgba(5, 18, 34, .82), rgba(5, 18, 34, .68)),
+      url("/media/home-hero-exact.webp") !important;
+    background-position: 69% center !important;
+  }
+
+  .app-shell main .dark-glass.rounded-\[34px\] {
+    background-image:
+      linear-gradient(180deg, rgba(3, 12, 24, .90), rgba(3, 12, 24, .72)),
+      url("/media/home-hero-exact.webp") !important;
+    background-position: 70% center !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .public-site #trang-chu,
+  .public-site main > section:first-child,
+  .public-page-hero,
+  .public-page-hero-compact,
+  .app-shell main .dark-glass.rounded-\[34px\] {
+    background-position: 72% center !important;
+  }
+}
+
+/* No fixed backgrounds: Safari iOS handles scrolling more smoothly this way. */
+@media (prefers-reduced-motion: reduce) {
+  .public-site #trang-chu,
+  .public-site main > section:first-child,
+  .public-page-hero,
+  .public-page-hero-compact,
+  .app-shell main .dark-glass.rounded-\[34px\] {
+    background-attachment: scroll !important;
+  }
+}
