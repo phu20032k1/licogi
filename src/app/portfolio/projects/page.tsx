@@ -4,7 +4,7 @@ import PublicSiteFrame from "../../../components/PublicSiteFrame";
 
 export default function PublicProjectsPage() {
   return <PublicSiteFrame>
-    <main className="public-page-main">
+    <main className="public-page-main public-projects-route">
       <section className="public-page-hero public-page-hero-compact">
         <div className="public-container">
           <span>Danh mục dự án</span>
