@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Download, Eye, LayoutGrid, List, MapPin, Pencil, Plus, RefreshCcw, Search, Trash2, Upload } from "lucide-react";
 import { ProjectStatus, ProjectType, projectTypes } from "../data/projects";
-import { fetchProjectsFromDataCenter, ProjectWithRowId, projectToRow } from "../lib/projectData";
+import { fetchProjectsFromDataCenter, ProjectWithRowId, projectToRow, readProjectSnapshot } from "../lib/projectData";
 import PageHeader from "./ui/PageHeader";
 import ProgressBar from "./ui/ProgressBar";
 import { RiskBadge, StatusBadge } from "./ui/StatusBadge";
@@ -39,6 +39,9 @@ export default function ProjectManager() {
     // Cards are much easier to scan and tap than a 1200px table on phones.
     // Apply this once at mount so an explicit user toggle is still respected.
     if (window.matchMedia("(max-width: 767px)").matches) setView("grid");
+
+    const snapshot = readProjectSnapshot();
+    if (snapshot.length > 0) setItems(snapshot);
 
     const timer = window.setTimeout(() => { void load(); }, 0);
     const sync = () => { void load(); };
