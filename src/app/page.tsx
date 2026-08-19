@@ -1,9 +1,10 @@
 import HomePageClient from "./HomePageClient";
 import { PublicProjectBootstrapProvider } from "../components/PublicProjectBootstrapContext";
 import { getPublicMapProjects } from "../lib/publicProjectMapData";
+import type { PublicProjectRecord } from "../lib/publicProject";
 
 export default async function HomePage() {
-  let initialProjects = [];
+  let initialProjects: PublicProjectRecord[] = [];
   try {
     initialProjects = await getPublicMapProjects();
   } catch (error) {
