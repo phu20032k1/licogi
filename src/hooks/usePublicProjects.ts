@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePublicProjectBootstrap } from "../components/PublicProjectBootstrapContext";
 import type { PublicProjectRecord, PublicProjectsResponse } from "../lib/publicProject";
 
 const CACHE_KEY = "licogi-public-projects-cache-v1";
@@ -39,14 +40,11 @@ function readCachedProjects(allowStale = true): CachedRead {
 function cacheProjects(projects: PublicProjectRecord[]) {
   if (typeof window === "undefined" || projects.length === 0) return;
   const payload: CachedProjects = { savedAt: Date.now(), projects };
-
-  // localStorage is synchronous. Persist after paint so Safari does not block the
-  // first useful frame while serializing a large project list.
   window.setTimeout(() => {
     try {
       window.localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
     } catch {
-      // Private browsing / storage quota must not prevent live data from working.
+      // Safari private mode / quota errors must not block rendering.
     }
   }, 0);
 }
@@ -69,11 +67,13 @@ async function fetchProjectPayload(endpoint: string, timeout: number) {
   }
 }
 
-export default function usePublicProjects() {
-  const [projects, setProjects] = useState<PublicProjectRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function usePublicProjects(explicitInitialProjects: PublicProjectRecord[] = []) {
+  const bootstrappedProjects = usePublicProjectBootstrap();
+  const initialProjects = explicitInitialProjects.length > 0 ? explicitInitialProjects : bootstrappedProjects;
+  const [projects, setProjects] = useState<PublicProjectRecord[]>(initialProjects);
+  const [loading, setLoading] = useState(initialProjects.length === 0);
   const [error, setError] = useState("");
-  const hasDataRef = useRef(false);
+  const hasDataRef = useRef(initialProjects.length > 0);
   const disposedRef = useRef(false);
 
   const applyProjects = useCallback((nextProjects: PublicProjectRecord[]) => {
@@ -88,14 +88,15 @@ export default function usePublicProjects() {
     try {
       const nextProjects = await fetchProjectPayload("/api/public/projects", REQUEST_TIMEOUT);
       if (disposedRef.current) return;
-      applyProjects(nextProjects);
-      cacheProjects(nextProjects);
+      if (nextProjects.length > 0) {
+        applyProjects(nextProjects);
+        cacheProjects(nextProjects);
+      }
       setError("");
     } catch (err) {
       if (disposedRef.current) return;
       const cached = readCachedProjects(true);
       if (!hasDataRef.current && cached.projects.length > 0) applyProjects(cached.projects);
-
       if (!hasDataRef.current) {
         setError(err instanceof Error ? err.message : "Không tải được dữ liệu dự án.");
       } else if (!silent && cached.stale) {
@@ -112,8 +113,6 @@ export default function usePublicProjects() {
       if (disposedRef.current) return false;
       if (previewProjects.length > 0) {
         applyProjects(previewProjects);
-        // Important on iOS: keep the lightweight response too. Previously it was
-        // rendered once but never cached, so Safari had to start from zero again.
         cacheProjects(previewProjects);
         setError("");
         return true;
@@ -126,38 +125,37 @@ export default function usePublicProjects() {
 
   useEffect(() => {
     disposedRef.current = false;
-    const cached = readCachedProjects(true);
     let refreshTimer = 0;
 
-    // Never make a returning iPhone wait for the network. Even a stale snapshot is
-    // more useful than a spinner; the server refresh happens after first paint.
-    if (cached.projects.length > 0) {
-      applyProjects(cached.projects);
-      setError("");
-      refreshTimer = window.setTimeout(() => { void loadFull(true); }, 900);
+    if (initialProjects.length > 0) {
+      hasDataRef.current = true;
+      setLoading(false);
+      cacheProjects(initialProjects);
+      refreshTimer = window.setTimeout(() => { void loadFull(true); }, 1200);
     } else {
-      // Hard loading budget: the UI stops presenting an endless spinner even when a
-      // Vercel cold start or mobile network stalls. The request may still complete
-      // in the background and populate the page immediately when it does.
-      const budgetTimer = window.setTimeout(() => {
-        if (disposedRef.current || hasDataRef.current) return;
-        setLoading(false);
-        setError("Kết nối đang chậm. Hệ thống vẫn tiếp tục đồng bộ dữ liệu ở nền.");
-      }, INITIAL_LOADING_BUDGET);
+      const cached = readCachedProjects(true);
+      if (cached.projects.length > 0) {
+        applyProjects(cached.projects);
+        setError("");
+        refreshTimer = window.setTimeout(() => { void loadFull(true); }, 900);
+      } else {
+        const budgetTimer = window.setTimeout(() => {
+          if (disposedRef.current || hasDataRef.current) return;
+          setLoading(false);
+          setError("Kết nối đang chậm. Hệ thống vẫn tiếp tục đồng bộ dữ liệu ở nền.");
+        }, INITIAL_LOADING_BUDGET);
 
-      void loadPreview().then((previewReady) => {
-        if (disposedRef.current) return;
-        window.clearTimeout(budgetTimer);
-        if (previewReady) {
-          refreshTimer = window.setTimeout(() => { void loadFull(true); }, 1200);
-          return;
-        }
-
-        // Do not put the phone back into a blocking loading state. A full request is
-        // only a background recovery path after the lightweight endpoint timed out.
-        setLoading(false);
-        void loadFull(true);
-      });
+        void loadPreview().then((previewReady) => {
+          if (disposedRef.current) return;
+          window.clearTimeout(budgetTimer);
+          if (previewReady) {
+            refreshTimer = window.setTimeout(() => { void loadFull(true); }, 1200);
+            return;
+          }
+          setLoading(false);
+          void loadFull(true);
+        });
+      }
     }
 
     const reloadWhenOnline = () => { void loadFull(true); };
@@ -173,7 +171,7 @@ export default function usePublicProjects() {
       window.removeEventListener("online", reloadWhenOnline);
       document.removeEventListener("visibilitychange", reloadWhenVisible);
     };
-  }, [applyProjects, loadFull, loadPreview]);
+  }, [applyProjects, initialProjects, loadFull, loadPreview]);
 
   const reload = useCallback(() => {
     setError("");

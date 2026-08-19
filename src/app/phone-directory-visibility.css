@@ -1,0 +1,7 @@
+.phone-project-directory-only { display: none; }
+.desktop-project-directory-only { display: block; }
+
+@media (max-width: 767px) {
+  .phone-project-directory-only { display: block; }
+  .desktop-project-directory-only { display: none !important; }
+}

@@ -21,6 +21,8 @@ import "./mobile-universal.css";
 import "./photo-background.css";
 import "./phone-only-v2.css";
 import "./phone-route-fixes.css";
+import "./phone-touch-data-fixes.css";
+import "./phone-directory-visibility.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -69,16 +71,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#071426",
+  themeColor: "#f7f8fa",
   colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <head>
-        <link rel="preload" href="/media/home-hero-exact.webp" as="image" type="image/webp" />
-      </head>
       <body className={beVietnamPro.variable}>
         <AppShell>{children}</AppShell>
       </body>

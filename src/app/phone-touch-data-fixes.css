@@ -1,0 +1,256 @@
+/* Final phone-only interaction/data layer. Desktop stays unchanged. */
+.phone-home-map-only { display: none; }
+.desktop-home-map-only { display: block; }
+
+@media (max-width: 767px) {
+  .phone-home-map-only { display: block; }
+  .desktop-home-map-only { display: none !important; }
+
+  /* Never let decorative overlays intercept taps on iOS Safari. */
+  .public-site #trang-chu::before,
+  .public-site #trang-chu::after,
+  .public-page-hero::before,
+  .public-page-hero::after,
+  .public-page-hero-compact::before,
+  .public-page-hero-compact::after,
+  .phone-projects-hero::before,
+  .phone-projects-hero::after,
+  .public-project-portfolio-card::before,
+  .public-project-portfolio-card::after,
+  [data-reveal]::before,
+  [data-reveal]::after {
+    pointer-events: none !important;
+  }
+
+  .public-site a,
+  .public-site button,
+  .public-site input,
+  .public-site select,
+  .public-site textarea,
+  .phone-projects-page a,
+  .phone-projects-page button,
+  .phone-projects-page input,
+  .phone-projects-page select {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(194, 65, 12, .12);
+  }
+
+  .public-site a,
+  .public-site button,
+  .phone-projects-page a,
+  .phone-projects-page button {
+    position: relative;
+    z-index: 2;
+  }
+
+  .public-header-pages {
+    z-index: 1000 !important;
+    pointer-events: auto !important;
+  }
+
+  .public-header-pages .public-header-inner,
+  .public-header-pages .public-header-actions,
+  .public-header-pages .public-menu-button,
+  .public-header-pages .public-page-nav,
+  .public-header-pages .public-page-nav a {
+    pointer-events: auto !important;
+  }
+
+  .public-header-pages .public-page-nav.is-open {
+    z-index: 1010 !important;
+  }
+
+  [data-reveal] {
+    pointer-events: auto !important;
+  }
+
+  /* Instant lightweight map rendered from server-provided project data. */
+  .phone-home-map-card {
+    overflow: hidden;
+    border: 1px solid rgba(203, 213, 225, .9);
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, .11);
+  }
+
+  .phone-home-map-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 14px 12px;
+    border-bottom: 1px solid #e8edf2;
+  }
+
+  .phone-home-map-head > div {
+    min-width: 0;
+  }
+
+  .phone-home-map-head span,
+  .phone-home-map-head strong {
+    display: block;
+  }
+
+  .phone-home-map-head span {
+    color: #c2410c;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .12em;
+  }
+
+  .phone-home-map-head strong {
+    margin-top: 3px;
+    color: #0f172a;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .phone-home-map-head > a {
+    display: inline-flex;
+    min-height: 42px;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+    border-radius: 12px;
+    padding: 0 10px;
+    background: #fff7ed;
+    color: #c2410c;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .phone-home-map-canvas {
+    position: relative;
+    display: grid;
+    min-height: 365px;
+    place-items: center;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 48%, rgba(251, 146, 60, .10), transparent 36%),
+      linear-gradient(180deg, #f8fafc, #eef3f7);
+  }
+
+  .phone-home-map-canvas::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    opacity: .35;
+    background-image:
+      linear-gradient(#dce4ec 1px, transparent 1px),
+      linear-gradient(90deg, #dce4ec 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  .phone-home-map-canvas svg {
+    position: relative;
+    z-index: 1;
+    width: min(68vw, 245px);
+    height: 320px;
+    overflow: visible;
+    filter: drop-shadow(0 14px 24px rgba(15, 23, 42, .12));
+  }
+
+  .phone-vietnam-shape {
+    fill: rgba(255,255,255,.88);
+    stroke: #94a3b8;
+    stroke-width: 2.2;
+  }
+
+  .phone-map-point {
+    stroke: #fff;
+    stroke-width: 2.4;
+  }
+
+  .phone-map-point.is-ongoing { fill: #ea580c; }
+  .phone-map-point.is-completed { fill: #16a34a; }
+  .phone-map-point.is-warranty { fill: #2563eb; }
+
+  .phone-home-map-legend {
+    position: absolute;
+    z-index: 2;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 11px;
+    border: 1px solid rgba(226, 232, 240, .92);
+    border-radius: 13px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,.92);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .phone-home-map-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #475569;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .phone-home-map-legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+  }
+
+  .phone-home-map-legend i.is-ongoing { background: #ea580c; }
+  .phone-home-map-legend i.is-completed { background: #16a34a; }
+  .phone-home-map-legend i.is-warranty { background: #2563eb; }
+
+  .phone-home-map-button {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin: 10px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    color: #fff !important;
+    font-size: 11px;
+    font-weight: 850;
+    box-shadow: 0 10px 24px rgba(194, 65, 12, .22);
+  }
+
+  /* Buttons/filters must stay above cards and scroll containers. */
+  .phone-project-filters,
+  .phone-project-status-tabs,
+  .phone-project-filter-row,
+  .phone-project-actions {
+    position: relative;
+    z-index: 3;
+    pointer-events: auto !important;
+  }
+
+  .phone-project-status-tabs {
+    display: flex !important;
+    gap: 7px !important;
+    overflow-x: auto !important;
+    padding-bottom: 2px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .phone-project-status-tabs::-webkit-scrollbar { display: none; }
+
+  .phone-project-status-tabs button {
+    min-width: max-content !important;
+    min-height: 44px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .phone-project-actions a,
+  .phone-project-reload,
+  .phone-project-error button,
+  .public-outline-button,
+  .public-primary-button,
+  .public-secondary-button {
+    min-height: 46px !important;
+  }
+}
