@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import MobileBottomNav from "./MobileBottomNav";
 import { readSession, refreshServerSession } from "../lib/authSession";
 import { canViewModule, moduleFromPath, roleDefaultRoute } from "../lib/rbac";
 
@@ -98,6 +99,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <main className="max-w-full px-3 pb-10 pt-4 sm:px-4 lg:px-5 xl:px-6">
           <div className="mx-auto max-w-[1820px] min-w-0">{children}</div>
         </main>
+        <MobileBottomNav onOpenMenu={() => setMobileOpen(true)} />
       </div>
     </div>
   );
