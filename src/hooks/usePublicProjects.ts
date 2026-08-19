@@ -75,9 +75,13 @@ export default function usePublicProjects() {
     } catch (err) {
       const cachedProjects = readCachedProjects();
       setProjects((current) => current.length > 0 ? current : cachedProjects);
-      setError(cachedProjects.length > 0
-        ? "Mạng đang không ổn định. Đang hiển thị dữ liệu gần nhất."
-        : err instanceof Error ? err.message : "Không tải được dữ liệu dự án.");
+      if (!silent) {
+        setError(cachedProjects.length > 0
+          ? "Mạng đang không ổn định. Đang hiển thị dữ liệu gần nhất."
+          : err instanceof Error ? err.message : "Không tải được dữ liệu dự án.");
+      } else if (cachedProjects.length > 0) {
+        setError("");
+      }
     } finally {
       if (!silent) setLoading(false);
     }
@@ -97,14 +101,18 @@ export default function usePublicProjects() {
       // can show useful project counts and cards.
       void fetchProjectPayload("/api/public/projects/map", PREVIEW_TIMEOUT)
         .then((previewProjects) => {
-          if (disposed || previewProjects.length === 0) return;
-          setProjects(previewProjects);
-          setLoading(false);
-          setError("");
+          if (disposed) return;
+          if (previewProjects.length > 0) {
+            setProjects(previewProjects);
+            setLoading(false);
+            setError("");
+            void load(true);
+          } else {
+            void load(false);
+          }
         })
-        .catch(() => undefined)
-        .finally(() => {
-          if (!disposed) void load(true);
+        .catch(() => {
+          if (!disposed) void load(false);
         });
     }
 
