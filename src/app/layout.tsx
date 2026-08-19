@@ -21,6 +21,7 @@ import "./mobile-universal.css";
 import "./photo-background.css";
 import "./phone-only-v2.css";
 import "./phone-route-fixes.css";
+import "./phone-touch-data-fixes.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
