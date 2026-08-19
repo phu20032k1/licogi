@@ -3,9 +3,10 @@ import PublicProjectsWorkspace from "../../../components/PublicProjectsWorkspace
 import { PublicProjectBootstrapProvider } from "../../../components/PublicProjectBootstrapContext";
 import PublicSiteFrame from "../../../components/PublicSiteFrame";
 import { getPublicMapProjects } from "../../../lib/publicProjectMapData";
+import type { PublicProjectRecord } from "../../../lib/publicProject";
 
 export default async function PublicProjectsPage() {
-  let initialProjects = [];
+  let initialProjects: PublicProjectRecord[] = [];
   try {
     initialProjects = await getPublicMapProjects();
   } catch (error) {
