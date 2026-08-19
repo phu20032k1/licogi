@@ -1,43 +1,37 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import MobilePublicProjects from "./MobilePublicProjects";
 
-const PublicProjectMap = dynamic(() => import("./PublicProjectMap"), {
-  ssr: false,
-  loading: () => <div className="public-map-bootstrap" aria-live="polite"><span className="public-map-bootstrap-spinner" /><div><strong>Đang mở bản đồ dự án</strong><small>Dữ liệu công trình đang được tải song song.</small></div></div>,
-});
+type DesktopProps = {
+  status: string;
+  type: string;
+  search: string;
+};
 
-export default function PublicProjectsWorkspace() {
-  const searchParams = useSearchParams();
-  const status = searchParams.get("status") || "all";
-  const type = searchParams.get("type") || "all";
-  const search = searchParams.get("q") || "";
-  const [phoneMode, setPhoneMode] = useState<boolean | null>(null);
+function DesktopProjectDirectory({ status, type, search }: DesktopProps) {
+  const [MapComponent, setMapComponent] = useState<ComponentType | null>(null);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
-    const sync = () => setPhoneMode(media.matches);
-    sync();
-    media.addEventListener?.("change", sync);
-    return () => media.removeEventListener?.("change", sync);
-  }, []);
+    const media = window.matchMedia("(min-width: 768px)");
+    let active = true;
+    const load = () => {
+      if (!media.matches || MapComponent) return;
+      void import("./PublicProjectMap").then((module) => {
+        if (active) setMapComponent(() => module.default);
+      });
+    };
+    load();
+    media.addEventListener?.("change", load);
+    return () => {
+      active = false;
+      media.removeEventListener?.("change", load);
+    };
+  }, [MapComponent]);
 
   useEffect(() => {
-    if (phoneMode !== false) return;
-    // Desktop/tablet map keeps the richer Leaflet experience. Phone mode avoids
-    // downloading/parsing that bundle entirely and uses MobilePublicProjects.
-    void fetch("/api/public/projects/map", {
-      cache: "default",
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-    }).catch(() => undefined);
-  }, [phoneMode]);
-
-  useEffect(() => {
-    if (phoneMode !== false) return;
+    if (!MapComponent) return;
     const frame = window.requestAnimationFrame(() => {
       window.dispatchEvent(new CustomEvent("licogi-public-project-filter", {
         detail: {
@@ -49,15 +43,27 @@ export default function PublicProjectsWorkspace() {
       }));
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [phoneMode, search, status, type]);
+  }, [MapComponent, search, status, type]);
 
-  if (phoneMode === null) {
-    return <div className="phone-projects-entry-skeleton"><span/><span/><span/></div>;
+  if (!MapComponent) {
+    return <div className="public-map-bootstrap" aria-live="polite"><span className="public-map-bootstrap-spinner" /><div><strong>Đang mở bản đồ dự án</strong><small>Chuẩn bị bản đồ tương tác trên máy tính.</small></div></div>;
   }
 
-  if (phoneMode) {
-    return <MobilePublicProjects initialStatus={status} initialType={type} initialSearch={search} />;
-  }
+  return <MapComponent />;
+}
 
-  return <PublicProjectMap />;
+export default function PublicProjectsWorkspace() {
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status") || "all";
+  const type = searchParams.get("type") || "all";
+  const search = searchParams.get("q") || "";
+
+  return <>
+    <div className="phone-project-directory-only">
+      <MobilePublicProjects initialStatus={status} initialType={type} initialSearch={search} />
+    </div>
+    <div className="desktop-project-directory-only">
+      <DesktopProjectDirectory status={status} type={type} search={search} />
+    </div>
+  </>;
 }
