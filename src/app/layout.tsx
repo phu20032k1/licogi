@@ -17,6 +17,7 @@ import "./home-hero-asset.css";
 import "./mobile-polish.css";
 import "./mobile-icons.css";
 import "./mobile-floating.css";
+import "./mobile-universal.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -37,6 +38,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",
   icons: { icon: "/brand/licogi183-logo.svg", shortcut: "/brand/licogi183-logo.svg" },
+  formatDetection: { telephone: false, email: false, address: false },
+  appleWebApp: {
+    capable: true,
+    title: "LICOGI 18.3",
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     type: "website",
     locale: siteConfig.locale,
@@ -58,6 +65,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#f7f8fa",
   colorScheme: "light",
 };

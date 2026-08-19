@@ -7,6 +7,39 @@ type StoredRow = Record<string, string> & { _id?: string };
 
 export type ProjectWithRowId = Project & { _rowId?: string };
 
+const PROJECT_SNAPSHOT_KEY = "licogi-projects-snapshot-v1";
+const PROJECT_SNAPSHOT_MAX_AGE = 1000 * 60 * 60 * 24;
+
+type ProjectSnapshot = {
+  savedAt: number;
+  projects: ProjectWithRowId[];
+};
+
+export function readProjectSnapshot(): ProjectWithRowId[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(PROJECT_SNAPSHOT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ProjectSnapshot;
+    if (!parsed || !Array.isArray(parsed.projects)) return [];
+    if (!Number.isFinite(parsed.savedAt) || Date.now() - parsed.savedAt > PROJECT_SNAPSHOT_MAX_AGE) return [];
+    return parsed.projects;
+  } catch {
+    return [];
+  }
+}
+
+function cacheProjectSnapshot(projects: ProjectWithRowId[]) {
+  if (typeof window === "undefined" || projects.length === 0) return;
+  window.setTimeout(() => {
+    try {
+      window.localStorage.setItem(PROJECT_SNAPSHOT_KEY, JSON.stringify({ savedAt: Date.now(), projects } satisfies ProjectSnapshot));
+    } catch {
+      // Storage failures must never block the server-backed project list.
+    }
+  }, 0);
+}
+
 export function rowToProject(row: StoredRow, index: number): ProjectWithRowId {
   const province = row.province || "Hà Nội";
   const fallback = resolveProvinceCoordinates(province);
@@ -113,7 +146,7 @@ function publicProjectToProject(project: PublicProjectRecord, index: number): Pr
 
 async function fetchPublicProjectFallback() {
   const response = await fetch("/api/public/projects", {
-    cache: "no-store",
+    cache: "default",
     credentials: "same-origin",
   });
   const data = await response.json() as PublicProjectsResponse;
@@ -126,15 +159,22 @@ export async function fetchProjectsFromDataCenter(): Promise<ProjectWithRowId[]>
     const response = await fetch("/api/data/projects", { cache: "no-store", credentials: "same-origin" });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.message ?? "Không tải được danh mục dự án.");
-    return mergeServerAndClientRows("projects", data.rows as StoredRow[]).map(rowToProject);
+    const projects = mergeServerAndClientRows("projects", data.rows as StoredRow[]).map(rowToProject);
+    cacheProjectSnapshot(projects);
+    return projects;
   } catch {
     try {
       const publicProjects = await fetchPublicProjectFallback();
-      if (publicProjects.length > 0) return publicProjects;
+      if (publicProjects.length > 0) {
+        cacheProjectSnapshot(publicProjects);
+        return publicProjects;
+      }
     } catch {
       // Fall through to the device cache only when both server sources are unavailable.
     }
 
-    return readClientRows("projects").map((row, index) => rowToProject(row as StoredRow, index));
+    const localProjects = readClientRows("projects").map((row, index) => rowToProject(row as StoredRow, index));
+    if (localProjects.length > 0) return localProjects;
+    return readProjectSnapshot();
   }
 }

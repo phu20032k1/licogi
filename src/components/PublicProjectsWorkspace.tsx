@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 const PublicProjectMap = dynamic(() => import("./PublicProjectMap"), {
   ssr: false,
-  loading: () => <div className="public-page-loading">Đang khởi tạo bản đồ dự án...</div>,
+  loading: () => <div className="public-map-bootstrap" aria-live="polite"><span className="public-map-bootstrap-spinner" /><div><strong>Đang mở bản đồ dự án</strong><small>Dữ liệu công trình đang được tải song song để hiển thị nhanh hơn trên điện thoại.</small></div></div>,
 });
 
 export default function PublicProjectsWorkspace() {
@@ -14,6 +14,16 @@ export default function PublicProjectsWorkspace() {
   const status = searchParams.get("status") || "all";
   const type = searchParams.get("type") || "all";
   const search = searchParams.get("q") || "";
+
+  useEffect(() => {
+    // Start the compact data request immediately instead of waiting for the Leaflet
+    // bundle to finish parsing on slower iPhones/Android devices.
+    void fetch("/api/public/projects/map", {
+      cache: "default",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    }).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {

@@ -1,0 +1,682 @@
+/*
+ * Cross-platform mobile layer for LICOGI 18.3.
+ * This file is intentionally loaded after all legacy/mobile CSS.
+ * Targets iOS Safari, Android Chrome/WebView, small phones and compact tablets.
+ */
+
+:root {
+  --licogi-mobile-nav-height: 72px;
+  --licogi-mobile-edge: 12px;
+}
+
+@media (max-width: 1023px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    background: #f5f7fa;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* Internal top bar follows the physical safe area on iPhone/iPad. */
+  .app-shell header.sticky.top-0 {
+    height: calc(64px + env(safe-area-inset-top)) !important;
+    padding-top: env(safe-area-inset-top);
+    border-bottom-color: rgba(226, 232, 240, .78) !important;
+    background: rgba(255, 255, 255, .92) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.25);
+    backdrop-filter: blur(22px) saturate(1.25);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, .06) !important;
+  }
+
+  .app-shell main {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Bottom navigation makes the internal product feel like a native app. */
+  .licogi-mobile-nav {
+    position: fixed;
+    z-index: 35;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    display: block;
+    pointer-events: none;
+  }
+
+  .licogi-mobile-nav-inner {
+    display: flex;
+    width: min(100%, 620px);
+    min-height: var(--licogi-mobile-nav-height);
+    margin: 0 auto;
+    padding: 6px;
+    border: 1px solid rgba(203, 213, 225, .78);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, .93);
+    box-shadow: 0 18px 55px rgba(15, 23, 42, .17), 0 2px 8px rgba(15, 23, 42, .06);
+    -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    backdrop-filter: blur(24px) saturate(1.35);
+    pointer-events: auto;
+  }
+
+  .licogi-mobile-nav a,
+  .licogi-mobile-nav button {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    min-height: 58px;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: #64748b;
+    font: inherit;
+    text-decoration: none;
+    transition: transform .16s ease, color .16s ease, background-color .16s ease;
+  }
+
+  .licogi-mobile-nav a > span,
+  .licogi-mobile-nav button > span {
+    display: grid;
+    width: 32px;
+    height: 28px;
+    place-items: center;
+    border-radius: 11px;
+    transition: background-color .16s ease, box-shadow .16s ease, transform .16s ease;
+  }
+
+  .licogi-mobile-nav small {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 10px;
+    font-weight: 760;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .licogi-mobile-nav a.is-active {
+    color: #c2410c;
+    background: linear-gradient(180deg, rgba(255, 247, 237, .86), rgba(255, 237, 213, .72));
+  }
+
+  .licogi-mobile-nav a.is-active > span {
+    color: #fff;
+    background: linear-gradient(145deg, #fb923c, #ea580c);
+    box-shadow: 0 7px 16px rgba(234, 88, 12, .24);
+  }
+
+  .licogi-mobile-nav a:active,
+  .licogi-mobile-nav button:active {
+    transform: scale(.96);
+  }
+
+  /* Let the software keyboard own the bottom edge while typing. */
+  @supports selector(:has(*)) {
+    .app-shell:has(input:focus, textarea:focus, select:focus) .licogi-mobile-nav {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(120%);
+    }
+  }
+
+  /* Mobile drawer: safe-area aware and comfortable on Android tablets too. */
+  .app-shell > aside {
+    width: min(88vw, 344px) !important;
+    max-width: 344px !important;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .app-shell > aside nav a {
+    min-height: 48px;
+  }
+
+  /* Native-feeling controls on touch devices. */
+  .app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .app-shell select,
+  .app-shell textarea,
+  .public-site input,
+  .public-site select,
+  .public-site textarea {
+    font-size: 16px !important;
+  }
+
+  .app-shell button,
+  .app-shell a,
+  .public-site button,
+  .public-site a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Project cards get more breathing room than desktop-derived tables. */
+  .app-shell main .licogi-scroll article {
+    border-color: rgba(226, 232, 240, .94) !important;
+    border-radius: 20px !important;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(251, 146, 60, .07), transparent 34%),
+      #fff !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .065) !important;
+  }
+
+  /* Public map bootstrap while Leaflet JS is being parsed. */
+  .public-map-bootstrap {
+    display: flex;
+    min-height: 260px;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 70% 15%, rgba(249, 115, 22, .10), transparent 34%),
+      linear-gradient(180deg, #fff, #f8fafc);
+    color: #0f172a;
+    text-align: left;
+    box-shadow: 0 14px 40px rgba(15, 23, 42, .07);
+  }
+
+  .public-map-bootstrap-spinner {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border: 4px solid #fed7aa;
+    border-top-color: #ea580c;
+    border-radius: 999px;
+    animation: licogi-mobile-spin .8s linear infinite;
+  }
+
+  .public-map-bootstrap strong,
+  .public-map-bootstrap small {
+    display: block;
+  }
+
+  .public-map-bootstrap strong {
+    font-size: 15px;
+    font-weight: 850;
+  }
+
+  .public-map-bootstrap small {
+    max-width: 350px;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  @keyframes licogi-mobile-spin {
+    to { transform: rotate(360deg); }
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --licogi-mobile-edge: 11px;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(249, 115, 22, .055), transparent 28%),
+      #f5f7fa;
+  }
+
+  .app-shell main {
+    padding-top: 12px !important;
+    padding-right: var(--licogi-mobile-edge) !important;
+    padding-left: var(--licogi-mobile-edge) !important;
+  }
+
+  .app-shell main > div {
+    max-width: 100%;
+  }
+
+  /* Internal cards: one consistent radius/depth system across iOS and Android. */
+  .app-shell .glass-card,
+  .app-shell .enterprise-card,
+  .app-shell .dark-glass,
+  .app-shell main section.rounded-\[18px\],
+  .app-shell main section.rounded-\[20px\],
+  .app-shell main section.rounded-\[22px\] {
+    border-radius: 20px !important;
+  }
+
+  .licogi-page-header {
+    padding: 17px 16px !important;
+    border: 1px solid rgba(226, 232, 240, .9) !important;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(249, 115, 22, .09), transparent 38%),
+      rgba(255, 255, 255, .96) !important;
+  }
+
+  .licogi-page-header h1 {
+    font-size: clamp(21px, 6.3vw, 25px) !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .licogi-page-header-actions {
+    margin-top: 14px !important;
+  }
+
+  .app-shell .licogi-btn {
+    min-height: 46px !important;
+    border-radius: 14px !important;
+    font-weight: 760;
+  }
+
+  .app-shell .licogi-icon-btn {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+  }
+
+  /* Filter bars become full-width controls instead of compressed desktop rows. */
+  .app-shell main section.rounded-\[18px\] > .flex.flex-wrap.gap-3 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  .app-shell main section.rounded-\[18px\] > .flex.flex-wrap.gap-3 > label {
+    grid-column: 1 / -1;
+    min-width: 0 !important;
+    min-height: 48px;
+    border-radius: 14px !important;
+  }
+
+  .app-shell main section.rounded-\[18px\] > .flex.flex-wrap.gap-3 > select {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    border-radius: 14px !important;
+  }
+
+  .app-shell main section.rounded-\[18px\] > .flex.flex-wrap.gap-3 > .licogi-btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .app-shell main .licogi-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .app-shell main .licogi-scroll > .grid {
+    grid-template-columns: 1fr !important;
+    gap: 11px !important;
+  }
+
+  .app-shell main .licogi-scroll article {
+    padding: 16px !important;
+  }
+
+  .app-shell main .licogi-scroll article h3 {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.35;
+  }
+
+  /* Public site: softer, cleaner, less desktop-like. */
+  .public-site {
+    background: #f6f8fa;
+  }
+
+  .public-site .public-container {
+    width: calc(100% - 22px) !important;
+    max-width: none !important;
+  }
+
+  .public-header-pages {
+    border-bottom: 1px solid rgba(226, 232, 240, .68) !important;
+    background: rgba(255, 255, 255, .92) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.35) !important;
+    backdrop-filter: blur(24px) saturate(1.35) !important;
+  }
+
+  .public-header-pages .public-menu-button,
+  .public-header-pages button,
+  .public-header-pages a[role="button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .public-page-hero {
+    background:
+      radial-gradient(circle at 90% 10%, rgba(251, 146, 60, .12), transparent 35%),
+      linear-gradient(180deg, #fff, #f8fafc) !important;
+  }
+
+  .public-page-hero h1 {
+    max-width: 100%;
+    font-size: clamp(28px, 8.3vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .public-page-hero p {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+  }
+
+  .public-project-portfolio-grid {
+    gap: 12px !important;
+  }
+
+  .public-project-portfolio-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, .92) !important;
+    border-radius: 20px !important;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(249, 115, 22, .075), transparent 34%),
+      #fff !important;
+    box-shadow: 0 11px 30px rgba(15, 23, 42, .065) !important;
+  }
+
+  .public-project-portfolio-card::after {
+    position: absolute;
+    right: -32px;
+    bottom: -42px;
+    width: 90px;
+    height: 90px;
+    border-radius: 999px;
+    background: rgba(249, 115, 22, .045);
+    content: "";
+    pointer-events: none;
+  }
+
+  .public-project-portfolio-card:active {
+    transform: scale(.985);
+  }
+
+  .public-project-money-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .public-project-money-row > div {
+    min-width: 0;
+    border-radius: 13px !important;
+    background: #f8fafc !important;
+  }
+
+  /* Map shell and controls. */
+  .public-project-map-shell {
+    border: 1px solid rgba(203, 213, 225, .9) !important;
+    border-radius: 22px !important;
+    background: #fff;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, .09) !important;
+  }
+
+  .public-map-toolbar {
+    padding: 14px 13px 10px !important;
+  }
+
+  .public-map-toolbar > div:first-child p {
+    max-width: 270px;
+    color: #64748b !important;
+    line-height: 1.45;
+  }
+
+  .public-map-controls {
+    padding: 10px 12px 12px !important;
+  }
+
+  .public-map-controls label,
+  .public-map-controls select {
+    min-height: 48px !important;
+    border-radius: 14px !important;
+    background-color: #f8fafc !important;
+  }
+
+  .public-map-stats {
+    gap: 7px !important;
+    padding: 10px 12px 12px !important;
+  }
+
+  .public-map-stats button {
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    box-shadow: inset 0 0 0 1px rgba(226, 232, 240, .8);
+  }
+
+  .public-map-canvas {
+    height: 56vh !important;
+    height: 56dvh !important;
+    min-height: 390px !important;
+    max-height: 620px;
+  }
+
+  .public-map-leaflet-size,
+  .public-map-canvas .leaflet-container {
+    height: 100% !important;
+  }
+
+  .public-map-zoom-hint {
+    display: none !important;
+  }
+
+  .public-map-legend-toggle {
+    top: 10px !important;
+    right: 10px !important;
+    min-height: 40px;
+    border-radius: 13px !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .public-map-overlay-legend {
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 45% !important;
+    border-radius: 16px !important;
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+
+  .public-project-sidepanel {
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+  }
+
+  .public-project-list-panel button {
+    min-height: 72px;
+    border-radius: 14px !important;
+  }
+
+  .public-project-key-metrics-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .public-project-key-metrics-four > div,
+  .public-project-info-section {
+    border-radius: 15px !important;
+  }
+
+  .leaflet-control-zoom a {
+    width: 42px !important;
+    height: 42px !important;
+    line-height: 42px !important;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 17px !important;
+  }
+
+  /* Public footer and floating assistant respect home indicator areas. */
+  .public-site footer {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .public-ai-launcher {
+    bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+  }
+
+  .public-ai-panel {
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 22px !important;
+  }
+
+  /* Login/register cards no longer feel oversized on smaller phones. */
+  body > main.min-h-screen {
+    padding-top: max(18px, env(safe-area-inset-top)) !important;
+    padding-right: 12px !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+    padding-left: 12px !important;
+  }
+
+  body > main.min-h-screen section {
+    border-radius: 24px !important;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, .11) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --licogi-mobile-edge: 10px;
+  }
+
+  .licogi-mobile-nav {
+    right: max(6px, env(safe-area-inset-right));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    left: max(6px, env(safe-area-inset-left));
+  }
+
+  .licogi-mobile-nav-inner {
+    min-height: 68px;
+    border-radius: 21px;
+    padding: 5px;
+  }
+
+  .licogi-mobile-nav a,
+  .licogi-mobile-nav button {
+    min-height: 56px;
+    border-radius: 16px;
+  }
+
+  .licogi-mobile-nav small {
+    font-size: 9.5px;
+  }
+
+  .app-shell header.sticky.top-0 > div {
+    gap: 7px !important;
+    padding-right: 9px !important;
+    padding-left: 9px !important;
+  }
+
+  .app-shell header.sticky.top-0 h1 {
+    font-size: 14px !important;
+  }
+
+  .app-shell main section.rounded-\[18px\] > .flex.flex-wrap.gap-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .public-site .public-container {
+    width: calc(100% - 18px) !important;
+  }
+
+  .public-map-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .public-map-canvas {
+    min-height: 360px !important;
+    height: 54dvh !important;
+  }
+
+  .public-project-money-row,
+  .public-project-key-metrics-four {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .licogi-mobile-nav small {
+    font-size: 9px;
+  }
+
+  .licogi-mobile-nav a > span,
+  .licogi-mobile-nav button > span {
+    width: 29px;
+  }
+
+  .app-shell header.sticky.top-0 h1 {
+    max-width: 112px;
+  }
+
+  .public-page-hero h1 {
+    font-size: 27px !important;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
+  .licogi-mobile-nav-inner {
+    min-height: 58px;
+  }
+
+  .licogi-mobile-nav a,
+  .licogi-mobile-nav button {
+    min-height: 48px;
+    flex-direction: row;
+    gap: 5px;
+  }
+
+  .licogi-mobile-nav a > span,
+  .licogi-mobile-nav button > span {
+    width: 26px;
+    height: 26px;
+  }
+
+  .public-map-canvas {
+    min-height: 300px !important;
+    height: 72dvh !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .licogi-mobile-nav *,
+  .public-project-portfolio-card,
+  .public-map-bootstrap-spinner {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .licogi-mobile-nav {
+    display: none !important;
+  }
+}

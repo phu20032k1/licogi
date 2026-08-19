@@ -81,6 +81,42 @@ type PublicProject = {
 
 type PublicProjectsResponse = { ok: boolean; projects?: PublicProject[]; message?: string };
 type FilterDetail = { search?: string; type?: string; status?: string; projectId?: string | null };
+type LoadMode = "initial" | "refresh" | "silent";
+
+type CachedMapProjects = {
+  savedAt: number;
+  projects: PublicProject[];
+};
+
+const MAP_CACHE_KEY = "licogi-public-map-projects-v2";
+const MAP_CACHE_MAX_AGE = 1000 * 60 * 60 * 6;
+const MAP_REQUEST_TIMEOUT = 8000;
+const MOBILE_MARKER_LIMIT = 220;
+
+function readCachedMapProjects() {
+  if (typeof window === "undefined") return [] as PublicProject[];
+  try {
+    const raw = window.localStorage.getItem(MAP_CACHE_KEY);
+    if (!raw) return [];
+    const cached = JSON.parse(raw) as CachedMapProjects;
+    if (!cached || !Array.isArray(cached.projects)) return [];
+    if (!Number.isFinite(cached.savedAt) || Date.now() - cached.savedAt > MAP_CACHE_MAX_AGE) return [];
+    return cached.projects;
+  } catch {
+    return [];
+  }
+}
+
+function cacheMapProjects(projects: PublicProject[]) {
+  if (typeof window === "undefined" || projects.length === 0) return;
+  window.setTimeout(() => {
+    try {
+      window.localStorage.setItem(MAP_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), projects } satisfies CachedMapProjects));
+    } catch {
+      // Safari private mode / quota errors should never block the live map.
+    }
+  }, 0);
+}
 
 function isVietnamProject(project: PublicProject) {
   const country = (project.projectCountry || "Việt Nam").trim().toLocaleLowerCase("vi");
@@ -134,33 +170,74 @@ export default function PublicProjectMap() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [legendOpen, setLegendOpen] = useState(true);
+  const [mobileMap, setMobileMap] = useState(false);
 
-  const load = useCallback(async (initial = false) => {
-    if (initial) setLoading(true); else setRefreshing(true);
+  const load = useCallback(async (mode: LoadMode = "initial") => {
+    if (mode === "initial") setLoading(true);
+    if (mode === "refresh") setRefreshing(true);
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), MAP_REQUEST_TIMEOUT);
     try {
-      const response = await fetch("/api/public/projects", { cache: "no-store" });
+      const response = await fetch("/api/public/projects/map", {
+        cache: "default",
+        credentials: "same-origin",
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
       const data = (await response.json()) as PublicProjectsResponse;
       if (!response.ok || !data.ok) throw new Error(data.message || "Không tải được dữ liệu dự án.");
-      setProjects(Array.isArray(data.projects) ? data.projects : []);
+      const nextProjects = Array.isArray(data.projects) ? data.projects : [];
+      setProjects(nextProjects);
+      cacheMapProjects(nextProjects);
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không tải được dữ liệu dự án.");
+      const cachedProjects = readCachedMapProjects();
+      if (cachedProjects.length > 0) {
+        setProjects((current) => current.length > 0 ? current : cachedProjects);
+        setError("");
+      } else {
+        setError(err instanceof Error ? err.message : "Không tải được dữ liệu dự án.");
+      }
     } finally {
+      window.clearTimeout(timer);
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    void load(true);
-    const refresh = () => void load(false);
-    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void load(false); }, 60000);
+    const media = window.matchMedia("(max-width: 900px)");
+    const syncMobile = () => {
+      setMobileMap(media.matches);
+      if (media.matches) setLegendOpen(false);
+    };
+    syncMobile();
+    media.addEventListener?.("change", syncMobile);
+
+    const cachedProjects = readCachedMapProjects();
+    if (cachedProjects.length > 0) {
+      setProjects(cachedProjects);
+      setLoading(false);
+      void load("silent");
+    } else {
+      void load("initial");
+    }
+
+    const refresh = () => void load("silent");
+    const reloadWhenOnline = () => void load("silent");
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible" && navigator.onLine) void load("silent");
+    }, 300000);
     window.addEventListener("licogi-data-imported", refresh);
     window.addEventListener("licogi-projects-updated", refresh);
+    window.addEventListener("online", reloadWhenOnline);
     return () => {
       window.clearInterval(interval);
+      media.removeEventListener?.("change", syncMobile);
       window.removeEventListener("licogi-data-imported", refresh);
       window.removeEventListener("licogi-projects-updated", refresh);
+      window.removeEventListener("online", reloadWhenOnline);
     };
   }, [load]);
 
@@ -230,6 +307,10 @@ export default function PublicProjectMap() {
   const hasExplicitFilter = Boolean(search.trim()) || type !== "all" || status !== "all" || hiddenTypes.size > 0 || hiddenStatuses.size > 0;
   const vietnamProjects = useMemo(() => filtered.filter(isVietnamProject), [filtered]);
   const mapProjects = !hasExplicitFilter && !selectedProject && vietnamProjects.length ? vietnamProjects : filtered;
+  const renderedMapProjects = useMemo(() => {
+    if (!mobileMap || hasExplicitFilter || selectedProject || mapProjects.length <= MOBILE_MARKER_LIMIT) return mapProjects;
+    return mapProjects.slice(0, MOBILE_MARKER_LIMIT);
+  }, [hasExplicitFilter, mapProjects, mobileMap, selectedProject]);
 
   useEffect(() => {
     if (selectedId && hasExplicitFilter && !filtered.some((project) => project.id === selectedId)) setSelectedId(null);
@@ -273,11 +354,11 @@ export default function PublicProjectMap() {
   return (
     <div className={`public-map-shell public-project-map-shell ${expanded ? "is-expanded" : ""}`}>
       <div className="public-map-toolbar">
-        <div><h3>Danh mục dự án</h3><p>{mapProjects.length} dự án trên bản đồ · {filtered.length}/{projects.length} dự án theo bộ lọc</p></div>
+        <div><h3>Danh mục dự án</h3><p>{mapProjects.length} dự án trên bản đồ · {filtered.length}/{projects.length} dự án theo bộ lọc{renderedMapProjects.length < mapProjects.length ? ` · đang tối ưu ${renderedMapProjects.length} điểm cho điện thoại` : ""}</p></div>
         <div className="public-map-toolbar-actions">
           {hasExplicitFilter ? <button type="button" onClick={resetFilters} className="public-map-reset"><X size={14} /> Xóa lọc</button> : null}
           <button type="button" onClick={() => setExpanded((value) => !value)} className="public-icon-button" aria-label={expanded ? "Thu nhỏ bản đồ" : "Phóng lớn bản đồ"}>{expanded ? <Expand size={17} /> : <Maximize2 size={17} />}</button>
-          <button type="button" onClick={() => void load(false)} className="public-icon-button" aria-label="Tải lại dự án" disabled={refreshing}><RefreshCcw size={17} className={refreshing ? "animate-spin" : ""} /></button>
+          <button type="button" onClick={() => void load("refresh")} className="public-icon-button" aria-label="Tải lại dự án" disabled={refreshing}><RefreshCcw size={17} className={refreshing ? "animate-spin" : ""} /></button>
         </div>
       </div>
 
@@ -296,7 +377,7 @@ export default function PublicProjectMap() {
 
       <div className="public-map-workspace">
         <div className="public-map-canvas">
-          <div className="public-map-zoom-hint"><CircleDot size={12} /> Lăn chuột để zoom</div>
+          <div className="public-map-zoom-hint"><CircleDot size={12} /> Kéo / cuộn để zoom</div>
           <button type="button" className={`public-map-legend-toggle ${legendOpen ? "is-open" : ""}`} onClick={() => setLegendOpen((value) => !value)}><Layers3 size={13} /> Chú thích</button>
           {legendOpen ? <div className="public-map-overlay-legend" aria-label="Chú thích bản đồ">
             <div className="public-map-overlay-title"><Layers3 size={13} /><span>Màu theo lĩnh vực</span><button type="button" onClick={() => setLegendOpen(false)} aria-label="Đóng chú thích"><X size={12} /></button></div>
@@ -320,14 +401,14 @@ export default function PublicProjectMap() {
             <TileLayer attribution={siteConfig.map.attribution} url={siteConfig.map.tileUrl} />
             <ScaleControl position="bottomleft" imperial={false} metric />
             <MapViewportController
-              points={mapProjects.map(({ lat, lng }) => ({ lat, lng }))}
+              points={renderedMapProjects.map(({ lat, lng }) => ({ lat, lng }))}
               selected={selectedProject ? { lat: selectedProject.lat, lng: selectedProject.lng } : null}
               focusVietnam={!hasExplicitFilter && !selectedProject}
               maxZoom={8}
               selectedZoom={8}
               singlePointZoom={7}
             />
-            {mapProjects.map((project) => {
+            {renderedMapProjects.map((project) => {
               const selected = selectedId === project.id;
               const visual = projectTypeVisuals[project.type];
               return <Marker
@@ -355,7 +436,7 @@ export default function PublicProjectMap() {
             })}
           </MapContainer>
           {loading && projects.length === 0 ? <div className="public-map-loading">Đang tải dữ liệu dự án...</div> : null}
-          {error ? <div className="public-map-error"><span>{error}</span><button type="button" onClick={() => void load(false)}>Thử lại</button></div> : null}
+          {error ? <div className="public-map-error"><span>{error}</span><button type="button" onClick={() => void load("refresh")}>Thử lại</button></div> : null}
           {!loading && !error && mapProjects.length === 0 ? <div className="public-map-empty">Không có dự án phù hợp bộ lọc.</div> : null}
         </div>
 
