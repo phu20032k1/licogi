@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePublicProjectBootstrap } from "../components/PublicProjectBootstrapContext";
 import type { PublicProjectRecord, PublicProjectsResponse } from "../lib/publicProject";
 
 const CACHE_KEY = "licogi-public-projects-cache-v1";
@@ -66,7 +67,9 @@ async function fetchProjectPayload(endpoint: string, timeout: number) {
   }
 }
 
-export default function usePublicProjects(initialProjects: PublicProjectRecord[] = []) {
+export default function usePublicProjects(explicitInitialProjects: PublicProjectRecord[] = []) {
+  const bootstrappedProjects = usePublicProjectBootstrap();
+  const initialProjects = explicitInitialProjects.length > 0 ? explicitInitialProjects : bootstrappedProjects;
   const [projects, setProjects] = useState<PublicProjectRecord[]>(initialProjects);
   const [loading, setLoading] = useState(initialProjects.length === 0);
   const [error, setError] = useState("");
@@ -125,8 +128,6 @@ export default function usePublicProjects(initialProjects: PublicProjectRecord[]
     let refreshTimer = 0;
 
     if (initialProjects.length > 0) {
-      // Server-rendered preview is already visible in the first HTML response.
-      // Persist it after paint and enrich quietly; never replace it with a spinner.
       hasDataRef.current = true;
       setLoading(false);
       cacheProjects(initialProjects);
