@@ -21,12 +21,12 @@ const LAT_MAX = 23.6;
 const LNG_MIN = 102.0;
 const LNG_MAX = 109.6;
 
-const COPY: Record<PublicLanguage, { title: string; status: string; hint: string; progress: string }> = {
-  vi: { title: "Công trình đang thi công", status: "Đang thi công", hint: "Bấm vào điểm để xem", progress: "Tiến độ" },
-  en: { title: "Projects under construction", status: "Under construction", hint: "Click a point to view", progress: "Progress" },
-  ja: { title: "施工中の工事", status: "施工中", hint: "ポイントをクリック", progress: "進捗" },
-  ko: { title: "시공 중 프로젝트", status: "시공 중", hint: "점을 눌러 보기", progress: "진행률" },
-  zh: { title: "在建项目", status: "在建", hint: "点击点位查看", progress: "进度" },
+const COPY: Record<PublicLanguage, { title: string; status: string; progress: string }> = {
+  vi: { title: "Công trình đang thi công", status: "Đang thi công", progress: "Tiến độ" },
+  en: { title: "Projects under construction", status: "Under construction", progress: "Progress" },
+  ja: { title: "施工中の工事", status: "施工中", progress: "進捗" },
+  ko: { title: "시공 중 프로젝트", status: "시공 중", progress: "진행률" },
+  zh: { title: "在建项目", status: "在建", progress: "进度" },
 };
 
 type ProjectPin = {
@@ -146,14 +146,6 @@ export default function HomepageVietnamProjectMap({ language }: { language: Publ
           );
         })}
       </svg>
-
-      <div className={styles.caption}>
-        <span className={styles.captionDot} />
-        <div>
-          <strong>{pins.length} {t.title.toLocaleLowerCase()}</strong>
-          <span>{t.hint}</span>
-        </div>
-      </div>
 
       {activePin ? (
         <div
