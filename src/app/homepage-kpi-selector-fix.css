@@ -1,0 +1,288 @@
+/*
+ * Final homepage KPI selector correction.
+ *
+ * Important: CSS-module class names such as `..._kpiGrid__...` also contain
+ * the substring `kpi`. Older rules using [class*="kpi"] therefore styled the
+ * grid itself as if it were a KPI card, which caused the cards to stack and
+ * bleed into the investor row. The same issue existed for countryGrid/country.
+ *
+ * This file is intentionally loaded last and uses parent > child structure so
+ * the grid and its cards can never match the same rule.
+ */
+
+/* ---------- KPI row ---------- */
+.public-site main > #trang-chu [class*="kpiGrid"] {
+  display: grid !important;
+  width: 100% !important;
+  height: 145px !important;
+  min-height: 145px !important;
+  max-height: 145px !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-auto-flow: row !important;
+  align-items: stretch !important;
+  align-content: stretch !important;
+  justify-items: stretch !important;
+  justify-content: stretch !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a {
+  position: relative !important;
+  display: flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 145px !important;
+  min-height: 145px !important;
+  max-height: 145px !important;
+  flex: none !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 15px 12px 12px !important;
+  border: 0 !important;
+  border-right: 1px solid #e4e7eb !important;
+  background: transparent !important;
+  color: #172033 !important;
+  overflow: hidden !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a:last-child {
+  border-right: 0 !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a:hover,
+.public-site main > #trang-chu [class*="kpiGrid"] > a:focus-visible {
+  background: #fff8f3 !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a [class*="kpiIcon"] {
+  display: grid !important;
+  width: 31px !important;
+  min-width: 31px !important;
+  height: 31px !important;
+  min-height: 31px !important;
+  max-height: 31px !important;
+  flex: 0 0 31px !important;
+  place-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #bd4727 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a [class*="kpiIcon"] svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a > strong {
+  display: block !important;
+  width: 100% !important;
+  flex: 0 0 auto !important;
+  margin: 8px 0 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  color: #bd4727 !important;
+  font-size: clamp(23px, 2vw, 31px) !important;
+  font-weight: 900 !important;
+  line-height: 1.03 !important;
+  letter-spacing: -.035em !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] > a > span:last-child {
+  display: block !important;
+  width: 100% !important;
+  flex: 0 0 auto !important;
+  margin: 8px 0 0 !important;
+  padding: 0 !important;
+  color: #1f2937 !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  line-height: 1.32 !important;
+  text-transform: uppercase !important;
+  overflow-wrap: normal !important;
+}
+
+/* ---------- Investor/country row ---------- */
+.public-site main > #trang-chu [class*="investors"] {
+  display: block !important;
+  width: 100% !important;
+  height: 92px !important;
+  min-height: 92px !important;
+  max-height: 92px !important;
+  margin: 0 !important;
+  padding: 10px 14px 8px !important;
+  overflow: hidden !important;
+  border-top: 1px solid #e2e6ea !important;
+}
+
+.public-site main > #trang-chu [class*="investorsTitle"] {
+  display: block !important;
+  height: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  margin: 0 0 5px 2px !important;
+  padding: 0 !important;
+  line-height: 15px !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] {
+  display: grid !important;
+  width: 100% !important;
+  height: 53px !important;
+  min-height: 53px !important;
+  max-height: 53px !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  align-content: stretch !important;
+  justify-items: stretch !important;
+  justify-content: stretch !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] > a {
+  display: grid !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 53px !important;
+  min-height: 53px !important;
+  max-height: 53px !important;
+  place-items: center !important;
+  align-content: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  margin: 0 !important;
+  padding: 3px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: #253246 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  text-align: center !important;
+  overflow: hidden !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] > a:hover,
+.public-site main > #trang-chu [class*="countryGrid"] > a:focus-visible {
+  background: #fff6f0 !important;
+  color: #ad351e !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] > a b {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] > a span {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+
+/* ---------- Narrow screens / browser zoom ---------- */
+@media (max-width: 760px) {
+  .public-site main > #trang-chu [class*="dataPanel"] {
+    overflow: hidden !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] {
+    height: 126px !important;
+    min-height: 126px !important;
+    max-height: 126px !important;
+    grid-template-columns: repeat(5, minmax(96px, 1fr)) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"]::-webkit-scrollbar,
+  .public-site main > #trang-chu [class*="countryGrid"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] > a {
+    height: 126px !important;
+    min-height: 126px !important;
+    max-height: 126px !important;
+    grid-column: auto !important;
+    padding: 11px 9px 9px !important;
+    scroll-snap-align: start;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] > a [class*="kpiIcon"] {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    flex-basis: 26px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] > a [class*="kpiIcon"] svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] > a > strong {
+    margin-top: 6px !important;
+    font-size: 24px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] > a > span:last-child {
+    margin-top: 6px !important;
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+  }
+
+  .public-site main > #trang-chu [class*="investors"] {
+    height: 86px !important;
+    min-height: 86px !important;
+    max-height: 86px !important;
+    padding: 8px 10px 7px !important;
+  }
+
+  .public-site main > #trang-chu [class*="countryGrid"] {
+    height: 53px !important;
+    min-height: 53px !important;
+    max-height: 53px !important;
+    grid-template-columns: repeat(6, minmax(68px, 1fr)) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .public-site main > #trang-chu [class*="countryGrid"] > a {
+    height: 53px !important;
+    min-height: 53px !important;
+    max-height: 53px !important;
+  }
+}

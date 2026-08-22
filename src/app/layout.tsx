@@ -25,6 +25,7 @@ import "./phone-touch-data-fixes.css";
 import "./phone-directory-visibility.css";
 import "./homepage-reference.css";
 import "./homepage-compact-fix.css";
+import "./homepage-kpi-selector-fix.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
