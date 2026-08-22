@@ -1,0 +1,222 @@
+/* Final compact correction for the homepage reference panel.
+ * Keeps the KPI + investor block at the same visual height as the supplied reference
+ * and prevents touch/mobile styles from stretching its rows vertically.
+ */
+
+.public-site main > #trang-chu [class*="dataPanel"] {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] {
+  height: 145px !important;
+  min-height: 145px !important;
+  max-height: 145px !important;
+  align-items: stretch !important;
+  align-content: stretch !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"] {
+  display: flex !important;
+  height: 145px !important;
+  min-height: 145px !important;
+  max-height: 145px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
+  gap: 0 !important;
+  padding: 15px 12px 12px !important;
+}
+
+.public-site main > #trang-chu [class*="kpiIcon"] {
+  display: grid !important;
+  width: 31px !important;
+  height: 31px !important;
+  min-height: 31px !important;
+  flex: 0 0 31px !important;
+  margin: 0 !important;
+  place-items: center !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"] strong {
+  display: block !important;
+  flex: 0 0 auto !important;
+  margin: 8px 0 0 !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"] > span:last-child {
+  display: block !important;
+  flex: 0 0 auto !important;
+  margin: 8px 0 0 !important;
+}
+
+.public-site main > #trang-chu [class*="investors"] {
+  display: block !important;
+  height: 92px !important;
+  min-height: 92px !important;
+  max-height: 92px !important;
+  align-content: start !important;
+  padding: 10px 14px 8px !important;
+}
+
+.public-site main > #trang-chu [class*="investorsTitle"] {
+  display: block !important;
+  height: 15px !important;
+  min-height: 0 !important;
+  margin: 0 0 5px 2px !important;
+  line-height: 15px !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] {
+  height: 53px !important;
+  min-height: 53px !important;
+  max-height: 53px !important;
+  align-items: stretch !important;
+  align-content: stretch !important;
+}
+
+.public-site main > #trang-chu [class*="country"] {
+  display: grid !important;
+  height: 53px !important;
+  min-height: 53px !important;
+  max-height: 53px !important;
+  place-items: center !important;
+  align-content: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 3px !important;
+}
+
+.public-site main > #trang-chu [class*="country"] b,
+.public-site main > #trang-chu [class*="country"] span {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+/* Compact touch layout: keep the reference's horizontal visual rhythm instead
+ * of turning the KPI panel into a tall 2-column stack. Small phones can swipe. */
+@media (max-width: 760px) {
+  .public-site main > #trang-chu [class*="dataPanel"] {
+    overflow: hidden !important;
+    border-radius: 11px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] {
+    display: grid !important;
+    width: 100% !important;
+    height: 126px !important;
+    min-height: 126px !important;
+    max-height: 126px !important;
+    grid-template-columns: repeat(5, minmax(112px, 1fr)) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"]::-webkit-scrollbar,
+  .public-site main > #trang-chu [class*="countryGrid"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] {
+    width: auto !important;
+    height: 126px !important;
+    min-height: 126px !important;
+    max-height: 126px !important;
+    grid-column: auto !important;
+    scroll-snap-align: start;
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 1px solid #e4e7eb !important;
+    padding: 12px 10px 10px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"]:last-child,
+  .public-site main > #trang-chu [class*="kpi"]:nth-child(even) {
+    grid-column: auto !important;
+    border-left: 0 !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiIcon"] {
+    width: 27px !important;
+    height: 27px !important;
+    min-height: 27px !important;
+    flex-basis: 27px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiIcon"] svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] strong {
+    margin-top: 6px !important;
+    font-size: 25px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] > span:last-child {
+    margin-top: 6px !important;
+    font-size: 9.5px !important;
+    line-height: 1.28 !important;
+  }
+
+  .public-site main > #trang-chu [class*="investors"] {
+    height: 86px !important;
+    min-height: 86px !important;
+    max-height: 86px !important;
+    padding: 8px 10px 7px !important;
+  }
+
+  .public-site main > #trang-chu [class*="countryGrid"] {
+    display: grid !important;
+    width: 100% !important;
+    height: 53px !important;
+    min-height: 53px !important;
+    max-height: 53px !important;
+    grid-template-columns: repeat(6, minmax(78px, 1fr)) !important;
+    gap: 2px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .public-site main > #trang-chu [class*="country"] {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 53px !important;
+    min-height: 53px !important;
+    max-height: 53px !important;
+    flex: initial !important;
+    border: 0 !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+  }
+
+  .public-site main > #trang-chu [class*="actions"] {
+    margin-top: 10px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .public-site main > #trang-chu [class*="heroCopy"] {
+    padding-top: 18px !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroLead"] {
+    margin-top: 12px !important;
+  }
+
+  .public-site main > #trang-chu [class*="dataPanel"] {
+    margin-top: 14px !important;
+  }
+
+  .public-site main > #trang-chu [class*="actions"] {
+    grid-template-columns: 1fr !important;
+  }
+}
