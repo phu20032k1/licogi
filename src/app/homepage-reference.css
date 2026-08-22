@@ -1,0 +1,868 @@
+/*
+ * Homepage reference pass (2026-08-22)
+ *
+ * Final homepage-only visual layer matching the supplied LICOGI 18.3 reference:
+ * - compact white/translucent top navigation over the industrial hero
+ * - exact uploaded Vietnam industrial hero asset remains provided by home-hero-asset.css
+ * - tighter hero proportions, larger click targets and typography
+ * - six-column one-click data explorer on desktop
+ * - safe tablet/mobile/zoom behavior with no horizontal overflow
+ */
+
+/* ---------- Homepage frame / header ---------- */
+.public-site:has(#trang-chu) {
+  background: #f7f7f6;
+}
+
+.public-site:has(#trang-chu) .public-header-pages {
+  inset: 8px 8px auto !important;
+  height: 86px !important;
+  overflow: visible;
+  border: 0 !important;
+  border-radius: 14px 14px 0 0;
+  background: rgba(255, 255, 255, .84) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(10px) saturate(1.04);
+}
+
+.public-site:has(#trang-chu) .public-header-pages.is-scrolled {
+  inset: 0 0 auto !important;
+  height: 78px !important;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(226, 232, 240, .88) !important;
+  background: rgba(255, 255, 255, .96) !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .07) !important;
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+.public-site:has(#trang-chu) .public-header-pages .public-container {
+  width: min(1440px, calc(100% - 84px)) !important;
+}
+
+.public-site:has(#trang-chu) .public-header-pages .public-header-inner {
+  height: 86px !important;
+  gap: 18px !important;
+}
+
+.public-site:has(#trang-chu) .public-header-pages.is-scrolled .public-header-inner {
+  height: 78px !important;
+}
+
+.public-site:has(#trang-chu) .public-brand-link {
+  flex: 0 0 auto;
+}
+
+.public-site:has(#trang-chu) .public-brand-link > span {
+  min-width: 222px !important;
+  gap: 10px !important;
+}
+
+.public-site:has(#trang-chu) .public-brand-link > span > svg {
+  width: 43px !important;
+  height: 51px !important;
+}
+
+.public-site:has(#trang-chu) .public-brand-link > span > span > strong {
+  font-size: 23px !important;
+  letter-spacing: -.025em !important;
+}
+
+.public-site:has(#trang-chu) .public-brand-link > span > span > span {
+  margin-top: 6px !important;
+  font-size: 10px !important;
+  letter-spacing: .055em !important;
+}
+
+.public-site:has(#trang-chu) .public-page-nav {
+  min-width: 0;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: clamp(22px, 2.15vw, 39px) !important;
+  margin-left: auto;
+}
+
+.public-site:has(#trang-chu) .public-page-nav a {
+  padding: 31px 0 28px !important;
+  color: #101827 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: .005em !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+.public-site:has(#trang-chu) .public-page-nav a.is-active {
+  color: #ad2d1d !important;
+}
+
+.public-site:has(#trang-chu) .public-page-nav a::after {
+  bottom: 20px !important;
+  height: 2px !important;
+  background: #b52f1d !important;
+}
+
+/* The supplied reference has a clean navigation bar without a desktop language pill. */
+.public-site:has(#trang-chu) .public-header-actions > div {
+  display: none !important;
+}
+
+.public-site:has(#trang-chu) .public-menu-button {
+  color: #111827 !important;
+}
+
+/* ---------- Hero ---------- */
+.public-site main > #trang-chu {
+  position: relative;
+  width: auto;
+  min-height: 620px !important;
+  margin: 8px 8px 0;
+  padding: 86px 0 22px !important;
+  overflow: hidden;
+  border-radius: 14px 14px 0 0;
+  background: #eef1f3 !important;
+  isolation: isolate;
+}
+
+.public-site main > #trang-chu::before {
+  inset: 0 !important;
+  z-index: 1 !important;
+  background:
+    linear-gradient(90deg,
+      rgba(249, 250, 251, 1) 0%,
+      rgba(249, 250, 251, .997) 28%,
+      rgba(249, 250, 251, .96) 35%,
+      rgba(249, 250, 251, .80) 42%,
+      rgba(249, 250, 251, .37) 51%,
+      rgba(249, 250, 251, .08) 62%,
+      rgba(15, 23, 42, .025) 100%) !important;
+  pointer-events: none;
+}
+
+.public-site main > #trang-chu [class*="heroBg"] {
+  inset: 0 0 0 33% !important;
+  border-radius: 0 14px 0 0;
+  background-position: 58% 51% !important;
+  background-size: cover !important;
+}
+
+.public-site main > #trang-chu [class*="heroBg"]::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(5, 17, 30, .10)),
+    radial-gradient(circle at 38% 19%, rgba(255, 185, 101, .16), transparent 28%) !important;
+}
+
+.public-site main > #trang-chu [class*="heroInner"] {
+  z-index: 3 !important;
+  width: min(1410px, calc(100% - 100px)) !important;
+  min-height: 510px !important;
+  margin: 0 auto !important;
+}
+
+.public-site main > #trang-chu [class*="heroCopy"] {
+  width: 670px !important;
+  max-width: 49% !important;
+  padding-top: 36px !important;
+}
+
+.public-site main > #trang-chu [class*="heroTitle"] {
+  max-width: 650px !important;
+  margin: 0 !important;
+  color: #111c2f !important;
+  font-size: clamp(40px, 3.2vw, 50px) !important;
+  font-weight: 900 !important;
+  line-height: 1.045 !important;
+  letter-spacing: -.032em !important;
+}
+
+.public-site main > #trang-chu [class*="heroTitle"] span {
+  margin-top: 7px !important;
+  color: #be3021 !important;
+}
+
+.public-site main > #trang-chu [class*="heroLead"] {
+  max-width: 520px !important;
+  margin: 17px 0 0 !important;
+  color: #263243 !important;
+  font-size: 15.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.58 !important;
+}
+
+/* ---------- KPI / investor panel ---------- */
+.public-site main > #trang-chu [class*="dataPanel"] {
+  width: 670px !important;
+  max-width: 100% !important;
+  margin-top: 18px !important;
+  overflow: hidden;
+  border: 1px solid rgba(213, 218, 224, .95) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, .965) !important;
+  box-shadow: 0 9px 25px rgba(15, 23, 42, .075) !important;
+  backdrop-filter: blur(13px);
+}
+
+.public-site main > #trang-chu [class*="kpiGrid"] {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"] {
+  min-width: 0;
+  min-height: 145px !important;
+  padding: 16px 12px 13px !important;
+  color: #172033 !important;
+  outline: none;
+}
+
+.public-site main > #trang-chu [class*="kpi"] + [class*="kpi"] {
+  border-left: 1px solid #e4e7eb !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"]:hover,
+.public-site main > #trang-chu [class*="kpi"]:focus-visible {
+  background: #fff8f3 !important;
+  box-shadow: inset 0 0 0 2px rgba(190, 48, 33, .08);
+}
+
+.public-site main > #trang-chu [class*="kpiIcon"] {
+  width: 32px !important;
+  height: 32px !important;
+  color: #bd4727 !important;
+}
+
+.public-site main > #trang-chu [class*="kpiIcon"] svg {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"] strong {
+  margin-top: 6px !important;
+  color: #bd4727 !important;
+  font-size: clamp(24px, 2vw, 31px) !important;
+  font-weight: 900 !important;
+  line-height: 1.03 !important;
+  letter-spacing: -.035em !important;
+}
+
+.public-site main > #trang-chu [class*="kpi"] > span:last-child {
+  margin-top: 9px !important;
+  color: #1f2937 !important;
+  font-size: 10.5px !important;
+  font-weight: 850 !important;
+  line-height: 1.35 !important;
+}
+
+.public-site main > #trang-chu [class*="investors"] {
+  min-height: 92px;
+  padding: 10px 14px 9px !important;
+  border-top: 1px solid #e2e6ea !important;
+}
+
+.public-site main > #trang-chu [class*="investorsTitle"] {
+  margin: 0 0 7px 2px !important;
+  color: #3f4958 !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .025em !important;
+}
+
+.public-site main > #trang-chu [class*="countryGrid"] {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 2px !important;
+}
+
+.public-site main > #trang-chu [class*="country"] {
+  min-width: 0;
+  min-height: 53px !important;
+  gap: 4px !important;
+  padding: 3px 4px !important;
+  border-radius: 7px !important;
+  color: #253246 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1.18 !important;
+}
+
+.public-site main > #trang-chu [class*="country"] b {
+  font-size: 19px !important;
+}
+
+.public-site main > #trang-chu [class*="country"]:hover,
+.public-site main > #trang-chu [class*="country"]:focus-visible {
+  background: #fff6f0 !important;
+  color: #ad351e !important;
+}
+
+/* ---------- Hero actions / badge ---------- */
+.public-site main > #trang-chu [class*="actions"] {
+  gap: 12px !important;
+  margin-top: 13px !important;
+}
+
+.public-site main > #trang-chu [class*="primaryButton"],
+.public-site main > #trang-chu [class*="secondaryButton"] {
+  min-height: 42px !important;
+  min-width: 250px !important;
+  border-radius: 7px !important;
+  padding: 0 19px !important;
+  font-size: 12.5px !important;
+  font-weight: 850 !important;
+  letter-spacing: .005em !important;
+  box-shadow: none;
+}
+
+.public-site main > #trang-chu [class*="primaryButton"] {
+  border-color: #c9361d !important;
+  background: linear-gradient(135deg, #df4324, #c9311c) !important;
+  box-shadow: 0 7px 16px rgba(185, 45, 26, .17) !important;
+}
+
+.public-site main > #trang-chu [class*="secondaryButton"] {
+  border-color: #d9dde3 !important;
+  background: rgba(255, 255, 255, .94) !important;
+  color: #263246 !important;
+}
+
+.public-site main > #trang-chu [class*="primaryButton"]:hover,
+.public-site main > #trang-chu [class*="secondaryButton"]:hover,
+.public-site main > #trang-chu [class*="primaryButton"]:focus-visible,
+.public-site main > #trang-chu [class*="secondaryButton"]:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 20px rgba(15, 23, 42, .11) !important;
+}
+
+/* The exact hero image already contains the detailed Vietnam map + glowing points. */
+.public-site main > #trang-chu [class*="mapVisual"] {
+  display: none !important;
+}
+
+.public-site main > #trang-chu [class*="nationalBadge"] {
+  right: 2.1% !important;
+  bottom: 31px !important;
+  min-width: 244px !important;
+  max-width: 265px !important;
+  min-height: 78px;
+  gap: 12px !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important;
+  border-radius: 12px !important;
+  padding: 13px 16px !important;
+  background: rgba(8, 28, 47, .82) !important;
+  box-shadow: 0 11px 25px rgba(15, 23, 42, .18) !important;
+  backdrop-filter: blur(9px);
+}
+
+.public-site main > #trang-chu [class*="nationalBadge"] strong {
+  font-size: 28px !important;
+}
+
+.public-site main > #trang-chu [class*="nationalBadge"] span {
+  margin-top: 4px !important;
+  font-size: 9.5px !important;
+  line-height: 1.3 !important;
+}
+
+/* ---------- One-click explorer ---------- */
+.public-site main > #trang-chu + section {
+  margin: 0 8px;
+  padding: 10px 0 13px !important;
+  border-top: 0 !important;
+  background: #fff !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreInner"] {
+  width: min(1438px, calc(100% - 42px)) !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreTitle"] {
+  margin: 0 0 9px !important;
+  color: #131d2c !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.25 !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreGrid"] {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreCard"] {
+  position: relative;
+  min-width: 0;
+  min-height: 270px !important;
+  border: 1px solid #edf0f3 !important;
+  border-radius: 8px !important;
+  padding: 11px 10px 10px !important;
+  background: #fff !important;
+  color: #223046 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .025) !important;
+  outline: none;
+}
+
+.public-site main > #trang-chu + section [class*="exploreCard"]:hover,
+.public-site main > #trang-chu + section [class*="exploreCard"]:focus-visible {
+  transform: translateY(-2px) !important;
+  border-color: #e8c8ba !important;
+  box-shadow: 0 9px 20px rgba(15, 23, 42, .065) !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreCard"] > small {
+  min-height: 32px !important;
+  color: #202936 !important;
+  font-size: 10.5px !important;
+  font-weight: 850 !important;
+  line-height: 1.28 !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreCard"] > small::first-line {
+  color: #222b37;
+}
+
+.public-site main > #trang-chu + section [class*="miniVisual"] {
+  min-height: 155px !important;
+  margin: 6px 0 9px !important;
+  border: 1px solid #e0e4e8 !important;
+  border-radius: 7px !important;
+  background:
+    radial-gradient(circle at 42% 52%, rgba(221, 92, 43, .08), transparent 29%),
+    linear-gradient(145deg, #fafbfc, #f1f4f6) !important;
+}
+
+.public-site main > #trang-chu + section [class*="miniVisual"]::before {
+  opacity: .29 !important;
+  background-size: 20px 20px !important;
+}
+
+.public-site main > #trang-chu + section [class*="miniNumbers"] span {
+  padding: 9px 3px !important;
+  color: #b93e21 !important;
+  font-size: 12px !important;
+}
+
+.public-site main > #trang-chu + section [class*="miniList"] span {
+  padding: 5px 7px !important;
+  color: #29364a !important;
+  font-size: 9.5px !important;
+}
+
+.public-site main > #trang-chu + section [class*="miniIcons"] span {
+  min-height: 50px !important;
+  color: #a83d23 !important;
+  font-size: 8.5px !important;
+}
+
+.public-site main > #trang-chu + section [class*="exploreCard"] > strong {
+  min-height: 35px !important;
+  color: #1f2937 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.38 !important;
+}
+
+/* Orange chevrons between desktop cards, as in the supplied reference. */
+@media (min-width: 1181px) {
+  .public-site main > #trang-chu + section [class*="exploreCard"]:not(:last-child)::after {
+    position: absolute;
+    top: 48%;
+    right: -12px;
+    z-index: 4;
+    content: "›";
+    color: #d65a2a;
+    font-size: 34px;
+    font-weight: 500;
+    line-height: 1;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+}
+
+/* ---------- Bottom trust strip ---------- */
+.public-site main > #trang-chu + section + section {
+  margin: 0 8px 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #0d223d !important;
+  color: #fff;
+}
+
+.public-site main > #trang-chu + section + section [class*="trustInner"] {
+  width: min(1438px, calc(100% - 46px)) !important;
+  min-height: 67px !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+.public-site main > #trang-chu + section + section [class*="trustItem"] {
+  gap: 10px !important;
+  padding: 9px 17px !important;
+}
+
+.public-site main > #trang-chu + section + section [class*="trustItem"] svg {
+  width: 25px !important;
+  height: 25px !important;
+  color: #cf4d2c !important;
+}
+
+.public-site main > #trang-chu + section + section [class*="trustItem"] strong {
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+}
+
+.public-site main > #trang-chu + section + section [class*="trustItem"] span {
+  margin-top: 2px !important;
+  color: #d6dee8 !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+}
+
+/* Larger click text and comfortable hit targets throughout the opening viewport. */
+.public-site:has(#trang-chu) #trang-chu a,
+.public-site:has(#trang-chu) #trang-chu + section a,
+.public-site:has(#trang-chu) .public-page-nav a {
+  touch-action: manipulation;
+}
+
+/* ---------- Laptop / browser zoom ---------- */
+@media (max-width: 1280px) and (min-width: 1121px) {
+  .public-site:has(#trang-chu) .public-header-pages .public-container {
+    width: min(1200px, calc(100% - 44px)) !important;
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav {
+    gap: clamp(13px, 1.45vw, 20px) !important;
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav a {
+    font-size: 12px !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroInner"] {
+    width: min(1190px, calc(100% - 54px)) !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroCopy"] {
+    max-width: 53% !important;
+  }
+
+  .public-site main > #trang-chu [class*="dataPanel"] {
+    width: 620px !important;
+  }
+
+  .public-site main > #trang-chu [class*="nationalBadge"] {
+    right: 1.4% !important;
+  }
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1120px) {
+  .public-site:has(#trang-chu) .public-header-pages .public-container {
+    width: min(100% - 36px, 1060px) !important;
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav {
+    position: fixed !important;
+    top: 88px !important;
+    right: 18px !important;
+    left: 18px !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    margin: 0 !important;
+    overflow: hidden;
+    border: 1px solid #e1e5ea !important;
+    border-radius: 13px !important;
+    padding: 8px !important;
+    background: rgba(255, 255, 255, .985) !important;
+    box-shadow: 0 22px 52px rgba(15, 23, 42, .16) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav.is-open {
+    display: flex !important;
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav a {
+    min-height: 46px;
+    padding: 0 14px !important;
+    border-radius: 8px;
+    font-size: 13.5px !important;
+    line-height: 46px !important;
+    white-space: normal;
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav a::after {
+    display: none !important;
+  }
+
+  .public-site:has(#trang-chu) .public-menu-button {
+    display: grid !important;
+    width: 44px !important;
+    height: 44px !important;
+    place-items: center;
+    border-radius: 9px;
+  }
+
+  .public-site main > #trang-chu {
+    min-height: 610px !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroBg"] {
+    inset: 0 !important;
+    background-position: 62% center !important;
+  }
+
+  .public-site main > #trang-chu::before {
+    background: linear-gradient(90deg,
+      rgba(249, 250, 251, .985) 0%,
+      rgba(249, 250, 251, .96) 42%,
+      rgba(249, 250, 251, .73) 58%,
+      rgba(249, 250, 251, .32) 100%) !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroInner"] {
+    width: min(100% - 54px, 1040px) !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroCopy"] {
+    width: 650px !important;
+    max-width: 62% !important;
+  }
+
+  .public-site main > #trang-chu [class*="nationalBadge"] {
+    display: none !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreGrid"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 11px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreCard"] {
+    min-height: 248px !important;
+  }
+
+  .public-site main > #trang-chu + section + section [class*="trustInner"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .public-site main > #trang-chu + section + section [class*="trustItem"]:nth-child(4) {
+    border-left: 0 !important;
+  }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 760px) {
+  .public-site:has(#trang-chu) .public-header-pages {
+    inset: 6px 6px auto !important;
+    height: 76px !important;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .public-site:has(#trang-chu) .public-header-pages.is-scrolled {
+    inset: 0 !important;
+    height: 70px !important;
+    border-radius: 0;
+  }
+
+  .public-site:has(#trang-chu) .public-header-pages .public-header-inner {
+    height: 76px !important;
+  }
+
+  .public-site:has(#trang-chu) .public-header-pages.is-scrolled .public-header-inner {
+    height: 70px !important;
+  }
+
+  .public-site:has(#trang-chu) .public-header-pages .public-container {
+    width: calc(100% - 28px) !important;
+  }
+
+  .public-site:has(#trang-chu) .public-brand-link > span {
+    min-width: 0 !important;
+    gap: 7px !important;
+  }
+
+  .public-site:has(#trang-chu) .public-brand-link > span > svg {
+    width: 34px !important;
+    height: 40px !important;
+  }
+
+  .public-site:has(#trang-chu) .public-brand-link > span > span > strong {
+    font-size: 18px !important;
+  }
+
+  .public-site:has(#trang-chu) .public-brand-link > span > span > span {
+    display: none !important;
+  }
+
+  .public-site:has(#trang-chu) .public-page-nav {
+    top: 78px !important;
+    right: 12px !important;
+    left: 12px !important;
+  }
+
+  .public-site main > #trang-chu {
+    min-height: 0 !important;
+    margin: 6px 6px 0;
+    padding: 76px 0 22px !important;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .public-site main > #trang-chu [class*="heroBg"] {
+    opacity: .72;
+    background-position: 64% center !important;
+  }
+
+  .public-site main > #trang-chu::before {
+    background: rgba(249, 250, 251, .87) !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroInner"] {
+    width: calc(100% - 28px) !important;
+    min-height: 0 !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroCopy"] {
+    width: 100% !important;
+    max-width: none !important;
+    padding-top: 24px !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroTitle"] {
+    max-width: 100% !important;
+    font-size: clamp(32px, 9.7vw, 42px) !important;
+    line-height: 1.05 !important;
+  }
+
+  .public-site main > #trang-chu [class*="heroLead"] {
+    max-width: 100% !important;
+    font-size: 14.5px !important;
+    line-height: 1.55 !important;
+  }
+
+  .public-site main > #trang-chu [class*="dataPanel"] {
+    width: 100% !important;
+    border-radius: 10px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpiGrid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] {
+    min-height: 124px !important;
+    border-bottom: 1px solid #e4e7eb !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] + [class*="kpi"] {
+    border-left: 0 !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"]:nth-child(even) {
+    border-left: 1px solid #e4e7eb !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"]:last-child {
+    grid-column: 1 / -1;
+    min-height: 116px !important;
+    border-left: 0 !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] strong {
+    font-size: 28px !important;
+  }
+
+  .public-site main > #trang-chu [class*="kpi"] > span:last-child {
+    font-size: 10.5px !important;
+  }
+
+  .public-site main > #trang-chu [class*="countryGrid"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .public-site main > #trang-chu [class*="country"] {
+    min-height: 56px !important;
+    font-size: 10.5px !important;
+  }
+
+  .public-site main > #trang-chu [class*="actions"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .public-site main > #trang-chu [class*="primaryButton"],
+  .public-site main > #trang-chu [class*="secondaryButton"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    font-size: 13px !important;
+  }
+
+  .public-site main > #trang-chu + section {
+    margin: 0 6px;
+    padding: 11px 0 14px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreInner"] {
+    width: calc(100% - 20px) !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreTitle"] {
+    font-size: 15px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreGrid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreCard"] {
+    min-height: 228px !important;
+    padding: 10px 8px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="miniVisual"] {
+    min-height: 124px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreCard"] > small {
+    font-size: 10px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreCard"] > strong {
+    font-size: 11px !important;
+  }
+
+  .public-site main > #trang-chu + section + section {
+    margin: 0 6px 6px;
+  }
+
+  .public-site main > #trang-chu + section + section [class*="trustInner"] {
+    width: calc(100% - 20px) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .public-site main > #trang-chu + section + section [class*="trustItem"] {
+    justify-content: flex-start !important;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    border-left: 0 !important;
+    padding: 11px 8px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .public-site main > #trang-chu + section [class*="exploreGrid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="exploreCard"] {
+    min-height: 218px !important;
+  }
+
+  .public-site main > #trang-chu + section [class*="miniVisual"] {
+    min-height: 128px !important;
+  }
+
+  .public-site main > #trang-chu + section + section [class*="trustInner"] {
+    grid-template-columns: 1fr !important;
+  }
+}
