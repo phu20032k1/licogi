@@ -23,6 +23,7 @@ import "./phone-only-v2.css";
 import "./phone-route-fixes.css";
 import "./phone-touch-data-fixes.css";
 import "./phone-directory-visibility.css";
+import "./homepage-reference.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
