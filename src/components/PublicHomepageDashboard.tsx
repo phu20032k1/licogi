@@ -152,7 +152,7 @@ export default function PublicHomepageDashboard() {
 
   return <>
     <section className={styles.hero} id="trang-chu">
-      <div className={styles.heroBg}><img src="/media/hero-construction.svg" alt="Năng lực thi công LICOGI 18.3"/></div>
+      <div className={styles.heroBg}><img src="/media/hero-industrial-park.webp" alt="Khu công nghiệp và nhà máy LICOGI 18.3"/></div>
       <div className={styles.heroInner}>
         <div className={styles.heroCopy}>
           <h1 className={styles.heroTitle}>{t.line1}<span>{t.line2}</span></h1>
