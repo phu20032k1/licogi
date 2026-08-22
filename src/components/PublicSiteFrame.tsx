@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Mail, Menu, X } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import usePublicLanguage from "../hooks/usePublicLanguage";
+import HomepageVietnamProjectMap from "./HomepageVietnamProjectMap";
 import PublicAIAssistant from "./PublicAIAssistant";
 import PublicBrandMark from "./PublicBrandMark";
 import PublicLanguageSwitcher from "./PublicLanguageSwitcher";
@@ -90,6 +91,7 @@ export default function PublicSiteFrame({ children }: { children: ReactNode }) {
       </div>
     </header>
 
+    {pathname === "/" ? <HomepageVietnamProjectMap language={language} /> : null}
     {children}
 
     <footer className="public-footer public-page-footer">
