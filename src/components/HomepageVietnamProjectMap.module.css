@@ -1,9 +1,21 @@
+:global(.public-site main > #trang-chu [class*="mapVisual"]) {
+  display: none !important;
+}
+
+:global(.public-site main > #trang-chu [class*="heroBg"]) {
+  background: #d9e0e6 url("/media/hero-industrial-park.webp") center 49% / cover no-repeat !important;
+}
+
+:global(.public-site main > #trang-chu [class*="heroBg"] > img) {
+  opacity: 0 !important;
+}
+
 .wrap {
   position: absolute;
   z-index: 12;
-  top: 112px;
-  right: clamp(78px, 10.2vw, 166px);
-  width: clamp(205px, 15.8vw, 246px);
+  top: 105px;
+  right: clamp(72px, 10vw, 160px);
+  width: clamp(224px, 17.6vw, 282px);
   pointer-events: auto;
   isolation: isolate;
 }
@@ -11,11 +23,11 @@
 .mapGlow {
   position: absolute;
   z-index: -1;
-  inset: 5% -24% 3% -26%;
+  inset: 4% -28% 1% -26%;
   border-radius: 50%;
   background:
-    radial-gradient(ellipse at 52% 44%, rgba(9, 27, 45, .34) 0%, rgba(9, 27, 45, .19) 38%, rgba(9, 27, 45, .06) 61%, transparent 75%);
-  filter: blur(8px);
+    radial-gradient(ellipse at 52% 45%, rgba(7, 24, 40, .38) 0%, rgba(7, 24, 40, .21) 40%, rgba(7, 24, 40, .06) 64%, transparent 77%);
+  filter: blur(9px);
   pointer-events: none;
 }
 
@@ -24,29 +36,10 @@
   width: 100%;
   height: auto;
   overflow: visible;
-  filter: drop-shadow(0 12px 20px rgba(8, 21, 35, .20));
+  filter: drop-shadow(0 13px 22px rgba(8, 21, 35, .24));
 }
 
-.shapeGlow {
-  fill: none;
-  stroke: rgba(5, 20, 34, .28);
-  stroke-width: 8;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.shape {
-  stroke: rgba(255, 255, 255, .96);
-  stroke-width: 2.4;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.detailLine {
-  fill: none;
-  stroke: rgba(255, 255, 255, .30);
-  stroke-width: 1.05;
-  stroke-dasharray: 3 4;
+.mapImage {
   pointer-events: none;
 }
 
@@ -62,9 +55,9 @@
 }
 
 .pinPulse {
-  fill: rgba(255, 104, 34, .22);
-  stroke: rgba(255, 255, 255, .34);
-  stroke-width: 1;
+  fill: rgba(255, 104, 34, .24);
+  stroke: rgba(255, 255, 255, .42);
+  stroke-width: 1.8;
   transform-box: fill-box;
   transform-origin: center;
   animation: licogiMapPulse 1.9s ease-out infinite;
@@ -74,31 +67,31 @@
 .pinCore {
   fill: #ff6527;
   stroke: #fff;
-  stroke-width: 2.1;
+  stroke-width: 3.2;
   transition: r .16s ease, fill .16s ease;
   pointer-events: none;
 }
 
 .pinLink:hover .pinCore,
 .pinLink:focus .pinCore {
-  r: 6.2px;
+  r: 9.8px;
   fill: #ff3d16;
 }
 
 .caption {
   position: absolute;
-  right: -34px;
-  bottom: 18px;
+  right: -32px;
+  bottom: 20px;
   display: flex;
-  min-width: 186px;
+  min-width: 190px;
   align-items: center;
   gap: 9px;
-  border: 1px solid rgba(255, 255, 255, .22);
+  border: 1px solid rgba(255, 255, 255, .26);
   border-radius: 12px;
   padding: 9px 11px;
-  background: rgba(8, 27, 45, .76);
+  background: rgba(8, 27, 45, .79);
   color: #fff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, .18);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .2);
   backdrop-filter: blur(10px);
   pointer-events: none;
 }
@@ -107,10 +100,10 @@
   width: 9px;
   height: 9px;
   flex: 0 0 auto;
-  border: 2px solid rgba(255,255,255,.82);
+  border: 2px solid rgba(255,255,255,.86);
   border-radius: 50%;
   background: #ff6527;
-  box-shadow: 0 0 0 5px rgba(255, 101, 39, .15);
+  box-shadow: 0 0 0 5px rgba(255, 101, 39, .16);
 }
 
 .caption strong,
@@ -139,12 +132,12 @@
   width: min(230px, 24vw);
   min-width: 175px;
   transform: translate(12px, -50%);
-  border: 1px solid rgba(255, 255, 255, .24);
+  border: 1px solid rgba(255, 255, 255, .26);
   border-radius: 11px;
   padding: 9px 10px;
-  background: rgba(7, 24, 41, .92);
+  background: rgba(7, 24, 41, .94);
   color: #fff;
-  box-shadow: 0 12px 28px rgba(2, 10, 18, .26);
+  box-shadow: 0 12px 28px rgba(2, 10, 18, .28);
   backdrop-filter: blur(12px);
   pointer-events: none;
 }
@@ -182,7 +175,7 @@
 
 @keyframes licogiMapPulse {
   0% {
-    opacity: .95;
+    opacity: .96;
     transform: scale(.78);
   }
   72% {
@@ -197,27 +190,28 @@
 
 @media (max-width: 1280px) {
   .wrap {
-    right: 5.4%;
-    width: 205px;
+    top: 111px;
+    right: 5.2%;
+    width: 220px;
   }
 
   .caption {
-    right: -20px;
-    min-width: 170px;
+    right: -18px;
+    min-width: 172px;
   }
 }
 
 @media (max-width: 1040px) {
   .wrap {
-    top: 122px;
-    right: 4.2%;
-    width: 185px;
+    top: 120px;
+    right: 3.6%;
+    width: 188px;
   }
 
   .caption {
-    right: -10px;
-    bottom: 25px;
-    min-width: 156px;
+    right: -8px;
+    bottom: 28px;
+    min-width: 158px;
     padding: 8px 9px;
   }
 
@@ -229,9 +223,9 @@
 @media (max-width: 820px) {
   .wrap {
     top: 126px;
-    right: 2.5%;
-    width: 150px;
-    opacity: .95;
+    right: 2.2%;
+    width: 152px;
+    opacity: .96;
   }
 
   .caption {
