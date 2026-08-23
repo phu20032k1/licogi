@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import AppShell from "../components/AppShell";
+import HorizontalScrollReset from "../components/HorizontalScrollReset";
 import { siteConfig } from "../lib/siteConfig";
 import "./globals.css";
 import "./production.css";
@@ -90,6 +91,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={beVietnamPro.variable}>
+        <HorizontalScrollReset />
         <AppShell>{children}</AppShell>
       </body>
     </html>
