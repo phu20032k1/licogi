@@ -15,16 +15,14 @@ type Props = {
   singlePointZoom?: number;
 };
 
-// Trang public ưu tiên thể hiện vùng hoạt động chính ở miền Bắc.
-// Khi người dùng lọc/chọn dự án cụ thể, viewport vẫn tự động đi tới dữ liệu đó.
-const NORTHERN_VIETNAM_BOUNDS = L.latLngBounds([
-  [19.05, 102.75],
-  [23.55, 108.35],
+const VIETNAM_BOUNDS = L.latLngBounds([
+  [8.15, 102.0],
+  [23.7, 109.85],
 ]);
 
-const NORTHERN_VIETNAM_NAV_BOUNDS = L.latLngBounds([
-  [18.15, 101.55],
-  [24.15, 109.25],
+const VIETNAM_NAV_BOUNDS = L.latLngBounds([
+  [7.5, 101.2],
+  [24.25, 110.65],
 ]);
 
 const WORLD_BOUNDS = L.latLngBounds([
@@ -33,7 +31,9 @@ const WORLD_BOUNDS = L.latLngBounds([
 ]);
 
 function validPoint(point: MapPoint) {
-  return Number.isFinite(point.lat) && Number.isFinite(point.lng) && point.lat >= -90 && point.lat <= 90 && point.lng >= -180 && point.lng <= 180;
+  return Number.isFinite(point.lat) && Number.isFinite(point.lng)
+    && point.lat >= -90 && point.lat <= 90 && point.lng >= -180 && point.lng <= 180
+    && !(Math.abs(point.lat) < .001 && Math.abs(point.lng) < .001);
 }
 
 export default function MapViewportController({
@@ -41,8 +41,8 @@ export default function MapViewportController({
   selected,
   focusVietnam = false,
   maxZoom = 7,
-  selectedZoom = 6.5,
-  singlePointZoom = 6,
+  selectedZoom = 8.5,
+  singlePointZoom = 7.5,
 }: Props) {
   const map = useMap();
 
@@ -66,56 +66,56 @@ export default function MapViewportController({
 
   useEffect(() => {
     map.stop();
-    map.setMaxBounds(focusVietnam ? NORTHERN_VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
-    map.setMinZoom(focusVietnam ? 5.55 : 3);
+    map.setMaxBounds(focusVietnam ? VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
+    map.setMinZoom(focusVietnam ? 4.35 : 3);
 
     if (selected && validPoint(selected)) {
       map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), {
-        duration: 0.48,
-        easeLinearity: 0.24,
+        duration: .58,
+        easeLinearity: .22,
       });
       return;
     }
 
     if (focusVietnam) {
       const size = map.getSize();
-      const horizontalPadding = Math.max(14, Math.min(42, Math.round(size.x * 0.035)));
-      const verticalPadding = Math.max(12, Math.min(30, Math.round(size.y * 0.035)));
-      map.fitBounds(NORTHERN_VIETNAM_BOUNDS, {
+      const horizontalPadding = Math.max(18, Math.min(54, Math.round(size.x * .045)));
+      const verticalPadding = Math.max(16, Math.min(38, Math.round(size.y * .045)));
+      map.fitBounds(VIETNAM_BOUNDS, {
         paddingTopLeft: [horizontalPadding, verticalPadding],
         paddingBottomRight: [horizontalPadding, verticalPadding],
-        maxZoom: 6.65,
+        maxZoom: 5.8,
         animate: false,
       });
-      map.panInsideBounds(NORTHERN_VIETNAM_NAV_BOUNDS, { animate: false });
+      map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
       return;
     }
 
     const valid = points.filter(validPoint);
     if (!valid.length) {
-      map.setView([21.05, 105.75], 6.2, { animate: false });
+      map.fitBounds(VIETNAM_BOUNDS, { padding: [24, 24], maxZoom: 5.7, animate: false });
       return;
     }
 
     if (valid.length === 1) {
       map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, singlePointZoom), {
-        duration: 0.42,
-        easeLinearity: 0.24,
+        duration: .48,
+        easeLinearity: .22,
       });
       return;
     }
 
-    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(0.08);
+    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(.12);
     const size = map.getSize();
-    const horizontalPadding = Math.max(18, Math.min(48, Math.round(size.x * 0.04)));
-    const verticalPadding = Math.max(18, Math.min(42, Math.round(size.y * 0.05)));
+    const horizontalPadding = Math.max(22, Math.min(62, Math.round(size.x * .05)));
+    const verticalPadding = Math.max(20, Math.min(48, Math.round(size.y * .06)));
 
     map.fitBounds(bounds, {
       paddingTopLeft: [horizontalPadding, verticalPadding],
       paddingBottomRight: [horizontalPadding, verticalPadding],
       maxZoom,
       animate: true,
-      duration: 0.45,
+      duration: .52,
     });
   }, [focusVietnam, map, maxZoom, points, selected, selectedZoom, singlePointZoom]);
 
