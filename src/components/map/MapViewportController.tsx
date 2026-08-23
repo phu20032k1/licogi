@@ -20,27 +20,36 @@ const VIETNAM_BOUNDS = L.latLngBounds([
   [23.7, 109.85],
 ]);
 
+/*
+ * Keep the public Vietnam map from drifting all the way to India / Indonesia.
+ * The bounds are intentionally a little wider than Vietnam because a wide
+ * desktop map needs horizontal breathing room while keeping the whole country
+ * visible at a useful zoom level.
+ */
 const VIETNAM_NAV_BOUNDS = L.latLngBounds([
-  [7.5, 101.2],
-  [24.25, 110.65],
-]);
-
-const WORLD_BOUNDS = L.latLngBounds([
-  [-84, -179.5],
-  [84, 179.5],
+  [5.2, 94.2],
+  [27.2, 120.4],
 ]);
 
 function validPoint(point: MapPoint) {
   return Number.isFinite(point.lat) && Number.isFinite(point.lng)
-    && point.lat >= -90 && point.lat <= 90 && point.lng >= -180 && point.lng <= 180
+    && point.lat >= 8 && point.lat <= 24.5
+    && point.lng >= 102 && point.lng <= 110.8
     && !(Math.abs(point.lat) < .001 && Math.abs(point.lng) < .001);
+}
+
+function defaultVietnamZoom(width: number) {
+  if (width >= 1120) return 5.72;
+  if (width >= 900) return 5.6;
+  if (width >= 700) return 5.45;
+  return 5.2;
 }
 
 export default function MapViewportController({
   points,
   selected,
   focusVietnam = false,
-  maxZoom = 7,
+  maxZoom = 9,
   selectedZoom = 8.5,
   singlePointZoom = 7.5,
 }: Props) {
@@ -66,12 +75,12 @@ export default function MapViewportController({
 
   useEffect(() => {
     map.stop();
-    map.setMaxBounds(focusVietnam ? VIETNAM_NAV_BOUNDS : WORLD_BOUNDS);
-    map.setMinZoom(focusVietnam ? 4.35 : 3);
+    map.setMaxBounds(VIETNAM_NAV_BOUNDS);
+    map.setMinZoom(5.15);
 
     if (selected && validPoint(selected)) {
-      map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, selectedZoom), {
-        duration: .58,
+      map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, Math.max(7.4, selectedZoom)), {
+        duration: .5,
         easeLinearity: .22,
       });
       return;
@@ -79,44 +88,44 @@ export default function MapViewportController({
 
     if (focusVietnam) {
       const size = map.getSize();
-      const horizontalPadding = Math.max(18, Math.min(54, Math.round(size.x * .045)));
-      const verticalPadding = Math.max(16, Math.min(38, Math.round(size.y * .045)));
-      map.fitBounds(VIETNAM_BOUNDS, {
-        paddingTopLeft: [horizontalPadding, verticalPadding],
-        paddingBottomRight: [horizontalPadding, verticalPadding],
-        maxZoom: 5.8,
-        animate: false,
-      });
+      const zoom = Math.min(maxZoom, defaultVietnamZoom(size.x));
+      map.setView([16.25, 107.25], zoom, { animate: false });
       map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
       return;
     }
 
     const valid = points.filter(validPoint);
     if (!valid.length) {
-      map.fitBounds(VIETNAM_BOUNDS, { padding: [24, 24], maxZoom: 5.7, animate: false });
+      const size = map.getSize();
+      map.setView([16.25, 107.25], Math.min(maxZoom, defaultVietnamZoom(size.x)), { animate: false });
       return;
     }
 
     if (valid.length === 1) {
-      map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, singlePointZoom), {
-        duration: .48,
+      map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, Math.max(6.8, singlePointZoom)), {
+        duration: .42,
         easeLinearity: .22,
       });
       return;
     }
 
-    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(.12);
+    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(.1);
     const size = map.getSize();
-    const horizontalPadding = Math.max(22, Math.min(62, Math.round(size.x * .05)));
-    const verticalPadding = Math.max(20, Math.min(48, Math.round(size.y * .06)));
+    const horizontalPadding = Math.max(22, Math.min(54, Math.round(size.x * .045)));
+    const verticalPadding = Math.max(18, Math.min(42, Math.round(size.y * .055)));
 
     map.fitBounds(bounds, {
       paddingTopLeft: [horizontalPadding, verticalPadding],
       paddingBottomRight: [horizontalPadding, verticalPadding],
       maxZoom,
       animate: true,
-      duration: .52,
+      duration: .46,
     });
+
+    /* fitBounds may choose a very distant zoom on a wide canvas; never let the
+       public Vietnam view fall back to a continent-scale map. */
+    if (map.getZoom() < 5.15) map.setZoom(5.15, { animate: false });
+    map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
   }, [focusVietnam, map, maxZoom, points, selected, selectedZoom, singlePointZoom]);
 
   return null;
