@@ -15,10 +15,10 @@ export default async function PublicProjectsPage() {
 
   return <PublicSiteFrame>
     <main className="public-page-main public-projects-route">
-      <section className="public-page-hero public-page-hero-compact">
+      <section className="public-page-hero public-page-hero-compact public-projects-hero-tight">
         <div className="public-container">
-          <span>Danh mục dự án</span>
-          <h1>Dự án LICOGI 18.3</h1>
+          <div><span>Danh mục công trình</span><h1>Công trình LICOGI 18.3</h1></div>
+          <p>Bản đồ Việt Nam theo 34 tỉnh/thành sau sắp xếp · chọn tỉnh, điểm công trình hoặc bộ lọc để tự động đưa bản đồ tới đúng khu vực.</p>
         </div>
       </section>
       <section className="public-page-section public-projects-page-section">
