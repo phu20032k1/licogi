@@ -1,0 +1,186 @@
+/* Hard reset for the public homepage hero map.
+ * This file is intentionally loaded LAST. Do not use :has() here: the hero
+ * map exposes a stable aria-label containing LICOGI in every supported locale.
+ */
+
+html,
+body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.public-site,
+.public-site main {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.public-site main > #trang-chu {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 600px !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  box-sizing: border-box !important;
+}
+
+/* Stable target: HomepageVietnamProjectMap's aside aria-label always contains LICOGI. */
+.public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+  position: absolute !important;
+  top: 8px !important;
+  right: clamp(164px, 12.5vw, 184px) !important;
+  bottom: 8px !important;
+  left: auto !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 375 / 735 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  transform: none !important;
+  z-index: 18 !important;
+  box-sizing: border-box !important;
+}
+
+.public-site main > #trang-chu aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+/* Legend sits immediately to the right of the country silhouette, but the
+ * reserved right gap above guarantees that it remains inside the viewport. */
+.public-site main > #trang-chu aside[aria-label*="LICOGI"] > div[aria-label] {
+  position: absolute !important;
+  left: calc(100% + 12px) !important;
+  right: auto !important;
+  bottom: 92px !important;
+  width: 148px !important;
+  min-width: 148px !important;
+  max-width: 148px !important;
+  margin: 0 !important;
+  padding: 9px 10px !important;
+  gap: 6px !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+  z-index: 26 !important;
+}
+
+/* Never let a hover summary make the document wider. */
+.public-site main > #trang-chu aside[aria-label*="LICOGI"] > div:not([aria-label]) {
+  max-width: min(230px, 28vw) !important;
+}
+
+@media (max-width: 1199px) {
+  .public-site main > #trang-chu {
+    min-height: 570px !important;
+  }
+
+  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+    top: 10px !important;
+    right: 58px !important;
+    bottom: 10px !important;
+  }
+
+  .public-site main > #trang-chu aside[aria-label*="LICOGI"] > div[aria-label] {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1040px) {
+  .public-site main > #trang-chu {
+    min-height: 550px !important;
+  }
+
+  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+    top: 18px !important;
+    right: 24px !important;
+    bottom: 18px !important;
+    width: 220px !important;
+    height: auto !important;
+    aspect-ratio: 375 / 735 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .public-site main > #trang-chu {
+    min-height: initial !important;
+  }
+
+  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+    top: 18px !important;
+    right: 18px !important;
+    bottom: auto !important;
+    width: 180px !important;
+    height: auto !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+    display: none !important;
+  }
+}
+
+/* Public project map: make the project list an explicit scroll track so old
+ * legacy rules cannot collapse it to a single visible row. */
+.public-project-map-2026 .public-project-sidepanel-2026:not(:has(.public-project-preview)) {
+  display: grid !important;
+  grid-template-rows: 44px minmax(174px, 34%) minmax(0, 1fr) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list,
+.public-project-map-2026 .public-project-list-panel.public-project-ranked-list {
+  position: static !important;
+  display: grid !important;
+  grid-auto-flow: row !important;
+  grid-auto-rows: minmax(60px, auto) !important;
+  align-content: start !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button {
+  position: static !important;
+  display: grid !important;
+  width: 100% !important;
+  min-height: 60px !important;
+  height: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+@media (max-width: 900px) {
+  .public-project-map-2026 .public-project-sidepanel-2026:not(:has(.public-project-preview)) {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .public-project-map-2026 .public-project-ranked-list,
+  .public-project-map-2026 .public-project-list-panel.public-project-ranked-list {
+    display: grid !important;
+    height: auto !important;
+    max-height: 440px !important;
+  }
+}
