@@ -32,6 +32,7 @@ import "./homepage-click-cards-reference-v2.css";
 import "./homepage-click-cards-simplemaps-url.css";
 import "./public-map-2026.css";
 import "./public-map-marker-layout-hotfix.css";
+import "./public-map-layout-final.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
