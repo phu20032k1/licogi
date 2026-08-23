@@ -13,6 +13,7 @@ const VIEW_X = 35;
 const VIEW_Y = 0;
 const VIEW_WIDTH = 375;
 const VIEW_HEIGHT = 735;
+const KNOWN_PROJECT_TYPES = Object.keys(projectTypeVisuals) as ProjectType[];
 
 const COPY: Record<PublicLanguage, { title: string; projects: string; ongoing: string; value: string; fields: string; open: string; legend: string; strong: string; medium: string; early: string }> = {
   vi: { title: "Bản đồ hoạt động LICOGI sau sáp nhập", projects: "công trình", ongoing: "đang thi công", value: "Tổng giá trị", fields: "Lĩnh vực", open: "Bấm để mở danh sách", legend: "Mức độ hoạt động theo dữ liệu LICOGI", strong: "Mạnh", medium: "Đang phát triển", early: "Có dự án" },
@@ -70,26 +71,17 @@ function buildProvinceStats(projects: PublicProjectRecord[]) {
   const stats = new Map<string, ProvinceStat>();
   for (const [name, provinceProjects] of buckets) {
     const typeCounts: Partial<Record<ProjectType, number>> = {};
-    provinceProjects.forEach((project) => { typeCounts[project.type] = (typeCounts[project.type] || 0) + 1; });
+    provinceProjects.forEach((project) => {
+      const projectType = KNOWN_PROJECT_TYPES.includes(project.type as ProjectType) ? project.type as ProjectType : "Công nghiệp";
+      typeCounts[projectType] = (typeCounts[projectType] || 0) + 1;
+    });
     const dominantType = (Object.entries(typeCounts).sort((a, b) => Number(b[1]) - Number(a[1]))[0]?.[0] || "Công nghiệp") as ProjectType;
     const totalValue = provinceProjects.reduce((sum, project) => sum + Number(project.contractValueVnd || 0), 0);
     const ongoingProjects = provinceProjects.filter((project) => project.status === "ongoing");
-    const averageProgress = ongoingProjects.length
-      ? Math.round(ongoingProjects.reduce((sum, project) => sum + Number(project.progress || 0), 0) / ongoingProjects.length)
-      : 100;
+    const averageProgress = ongoingProjects.length ? Math.round(ongoingProjects.reduce((sum, project) => sum + Number(project.progress || 0), 0) / ongoingProjects.length) : 100;
     const industrialCount = Number(typeCounts["Công nghiệp"] || 0);
     const score = provinceProjects.length * 2 + industrialCount * 2.5 + Math.min(5, totalValue / 250_000_000_000);
-    stats.set(name, {
-      name,
-      projects: provinceProjects,
-      ongoing: ongoingProjects.length,
-      completed: provinceProjects.filter((project) => project.status === "completed").length,
-      totalValue,
-      averageProgress,
-      typeCounts,
-      dominantType,
-      score,
-    });
+    stats.set(name, { name, projects: provinceProjects, ongoing: ongoingProjects.length, completed: provinceProjects.filter((project) => project.status === "completed").length, totalValue, averageProgress, typeCounts, dominantType, score });
   }
   return stats;
 }
@@ -111,88 +103,30 @@ export default function HomepageVietnamProjectMap({ language }: { language: Publ
   const activeShape = activeProvince ? vietnamPostMergerProvinces.find((item) => item.name === activeProvince) || null : null;
   const t = COPY[language];
 
-  return (
-    <aside className={styles.wrap} aria-label={t.title}>
-      <div className={styles.mapGlow} aria-hidden="true" />
-      <svg className={styles.svg} viewBox={`${VIEW_X} ${VIEW_Y} ${VIEW_WIDTH} ${VIEW_HEIGHT}`} role="img" aria-label="Bản đồ Việt Nam 34 tỉnh thành sau sáp nhập">
-        <g className={styles.provinces}>
-          {vietnamPostMergerProvinces.map((province) => {
-            const stat = stats.get(province.name);
-            const href = `/portfolio/projects?q=${encodeURIComponent(province.name)}`;
-            const isActive = activeProvince === province.name;
-            return (
-              <a key={province.name} href={href} aria-label={`${province.name}${stat ? `, ${stat.projects.length} ${t.projects}` : ""}`}>
-                <path
-                  d={province.d}
-                  className={`${styles.province} ${stat ? styles.hasProjects : ""} ${isActive ? styles.isActive : ""}`}
-                  style={{ fill: activityFill(stat?.score || 0, maxScore) }}
-                  onMouseEnter={() => setActiveProvince(province.name)}
-                  onMouseLeave={() => setActiveProvince((current) => current === province.name ? null : current)}
-                  onFocus={() => setActiveProvince(province.name)}
-                  onBlur={() => setActiveProvince((current) => current === province.name ? null : current)}
-                />
-              </a>
-            );
-          })}
-        </g>
-
-        <g className={styles.islands} aria-hidden="true">
-          <circle cx="395" cy="308" r="2.1"/><circle cx="402" cy="322" r="1.6"/><circle cx="397" cy="340" r="1.3"/>
-          <circle cx="386" cy="585" r="1.7"/><circle cx="400" cy="612" r="1.4"/><circle cx="392" cy="640" r="1.2"/>
-        </g>
-
-        <g className={styles.projectPins}>
-          {vietnamPostMergerProvinces.map((province) => {
-            const stat = stats.get(province.name);
-            if (!stat) return null;
-            const visual = projectTypeVisuals[stat.dominantType];
-            const flag = countryFlag(stat.projects[0]?.investorCountry);
-            const href = `/portfolio/projects?q=${encodeURIComponent(province.name)}`;
-            return (
-              <a
-                key={`pin-${province.name}`}
-                href={href}
-                className={styles.pinLink}
-                onMouseEnter={() => setActiveProvince(province.name)}
-                onMouseLeave={() => setActiveProvince((current) => current === province.name ? null : current)}
-                onFocus={() => setActiveProvince(province.name)}
-                onBlur={() => setActiveProvince((current) => current === province.name ? null : current)}
-              >
-                <g transform={`translate(${province.cx} ${province.cy})`}>
-                  <circle className={styles.pinPulse} cx="0" cy="-5" r="12" style={{ color: visual.color }} />
-                  <path className={styles.pinDrop} d="M0-15C-8.3-15-15-8.3-15 0c0 11.7 15 27 15 27S15 11.7 15 0C15-8.3 8.3-15 0-15Z" style={{ fill: visual.color }} />
-                  <circle className={styles.pinInner} cx="0" cy="0" r="7.2" />
-                  <text className={styles.pinCount} x="0" y="3">{stat.projects.length}</text>
-                  <text className={styles.pinFlag} x="11" y="-10">{flag}</text>
-                </g>
-              </a>
-            );
-          })}
-        </g>
-      </svg>
-
-      <div className={styles.legend} aria-label={t.legend}>
-        <strong>{t.legend}</strong>
-        <span><i className={styles.levelStrong}/>{t.strong}</span>
-        <span><i className={styles.levelMedium}/>{t.medium}</span>
-        <span><i className={styles.levelEarly}/>{t.early}</span>
-      </div>
-
-      {active && activeShape ? (
-        <div
-          className={`${styles.tooltip} ${activeShape.cx > VIEW_X + VIEW_WIDTH * .58 ? styles.tooltipLeft : ""}`}
-          style={{ left: `${((activeShape.cx - VIEW_X) / VIEW_WIDTH) * 100}%`, top: `${((activeShape.cy - VIEW_Y) / VIEW_HEIGHT) * 100}%` }}
-          aria-hidden="true"
-        >
-          <div className={styles.tooltipTitle}><strong>{active.name}</strong><b>{active.projects.length} {t.projects}</b></div>
-          <div className={styles.tooltipMetrics}>
-            <span><small>{t.ongoing}</small><b>{active.ongoing}{active.ongoing ? ` · ${active.averageProgress}%` : ""}</b></span>
-            <span><small>{t.value}</small><b>{formatValue(active.totalValue)}</b></span>
-          </div>
-          <p>{t.fields}: {Object.entries(active.typeCounts).filter(([, count]) => Number(count) > 0).map(([type, count]) => `${type} ${count}`).join(" · ")}</p>
-          <em>{t.open}</em>
-        </div>
-      ) : null}
-    </aside>
-  );
+  return <aside className={styles.wrap} aria-label={t.title}>
+    <div className={styles.mapGlow} aria-hidden="true" />
+    <svg className={styles.svg} viewBox={`${VIEW_X} ${VIEW_Y} ${VIEW_WIDTH} ${VIEW_HEIGHT}`} role="img" aria-label="Bản đồ Việt Nam 34 tỉnh thành sau sáp nhập">
+      <g className={styles.provinces}>
+        {vietnamPostMergerProvinces.map((province) => {
+          const stat = stats.get(province.name);
+          const href = `/portfolio/projects?q=${encodeURIComponent(province.name)}`;
+          const isActive = activeProvince === province.name;
+          return <a key={province.name} href={href} aria-label={`${province.name}${stat ? `, ${stat.projects.length} ${t.projects}` : ""}`}><path d={province.d} className={`${styles.province} ${stat ? styles.hasProjects : ""} ${isActive ? styles.isActive : ""}`} style={{ fill: activityFill(stat?.score || 0, maxScore) }} onMouseEnter={() => setActiveProvince(province.name)} onMouseLeave={() => setActiveProvince((current) => current === province.name ? null : current)} onFocus={() => setActiveProvince(province.name)} onBlur={() => setActiveProvince((current) => current === province.name ? null : current)} /></a>;
+        })}
+      </g>
+      <g className={styles.islands} aria-hidden="true"><circle cx="395" cy="308" r="2.1"/><circle cx="402" cy="322" r="1.6"/><circle cx="397" cy="340" r="1.3"/><circle cx="386" cy="585" r="1.7"/><circle cx="400" cy="612" r="1.4"/><circle cx="392" cy="640" r="1.2"/></g>
+      <g className={styles.projectPins}>
+        {vietnamPostMergerProvinces.map((province) => {
+          const stat = stats.get(province.name);
+          if (!stat) return null;
+          const visual = projectTypeVisuals[stat.dominantType];
+          const flag = countryFlag(stat.projects[0]?.investorCountry);
+          const href = `/portfolio/projects?q=${encodeURIComponent(province.name)}`;
+          return <a key={`pin-${province.name}`} href={href} className={styles.pinLink} onMouseEnter={() => setActiveProvince(province.name)} onMouseLeave={() => setActiveProvince((current) => current === province.name ? null : current)} onFocus={() => setActiveProvince(province.name)} onBlur={() => setActiveProvince((current) => current === province.name ? null : current)}><g transform={`translate(${province.cx} ${province.cy})`}><circle className={styles.pinPulse} cx="0" cy="-5" r="12" style={{ color: visual.color }} /><path className={styles.pinDrop} d="M0-15C-8.3-15-15-8.3-15 0c0 11.7 15 27 15 27S15 11.7 15 0C15-8.3 8.3-15 0-15Z" style={{ fill: visual.color }} /><circle className={styles.pinInner} cx="0" cy="0" r="7.2" /><text className={styles.pinCount} x="0" y="3">{stat.projects.length}</text><text className={styles.pinFlag} x="11" y="-10">{flag}</text></g></a>;
+        })}
+      </g>
+    </svg>
+    <div className={styles.legend} aria-label={t.legend}><strong>{t.legend}</strong><span><i className={styles.levelStrong}/>{t.strong}</span><span><i className={styles.levelMedium}/>{t.medium}</span><span><i className={styles.levelEarly}/>{t.early}</span></div>
+    {active && activeShape ? <div className={`${styles.tooltip} ${activeShape.cx > VIEW_X + VIEW_WIDTH * .58 ? styles.tooltipLeft : ""}`} style={{ left: `${((activeShape.cx - VIEW_X) / VIEW_WIDTH) * 100}%`, top: `${((activeShape.cy - VIEW_Y) / VIEW_HEIGHT) * 100}%` }} aria-hidden="true"><div className={styles.tooltipTitle}><strong>{active.name}</strong><b>{active.projects.length} {t.projects}</b></div><div className={styles.tooltipMetrics}><span><small>{t.ongoing}</small><b>{active.ongoing}{active.ongoing ? ` · ${active.averageProgress}%` : ""}</b></span><span><small>{t.value}</small><b>{formatValue(active.totalValue)}</b></span></div><p>{t.fields}: {Object.entries(active.typeCounts).filter(([, count]) => Number(count) > 0).map(([type, count]) => `${type} ${count}`).join(" · ")}</p><em>{t.open}</em></div> : null}
+  </aside>;
 }
