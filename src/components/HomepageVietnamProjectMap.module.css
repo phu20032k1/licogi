@@ -24,46 +24,43 @@
   position: absolute;
   z-index: 12;
   top: 105px;
-  /* Nudge the whole Vietnam map a little further left to match the reference. */
   right: clamp(215px, 19vw, 320px);
   width: clamp(224px, 17.6vw, 282px);
   pointer-events: auto;
   isolation: isolate;
 }
 
-/* Local contrast plate: keeps the map readable on bright factory roofs without
-   putting a visible rectangular card over the hero. */
+/* Reference look: the Vietnam silhouette itself is white/translucent, not a
+   dark island. Keep only a soft white halo behind it. */
 .wrap::before {
   content: "";
   position: absolute;
   z-index: 0;
-  inset: 2% -10% 1% -12%;
-  border-radius: 46% 42% 44% 40%;
+  inset: 3% -8% 2% -10%;
+  border-radius: 48% 46% 47% 44%;
   background:
     radial-gradient(
       ellipse at 50% 47%,
-      rgba(5, 22, 38, .50) 0%,
-      rgba(5, 22, 38, .38) 39%,
-      rgba(5, 22, 38, .19) 61%,
-      rgba(5, 22, 38, .07) 74%,
-      transparent 84%
+      rgba(255, 255, 255, .16) 0%,
+      rgba(255, 255, 255, .09) 42%,
+      rgba(255, 255, 255, .03) 68%,
+      transparent 82%
     );
-  filter: blur(4px);
+  filter: blur(5px);
   pointer-events: none;
 }
 
 .mapGlow {
   position: absolute;
   z-index: -1;
-  inset: -1% -22% -2% -22%;
+  inset: -1% -18% -2% -18%;
   border-radius: 50%;
   background:
     radial-gradient(
       ellipse at 52% 45%,
-      rgba(5, 19, 33, .60) 0%,
-      rgba(5, 19, 33, .36) 40%,
-      rgba(5, 19, 33, .14) 64%,
-      transparent 79%
+      rgba(255, 255, 255, .12) 0%,
+      rgba(255, 255, 255, .055) 44%,
+      transparent 76%
     );
   filter: blur(8px);
   pointer-events: none;
@@ -77,19 +74,22 @@
   height: auto;
   overflow: visible;
   filter:
-    drop-shadow(0 1px 1px rgba(5, 18, 31, .88))
-    drop-shadow(0 9px 18px rgba(5, 18, 31, .36));
+    drop-shadow(0 1px 1px rgba(5, 18, 31, .42))
+    drop-shadow(0 7px 16px rgba(5, 18, 31, .18));
 }
 
-/* Keep the real province-border SVG white, but make it fully opaque and crisp. */
+/* The source SVG already uses white fill/strokes. Do not recolor it through a
+   dark contrast filter; screen blending keeps the provinces bright and white
+   exactly like the supplied reference image. */
 .mapImage {
   opacity: 1;
   pointer-events: none;
+  mix-blend-mode: screen;
   filter:
-    contrast(1.42)
-    brightness(1.12)
-    drop-shadow(0 1px 1px rgba(4, 16, 28, .94))
-    drop-shadow(0 0 4px rgba(4, 16, 28, .58));
+    brightness(1.42)
+    contrast(1.08)
+    drop-shadow(0 1px 1px rgba(8, 22, 35, .42))
+    drop-shadow(0 0 3px rgba(255, 255, 255, .36));
 }
 
 .pinLink {
@@ -105,7 +105,7 @@
 
 .pinPulse {
   fill: rgba(255, 91, 31, .34);
-  stroke: rgba(255, 255, 255, .68);
+  stroke: rgba(255, 255, 255, .76);
   stroke-width: 2;
   transform-box: fill-box;
   transform-origin: center;
