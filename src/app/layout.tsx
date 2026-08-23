@@ -30,6 +30,7 @@ import "./homepage-hero-cache-final.css";
 import "./homepage-click-cards-reference.css";
 import "./homepage-click-cards-reference-v2.css";
 import "./homepage-click-cards-simplemaps-url.css";
+import "./public-map-2026.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],

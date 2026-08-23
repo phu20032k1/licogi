@@ -1,4 +1,4 @@
-import { ProjectStatus, ProjectType, legacyProvinceCoordinates, normalizeProvinceName, provinceCoordinates } from "../data/projects";
+import { ProjectStatus, ProjectType, legacyProvinceCoordinates, normalizeProvinceName, normalizeProvinceNames, provinceCoordinates } from "../data/projects";
 
 export type MarkerVisual = {
   color: string;
@@ -27,7 +27,7 @@ export const projectStatusVisuals: Record<ProjectStatus, { color: string; symbol
 const TYPE_KEYWORDS: Array<{ type: ProjectType; keywords: string[] }> = [
   { type: "Công nghiệp", keywords: ["công nghiệp", "industrial", "nhà máy", "factory", "kho", "warehouse", "kcn"] },
   { type: "Nông nghiệp", keywords: ["nông nghiệp", "agriculture", "agri", "nông trại", "farm", "chăn nuôi", "trang trại", "nhà kính", "greenhouse"] },
-  { type: "Dân dụng", keywords: ["dân dụng", "civil", "chung cư", "residential", "khách sạn", "hotel", "đô thị"] },
+  { type: "Dân dụng", keywords: ["dân dụng", "civil", "chung cư", "residential", "khách sạn", "hotel", "đô thị", "trung tâm thương mại"] },
   { type: "Hạ tầng", keywords: ["hạ tầng", "infrastructure", "cấp thoát", "water", "khu công nghiệp", "logistics"] },
   { type: "Giao thông", keywords: ["giao thông", "transport", "đường", "road", "cầu", "bridge", "cao tốc"] },
   { type: "Điện năng", keywords: ["điện", "power", "energy", "trạm biến áp", "substation", "năng lượng"] },
@@ -51,14 +51,29 @@ function cleanProvincePrefix(value: string) {
   return value.trim().replace(/^(tỉnh|thành phố|tp\.?|city)\s+/i, "").trim();
 }
 
+function averageCoordinates(points: Array<{ lat: number; lng: number }>) {
+  return {
+    lat: points.reduce((sum, point) => sum + point.lat, 0) / points.length,
+    lng: points.reduce((sum, point) => sum + point.lng, 0) / points.length,
+  };
+}
+
 export function resolveProvinceCoordinates(province?: string | null) {
   const fallback = provinceCoordinates["Hà Nội"];
   const raw = String(province || "").trim();
   if (!raw) return fallback;
 
   const cleaned = cleanProvincePrefix(raw);
-  const legacyExact = legacyProvinceCoordinates[raw] || legacyProvinceCoordinates[cleaned];
-  if (legacyExact) return legacyExact;
+  const directLegacy = legacyProvinceCoordinates[raw] || legacyProvinceCoordinates[cleaned];
+  if (directLegacy) return directLegacy;
+
+  const rawParts = raw.split(/\s*(?:\/|\||;)\s*/).map(cleanProvincePrefix).filter(Boolean);
+  const legacyPoints = rawParts.map((part) => legacyProvinceCoordinates[part]).filter(Boolean);
+  if (legacyPoints.length) return averageCoordinates(legacyPoints);
+
+  const canonicalParts = normalizeProvinceNames(raw);
+  const canonicalPoints = canonicalParts.map((name) => provinceCoordinates[name]).filter(Boolean);
+  if (canonicalPoints.length) return averageCoordinates(canonicalPoints);
 
   const canonical = normalizeProvinceName(raw);
   if (provinceCoordinates[canonical]) return provinceCoordinates[canonical];
@@ -84,8 +99,19 @@ export function getMarkerVisual(type: ProjectType, status: ProjectStatus): Marke
   };
 }
 
-export function markerHtml(type: ProjectType, status: ProjectStatus, selected = false) {
+export function investorCountryFlag(value?: string | null) {
+  const raw = String(value || "").toLocaleLowerCase("vi");
+  if (raw.includes("nhật") || raw.includes("japan")) return "🇯🇵";
+  if (raw.includes("hàn") || raw.includes("korea")) return "🇰🇷";
+  if (raw.includes("trung quốc") || raw.includes("china")) return "🇨🇳";
+  if (raw.includes("đài loan") || raw.includes("taiwan")) return "🇹🇼";
+  if (raw.includes("việt") || raw.includes("vietnam")) return "🇻🇳";
+  return "🌐";
+}
+
+export function markerHtml(type: ProjectType, status: ProjectStatus, selected = false, investorCountry?: string | null) {
   const visual = getMarkerVisual(type, status);
   const scale = selected ? 1.14 : 1;
-  return `<div class="licogi-map-marker licogi-waterdrop-marker status-${status}${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};--status-color:${visual.statusColor};transform:translate(-50%,-100%) scale(${scale})" title="${visual.typeLabel}"><span class="licogi-waterdrop-body"><b>${visual.label}</b></span><em class="licogi-marker-status" aria-hidden="true">${visual.statusSymbol}</em></div>`;
+  const flag = investorCountryFlag(investorCountry);
+  return `<div class="licogi-map-marker licogi-waterdrop-marker status-${status}${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};--status-color:${visual.statusColor};transform:translate(-50%,-100%) scale(${scale})" title="${visual.typeLabel}"><span class="licogi-waterdrop-body"><b>${visual.label}</b></span><em class="licogi-marker-status" aria-hidden="true">${visual.statusSymbol}</em><span class="licogi-marker-country" aria-hidden="true">${flag}</span></div>`;
 }

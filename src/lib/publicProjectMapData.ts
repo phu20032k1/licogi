@@ -2,7 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
-import { normalizeProvinceName } from "../data/projects";
+import { currentVietnamProvinces, normalizeProvinceName, normalizeProvinceNames } from "../data/projects";
 import { normalizeProjectStatus, normalizeProjectType, resolveProvinceCoordinates } from "./projectMapVisuals";
 import type { PublicProjectRecord } from "./publicProject";
 
@@ -20,8 +20,15 @@ function firstMetadataValue(metadata: Prisma.JsonValue | null, keys: string[]) {
   return "";
 }
 
-function validCoordinate(value: number | null | undefined, min: number, max: number) {
-  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
+function validVietnamCoordinatePair(lat: number | null | undefined, lng: number | null | undefined) {
+  return typeof lat === "number" && typeof lng === "number"
+    && Number.isFinite(lat) && Number.isFinite(lng)
+    && lat >= 8 && lat <= 24.5 && lng >= 102 && lng <= 110.8;
+}
+
+function hasKnownPostMergerProvince(value?: string | null) {
+  const current = new Set<string>(currentVietnamProvinces);
+  return normalizeProvinceNames(value).some((name) => current.has(name));
 }
 
 async function queryPublicMapProjects(): Promise<PublicProjectRecord[]> {
@@ -62,21 +69,29 @@ async function queryPublicMapProjects(): Promise<PublicProjectRecord[]> {
   });
 
   return rows.map((row, index) => {
-    const legacyProvince = row.province || metadataValue(row.metadata, "province") || "Hà Nội";
+    const legacyProvince = row.province || metadataValue(row.metadata, "province") || "Đang cập nhật";
     const province = normalizeProvinceName(legacyProvince);
-    const fallback = resolveProvinceCoordinates(legacyProvince);
+    const fallback = hasKnownPostMergerProvince(legacyProvince) ? resolveProvinceCoordinates(legacyProvince) : null;
     const metadataLat = Number(metadataValue(row.metadata, "lat"));
     const metadataLng = Number(metadataValue(row.metadata, "lng"));
-    const lat = validCoordinate(row.lat, -90, 90)
-      ? row.lat as number
-      : validCoordinate(metadataLat, -90, 90) ? metadataLat : fallback.lat;
-    const lng = validCoordinate(row.lng, -180, 180)
-      ? row.lng as number
-      : validCoordinate(metadataLng, -180, 180) ? metadataLng : fallback.lng;
+
+    let lat = 0;
+    let lng = 0;
+    if (validVietnamCoordinatePair(row.lat, row.lng)) {
+      lat = row.lat as number;
+      lng = row.lng as number;
+    } else if (validVietnamCoordinatePair(metadataLat, metadataLng)) {
+      lat = metadataLat;
+      lng = metadataLng;
+    } else if (fallback) {
+      lat = fallback.lat;
+      lng = fallback.lng;
+    }
+
     const projectCountry = firstMetadataValue(row.metadata, ["project_country", "projectCountry", "country"]) || "Việt Nam";
     const metadataContractValue = Number(firstMetadataValue(row.metadata, ["contract_value_vnd", "contractValueVnd", "contract_value"]));
     const contractValueVnd = row.contractValueVnd ?? (Number.isFinite(metadataContractValue) && metadataContractValue > 0 ? metadataContractValue : null);
-    const publicFields = [row.code, row.name, row.type, row.status, province, row.customer?.name, contractValueVnd, row.valueRange, row.constructionArea, row.floorArea, row.scale, row.progress, row.lat, row.lng];
+    const publicFields = [row.code, row.name, row.type, row.status, province, row.customer?.name, contractValueVnd, row.valueRange, row.constructionArea, row.floorArea, row.scale, row.progress, lat || null, lng || null];
     const dataCompleteness = Math.round((publicFields.filter((value) => value !== null && value !== undefined && String(value).trim() !== "").length / publicFields.length) * 100);
 
     return {
@@ -121,6 +136,6 @@ async function queryPublicMapProjects(): Promise<PublicProjectRecord[]> {
 
 export const getPublicMapProjects = unstable_cache(
   queryPublicMapProjects,
-  ["licogi-public-map-projects-v1"],
+  ["licogi-public-map-projects-v2"],
   { revalidate: 60 },
 );

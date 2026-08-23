@@ -1,0 +1,536 @@
+/* 2026 public map upgrade: map-first layout, post-merger province layer and ranked project browser. */
+
+.public-projects-route .public-page-hero-compact.public-projects-hero-tight {
+  border-bottom: 1px solid #e7edf2;
+  padding: 16px 0 14px !important;
+  background: linear-gradient(180deg, #fff, #f8fafc);
+}
+
+.public-projects-route .public-projects-hero-tight .public-container {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.public-projects-route .public-projects-hero-tight span {
+  color: #c74423;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.public-projects-route .public-projects-hero-tight h1 {
+  margin: 2px 0 0 !important;
+  color: #172033;
+  font-size: clamp(25px, 2.7vw, 38px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.045em;
+}
+
+.public-projects-route .public-projects-hero-tight p {
+  max-width: 470px;
+  margin: 0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.public-projects-page-section {
+  padding-top: 18px !important;
+}
+
+.public-project-map-2026 {
+  overflow: hidden;
+  border: 1px solid #dbe4ec;
+  border-radius: 16px;
+  box-shadow: 0 16px 44px rgba(15, 23, 42, .07);
+}
+
+.public-project-map-2026 .public-map-toolbar {
+  padding: 12px 15px;
+}
+
+.public-project-map-2026 .public-map-toolbar h3 {
+  font-size: 14px;
+}
+
+.public-project-map-2026 .public-map-toolbar p {
+  margin-top: 2px;
+  font-size: 9px;
+}
+
+.public-project-map-2026 .public-map-controls {
+  padding: 9px 15px;
+}
+
+.public-project-map-2026 .public-map-stats {
+  padding: 7px 15px 10px;
+}
+
+.public-project-map-2026 .public-map-workspace {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.75fr) minmax(320px, .82fr) !important;
+  min-height: 540px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.public-project-map-2026 .public-map-canvas {
+  position: relative;
+  min-width: 0;
+  min-height: 540px;
+  overflow: hidden;
+  border-right: 1px solid #e2e8f0;
+  background: #eaf4ee;
+}
+
+.public-project-map-2026 .public-map-leaflet-size {
+  height: clamp(540px, 66vh, 690px) !important;
+  min-height: 540px;
+}
+
+.public-vietnam-province-overlay {
+  overflow: visible;
+  pointer-events: auto !important;
+}
+
+.public-vn-province-shape {
+  stroke: rgba(255, 255, 255, .88);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  cursor: default;
+  pointer-events: visiblePainted;
+  transition: fill .15s ease, stroke-width .15s ease, filter .15s ease;
+}
+
+.public-vn-province-shape.has-data {
+  cursor: pointer;
+  filter: drop-shadow(0 1px 1px rgba(15, 23, 42, .12));
+}
+
+.public-vn-province-shape.has-data:hover {
+  stroke: #fff;
+  stroke-width: 2.7;
+  filter: brightness(1.07) drop-shadow(0 3px 5px rgba(15,23,42,.22));
+}
+
+.public-vn-hover-card {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  z-index: 650;
+  width: min(330px, 46%);
+  transform: translateX(-50%);
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: 13px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.94);
+  color: #172033;
+  box-shadow: 0 10px 30px rgba(15,23,42,.15);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.public-vn-hover-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.public-vn-hover-card strong {
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.public-vn-hover-card > div b {
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: #fff1e8;
+  color: #c2410c;
+  font-size: 9px;
+}
+
+.public-vn-hover-card p {
+  margin: 5px 0 0;
+  color: #475569;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.public-vn-hover-card > span {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 8.5px;
+  font-weight: 700;
+}
+
+.public-vn-hover-card > span b {
+  color: #172033;
+}
+
+.public-map-overlay-legend-2026 {
+  max-width: 205px;
+}
+
+.public-vn-development-legend {
+  display: grid;
+  gap: 6px;
+  margin: 7px 0 9px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.public-vn-development-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.public-vn-development-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.public-vn-development-legend i.is-strong { background: #ef5a32; }
+.public-vn-development-legend i.is-growing { background: #fb923c; }
+.public-vn-development-legend i.is-active { background: #f8c95b; }
+
+.licogi-marker-country {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  z-index: 4;
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 10px;
+  line-height: 1;
+  box-shadow: 0 3px 8px rgba(15,23,42,.18);
+}
+
+.public-project-map-2026 .licogi-waterdrop-body {
+  border-width: 2px;
+  box-shadow: 0 5px 12px rgba(15,23,42,.20);
+}
+
+.public-map-tooltip-rich {
+  min-width: 210px;
+}
+
+.public-map-tooltip-rich em {
+  grid-column: 2;
+  margin-top: 3px;
+  color: #c2410c;
+  font-size: 8.5px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.public-project-sidepanel-2026 {
+  min-width: 0;
+  background: #fff;
+}
+
+.public-project-preview {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.public-project-preview-title > span {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 7px;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.public-project-preview-title > small {
+  margin-left: 7px;
+  color: #94a3b8;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.public-project-preview-title h4 {
+  margin: 9px 0 0;
+  color: #172033;
+  font-size: 16px;
+  line-height: 1.35;
+  letter-spacing: -.025em;
+}
+
+.public-project-preview-title p {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.public-project-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.public-project-preview-grid > div {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.public-project-preview-grid small,
+.public-project-preview-note small {
+  display: block;
+  color: #94a3b8;
+  font-size: 7.5px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.public-project-preview-grid strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #172033;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.public-project-preview-grid span {
+  display: block;
+  height: 4px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.public-project-preview-grid span i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.public-project-preview-note {
+  margin-top: 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  padding: 10px;
+}
+
+.public-project-preview-note p {
+  max-height: 88px;
+  margin: 5px 0 0;
+  overflow: auto;
+  color: #475569;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.public-project-preview-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.public-project-preview-actions a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #dbe4ec;
+  border-radius: 10px;
+  padding: 8px;
+  color: #334155;
+  font-size: 9px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.public-project-preview-actions a.is-primary {
+  border-color: #df4927;
+  background: #df4927;
+  color: #fff;
+}
+
+.public-province-ranking {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 11px 12px;
+}
+
+.public-province-ranking-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.public-province-ranking-head span {
+  color: #172033;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.public-province-ranking-head small {
+  color: #94a3b8;
+  font-size: 7.5px;
+}
+
+.public-province-ranking > button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 22px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-top: 1px solid #f1f5f9;
+  padding: 6px 2px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.public-province-ranking > button:hover {
+  background: #fff8f3;
+}
+
+.public-province-ranking > button > em {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.public-province-ranking > button span b,
+.public-province-ranking > button span small {
+  display: block;
+}
+
+.public-province-ranking > button span b {
+  color: #172033;
+  font-size: 9px;
+}
+
+.public-province-ranking > button span small {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 7.5px;
+}
+
+.public-province-ranking > button > strong {
+  color: #c2410c;
+  font-size: 8px;
+}
+
+.public-project-ranked-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.public-project-ranked-list > button {
+  grid-template-columns: 22px 5px minmax(0, 1fr) auto 14px !important;
+  gap: 7px !important;
+  padding: 9px 10px !important;
+}
+
+.public-project-ranked-list .public-project-rank {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.public-project-ranked-list > button > i {
+  width: 5px !important;
+  height: 34px !important;
+  border-radius: 999px;
+}
+
+.public-project-ranked-list > button > span label {
+  display: block;
+  height: 3px;
+  margin-top: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef2f6;
+}
+
+.public-project-ranked-list > button > span label u {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  text-decoration: none;
+}
+
+.public-project-ranked-list > button > strong {
+  display: inline-grid;
+  min-width: 35px;
+  min-height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  padding: 3px 5px;
+  background: #fff3eb;
+  color: #c2410c;
+  font-size: 8px;
+}
+
+.public-project-ranked-list > button > strong.status-completed {
+  background: #eaf7f0;
+  color: #23835b;
+}
+
+@media (max-width: 1100px) {
+  .public-project-map-2026 .public-map-workspace {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, .9fr) !important;
+  }
+  .public-project-map-2026 .public-map-leaflet-size,
+  .public-project-map-2026 .public-map-canvas { min-height: 510px; height: 510px !important; }
+}
+
+@media (max-width: 900px) {
+  .public-projects-route .public-projects-hero-tight p { display: none; }
+  .public-project-map-2026 .public-map-workspace { display: block !important; }
+  .public-project-sidepanel-2026 { border-top: 1px solid #e2e8f0; }
+  .public-project-ranked-list { max-height: 330px; }
+  .public-vn-hover-card { display: none; }
+}
