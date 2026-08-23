@@ -1,166 +1,257 @@
-/* Final containment + marker reset for the 2026 public project map. */
+/* Final containment + pure SVG marker reset for the public project map. */
 
 .public-project-map-2026 {
+  width: 100%;
   max-width: 100%;
+  overflow: hidden !important;
 }
 
 .public-project-map-2026 .public-map-workspace {
-  grid-template-columns: minmax(0, 1fr) clamp(320px, 29vw, 390px) !important;
-  height: clamp(540px, calc(100vh - 190px), 690px);
-  min-height: 540px;
-  overflow: hidden;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 360px) !important;
+  width: 100%;
+  height: clamp(500px, 68vh, 620px);
+  min-height: 500px;
+  max-height: 620px;
+  overflow: hidden !important;
 }
 
-.public-project-map-2026 .public-map-canvas,
-.public-project-map-2026 .public-project-sidepanel-2026 {
+.public-project-map-2026 .public-map-canvas {
+  position: relative;
   min-width: 0;
   min-height: 0;
+  width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: hidden !important;
+  border-right: 1px solid #e2e8f0;
 }
 
 .public-project-map-2026 .public-map-leaflet-size,
 .public-project-map-2026 .leaflet-container {
   width: 100% !important;
   height: 100% !important;
+  min-width: 0 !important;
   min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
 }
 
 .public-project-map-2026 .public-project-sidepanel-2026 {
-  display: flex;
+  display: flex !important;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
   flex-direction: column;
+  overflow: hidden !important;
   border-left: 1px solid #e2e8f0;
+  background: #fff;
 }
 
 .public-project-map-2026 .public-project-sidepanel-head {
   flex: 0 0 auto;
+  min-width: 0;
 }
 
 .public-project-map-2026 .public-province-ranking {
   flex: 0 0 auto;
-  max-height: 245px;
-  overflow: auto;
-}
-
-.public-project-map-2026 .public-project-ranked-list,
-.public-project-map-2026 .public-project-preview {
-  min-height: 0;
-  flex: 1 1 auto;
-  max-height: none !important;
+  min-width: 0;
+  max-height: 214px;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
+.public-project-map-2026 .public-project-ranked-list,
+.public-project-map-2026 .public-project-preview {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button {
+  width: 100%;
+  min-width: 0;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > span,
+.public-project-map-2026 .public-project-ranked-list > button > span b,
+.public-project-map-2026 .public-project-ranked-list > button > span small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Keep overlays inside the map instead of letting them cover the page below. */
 .public-project-map-2026 .public-map-overlay-legend,
 .public-project-map-2026 .public-map-overlay-legend-2026 {
   left: 12px !important;
   top: 12px !important;
   right: auto !important;
-  max-width: min(210px, calc(100% - 24px));
-  max-height: calc(100% - 24px);
-  overflow-y: auto;
+  bottom: auto !important;
+  width: 194px !important;
+  max-width: calc(100% - 24px) !important;
+  max-height: min(300px, calc(100% - 24px)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box;
 }
 
 .public-project-map-2026 .public-vn-hover-card {
-  top: 12px;
-  width: min(320px, calc(100% - 250px));
-  max-width: calc(100% - 30px);
+  left: auto !important;
+  right: 16px !important;
+  top: 14px !important;
+  width: min(300px, calc(100% - 240px)) !important;
+  max-width: calc(100% - 32px) !important;
+  transform: none !important;
+  box-sizing: border-box;
 }
 
-/* Leaflet divIcon must be visually empty. Only the waterdrop SVG is visible. */
+.public-project-map-2026 .public-map-zoom-hint {
+  right: 12px;
+  top: 12px;
+}
+
+/*
+ * Leaflet divIcon is only a positioning shell. It must never draw a square,
+ * border, background or shadow. The only visible marker is the SVG drop.
+ */
+.leaflet-marker-icon.licogi-div-icon,
 .public-project-map-2026 .leaflet-marker-icon.licogi-div-icon,
-.public-project-map-2026 .licogi-div-icon,
-.leaflet-marker-icon.licogi-div-icon {
+.public-project-map-2026 .licogi-div-icon {
   border: 0 !important;
   border-radius: 0 !important;
   outline: 0 !important;
   background: transparent !important;
+  background-color: transparent !important;
   box-shadow: none !important;
+  overflow: visible !important;
 }
 
 .public-project-map-2026 .licogi-div-icon::before,
-.public-project-map-2026 .licogi-div-icon::after {
+.public-project-map-2026 .licogi-div-icon::after,
+.public-project-map-2026 .licogi-waterdrop-body,
+.public-project-map-2026 .licogi-waterdrop-body::before,
+.public-project-map-2026 .licogi-waterdrop-body::after {
   display: none !important;
   content: none !important;
 }
 
 .public-project-map-2026 .licogi-waterdrop-marker {
   position: relative;
-  width: 44px;
-  height: 56px;
+  display: block;
+  width: 44px !important;
+  height: 56px !important;
+  margin: 0 !important;
+  padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
+  outline: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  overflow: visible !important;
   transform-origin: 50% 100%;
-  transition: transform .16s ease, filter .16s ease;
+  filter: none !important;
+  transition: transform .16s ease;
 }
 
 .public-project-map-2026 .licogi-waterdrop-svg {
-  display: block;
-  width: 44px;
-  height: 56px;
-  overflow: visible;
-  filter: drop-shadow(0 5px 8px rgba(15, 23, 42, .24));
+  position: absolute;
+  left: 3px;
+  top: 2px;
+  display: block !important;
+  width: 38px !important;
+  height: 50px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+  filter: drop-shadow(0 5px 7px rgba(15, 23, 42, .22));
 }
 
 .public-project-map-2026 .licogi-waterdrop-shape {
-  stroke: #fff;
-  stroke-width: 2.25px;
+  stroke: #fff !important;
+  stroke-width: 2.1px !important;
   vector-effect: non-scaling-stroke;
 }
 
 .public-project-map-2026 .licogi-waterdrop-core {
-  fill: rgba(255,255,255,.96);
-  stroke: rgba(15,23,42,.10);
-  stroke-width: 1px;
+  fill: rgba(255,255,255,.97) !important;
+  stroke: rgba(15,23,42,.10) !important;
+  stroke-width: 1px !important;
 }
 
 .public-project-map-2026 .licogi-waterdrop-label {
-  fill: #172033;
-  font-size: 9.5px;
-  font-weight: 950;
+  fill: #172033 !important;
+  font-size: 9.4px !important;
+  font-weight: 950 !important;
   text-anchor: middle;
   pointer-events: none;
 }
 
 .public-project-map-2026 .licogi-marker-status {
-  right: -1px;
-  top: 2px;
-  width: 17px;
-  height: 17px;
-  border: 2px solid #fff;
-  border-radius: 999px;
-  background: var(--status-color);
-  box-shadow: 0 3px 7px rgba(15,23,42,.18);
-  font-size: 9px;
+  position: absolute;
+  z-index: 5;
+  right: 0 !important;
+  top: 3px !important;
+  display: grid;
+  width: 15px !important;
+  height: 15px !important;
+  place-items: center;
+  border: 2px solid #fff !important;
+  border-radius: 999px !important;
+  background: var(--status-color) !important;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(15,23,42,.18) !important;
+  font-size: 8px !important;
+  line-height: 1;
 }
 
 .public-project-map-2026 .licogi-waterdrop-marker.status-ongoing .licogi-marker-status {
-  right: 1px;
-  top: 5px;
-  width: 12px;
-  height: 12px;
-  border-width: 2px;
+  right: 1px !important;
+  top: 5px !important;
+  width: 11px !important;
+  height: 11px !important;
+  font-size: 0 !important;
 }
 
 .public-project-map-2026 .licogi-waterdrop-marker.status-ongoing .licogi-marker-status::after {
+  display: block !important;
   width: 4px;
   height: 4px;
+  border-radius: 999px;
+  background: #fff;
+  content: "" !important;
 }
 
 .public-project-map-2026 .licogi-marker-country {
-  left: -4px;
-  top: 2px;
-  min-width: 18px;
-  height: 18px;
-  border-width: 1.5px;
-  font-size: 9px;
+  position: absolute;
+  z-index: 5;
+  left: 0 !important;
+  top: 3px !important;
+  display: grid;
+  min-width: 16px !important;
+  height: 16px !important;
+  place-items: center;
+  border: 1.5px solid #fff !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 6px rgba(15,23,42,.16) !important;
+  font-size: 8px !important;
+  line-height: 1;
 }
 
 .public-project-map-2026 .licogi-waterdrop-marker:hover {
   z-index: 999;
-  filter: brightness(1.04);
+  filter: brightness(1.04) !important;
 }
 
 .public-project-map-2026 .leaflet-tooltip,
@@ -171,12 +262,17 @@
 @media (max-width: 1100px) {
   .public-project-map-2026 .public-map-workspace {
     grid-template-columns: minmax(0, 1fr) 300px !important;
-    height: clamp(510px, calc(100vh - 180px), 640px);
-    min-height: 510px;
+    height: clamp(490px, 64vh, 570px);
+    min-height: 490px;
+    max-height: 570px;
+  }
+
+  .public-project-map-2026 .public-province-ranking {
+    max-height: 190px;
   }
 
   .public-project-map-2026 .public-vn-hover-card {
-    width: min(285px, calc(100% - 230px));
+    width: min(270px, calc(100% - 225px)) !important;
   }
 }
 
@@ -185,16 +281,19 @@
     display: block !important;
     height: auto;
     min-height: 0;
-    overflow: visible;
+    max-height: none;
+    overflow: visible !important;
   }
 
   .public-project-map-2026 .public-map-canvas {
-    height: 470px;
-    min-height: 470px;
+    width: 100%;
+    height: 460px;
+    min-height: 460px;
     border-right: 0;
   }
 
   .public-project-map-2026 .public-project-sidepanel-2026 {
+    width: 100%;
     height: auto;
     max-height: none;
     border-left: 0;
@@ -204,19 +303,24 @@
   .public-project-map-2026 .public-project-ranked-list,
   .public-project-map-2026 .public-project-preview,
   .public-project-map-2026 .public-province-ranking {
-    max-height: 340px !important;
+    flex: none !important;
+    max-height: 330px !important;
+  }
+
+  .public-project-map-2026 .public-vn-hover-card {
+    display: none !important;
   }
 }
 
 @media (max-width: 640px) {
   .public-project-map-2026 .public-map-canvas {
-    height: 430px;
-    min-height: 430px;
+    height: 420px;
+    min-height: 420px;
   }
 
   .public-project-map-2026 .public-map-overlay-legend,
   .public-project-map-2026 .public-map-overlay-legend-2026 {
-    max-width: 180px;
-    max-height: 250px;
+    width: 168px !important;
+    max-height: 238px !important;
   }
 }
