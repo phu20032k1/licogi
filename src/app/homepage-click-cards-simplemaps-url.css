@@ -1,30 +1,90 @@
-/* Exact Vietnam admin1 SVG supplied by the user. Loaded after v2 overrides. */
+/* Reliable local rendering of the SimpleMaps Vietnam admin1 SVG in homepage click cards.
+   The remote hotlink can fail on production, so use the same SimpleMaps-derived asset stored in /public. */
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"],
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"] {
-  background-color: #e7f0f3 !important;
+  background-color: #eaf2f4 !important;
 }
 
+/* Province / city card: make Vietnam large and obvious on the left. */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before {
   display: block !important;
-  inset: 4px 47% 4px 3px !important;
+  position: absolute !important;
+  z-index: 2 !important;
+  inset: -4px 45% -4px -7px !important;
   opacity: 1 !important;
+  content: "" !important;
+  pointer-events: none !important;
   background-color: transparent !important;
-  background-image: url('https://simplemaps.com/static/svg/country/vn/admin1/vn.svg') !important;
+  background-image: url('/maps/vietnam-accurate.svg') !important;
   background-repeat: no-repeat !important;
-  background-position: center center !important;
-  background-size: contain !important;
-  filter: none !important;
+  background-position: 46% 50% !important;
+  background-size: auto 112% !important;
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(64%)
+    sepia(15%)
+    saturate(510%)
+    hue-rotate(150deg)
+    brightness(92%)
+    contrast(93%)
+    drop-shadow(0 1px 1px rgba(64, 86, 96, .20)) !important;
 }
 
+/* Keep the location list readable and slightly narrower so the map gets more room. */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] {
+  z-index: 7 !important;
+  width: 45% !important;
+  right: 4px !important;
+}
+
+/* Map-point card: use a larger Vietnam silhouette behind the pin and popup. */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
   display: block !important;
-  inset: 3px 24% 3px 3px !important;
+  position: absolute !important;
+  z-index: 2 !important;
+  inset: -5px 18% -5px -10px !important;
   opacity: 1 !important;
+  content: "" !important;
+  pointer-events: none !important;
   background-color: transparent !important;
-  background-image: url('https://simplemaps.com/static/svg/country/vn/admin1/vn.svg') !important;
+  background-image: url('/maps/vietnam-accurate.svg') !important;
   background-repeat: no-repeat !important;
-  background-position: center center !important;
-  background-size: contain !important;
-  filter: none !important;
+  background-position: 43% 50% !important;
+  background-size: auto 116% !important;
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(64%)
+    sepia(15%)
+    saturate(510%)
+    hue-rotate(150deg)
+    brightness(92%)
+    contrast(93%)
+    drop-shadow(0 1px 1px rgba(64, 86, 96, .18)) !important;
+}
+
+/* Make the existing project pin sit visibly on top of the SVG. */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"] > svg {
+  z-index: 9 !important;
+  top: 52% !important;
+  left: 43% !important;
+}
+
+/* Keep the sample project popup above the map. */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::after {
+  z-index: 10 !important;
+}
+
+@media (max-width: 640px) {
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before {
+    inset: -2px 44% -2px -5px !important;
+    background-size: auto 108% !important;
+  }
+
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
+    inset: -2px 18% -2px -6px !important;
+    background-size: auto 110% !important;
+  }
 }
