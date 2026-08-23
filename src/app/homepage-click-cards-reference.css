@@ -30,155 +30,188 @@
 }
 
 .public-site main [class*="exploreGrid"] [class*="miniVisual"] {
+  position: relative;
   min-height: 168px !important;
   border-color: #dde3e8 !important;
   border-radius: 8px !important;
-  background-color: #f7f9fa !important;
+  background: linear-gradient(145deg, #fafcfd, #f2f6f8) !important;
   cursor: pointer !important;
 }
 
-/* Remove the generic grid texture in the two map cards. */
+/* The accurate Vietnam SVG is white/translucent by design. Put it over a
+   pale-blue map field so the silhouette AND province borders are actually
+   visible like the supplied reference, instead of disappearing on white. */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before,
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
+  position: absolute !important;
   display: block !important;
-  inset: 0 !important;
+  z-index: 1 !important;
+  content: "" !important;
   opacity: 1 !important;
-  background-color: #f1f5f6 !important;
+  border: 1px solid rgba(166, 190, 200, .42);
   background-image: url('/maps/vietnam-accurate.svg') !important;
   background-repeat: no-repeat !important;
+  box-shadow: inset 0 0 24px rgba(255,255,255,.26), 0 3px 9px rgba(38, 65, 79, .045);
 }
 
 /* --- Click province/city card --- */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before {
-  background-position: 8% 50% !important;
-  background-size: 48% 90% !important;
-  filter: grayscale(.25) brightness(1.14) contrast(.88);
+  top: 8px !important;
+  bottom: 8px !important;
+  left: 8px !important;
+  width: 49% !important;
+  border-radius: 7px !important;
+  background-color: #bdd2db !important;
+  background-position: 47% 50% !important;
+  background-size: 87% 94% !important;
+  filter: none !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::after {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  left: 17%;
+  width: 7px;
+  height: 7px;
+  content: "";
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #d34a27;
+  box-shadow:
+    16px 24px 0 -1px #d34a27,
+    9px 54px 0 -1px #d34a27,
+    21px 87px 0 -1px #d34a27,
+    0 0 0 4px rgba(211,74,39,.14);
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] {
   position: absolute !important;
-  z-index: 4 !important;
-  top: 10px !important;
+  z-index: 5 !important;
+  top: 9px !important;
   right: 7px !important;
-  bottom: 10px !important;
-  width: 48% !important;
+  bottom: 9px !important;
+  width: 47% !important;
   align-content: center !important;
-  gap: 2px !important;
-  padding: 5px !important;
-  border: 1px solid #e6eaee !important;
+  gap: 1px !important;
+  padding: 5px 6px !important;
+  border: 1px solid #e3e8ec !important;
   border-radius: 5px !important;
-  background: rgba(255, 255, 255, .96) !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, .06) !important;
+  background: rgba(255, 255, 255, .98) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .055) !important;
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] span {
-  min-height: 23px !important;
+  min-height: 22px !important;
   padding: 4px 5px !important;
   border-radius: 3px !important;
   background: transparent !important;
   box-shadow: none !important;
   color: #263244 !important;
-  font-size: 8.5px !important;
+  font-size: 8.2px !important;
   font-weight: 760 !important;
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] span + span {
-  border-top: 1px solid #eef1f3;
+  border-top: 1px solid #edf0f2;
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2)::after {
   position: absolute;
-  z-index: 9;
+  z-index: 10;
   top: 112px;
-  left: 26%;
-  width: 36px;
-  height: 45px;
+  left: 25%;
+  width: 37px;
+  height: 47px;
   content: "";
   pointer-events: none;
   background: url('/media/click-hand.svg') center / contain no-repeat;
-  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .12));
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .13));
 }
 
 /* --- Click map point card --- */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
-  background-position: 10% 48% !important;
-  background-size: 62% 94% !important;
-  filter: grayscale(.28) brightness(1.13) contrast(.88);
+  inset: 8px !important;
+  border-radius: 7px !important;
+  background-color: #c9dbe2 !important;
+  background-position: 8% 49% !important;
+  background-size: 58% 94% !important;
+  filter: none !important;
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"] > svg {
   position: absolute !important;
-  z-index: 5 !important;
-  top: 49% !important;
-  left: 38% !important;
-  width: 18px !important;
-  height: 18px !important;
+  z-index: 6 !important;
+  top: 50% !important;
+  left: 36% !important;
+  width: 19px !important;
+  height: 19px !important;
   transform: translate(-50%, -50%) !important;
-  color: #d84a28 !important;
-  fill: #f7a486 !important;
-  filter: drop-shadow(0 1px 2px rgba(137, 48, 23, .3));
+  color: #d64020 !important;
+  fill: #f3a184 !important;
+  stroke-width: 2.6 !important;
+  filter: drop-shadow(0 1px 2px rgba(137, 48, 23, .36));
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::after {
   position: absolute;
-  z-index: 6;
-  top: 45px;
+  z-index: 7;
+  top: 39px;
   right: 8px;
   width: 112px;
-  min-height: 87px;
+  min-height: 91px;
   box-sizing: border-box;
-  border: 1px solid #e2e6e9;
+  border: 1px solid #dfe5e9;
   border-radius: 5px;
-  padding: 8px 8px 25px;
-  content: "Nhà máy ABC VINA\A• Hải Phòng\A• Công nghiệp\A• Nhật Bản";
+  padding: 8px 8px 26px;
+  content: "Nhà máy ABC VINA\A• Hải Phòng\A• Công nghiệp\A• Nhật Bản\A  Xem chi tiết";
   white-space: pre-line;
   color: #253246;
-  font-size: 7.8px;
+  font-size: 7.7px;
   font-weight: 720;
-  line-height: 1.55;
+  line-height: 1.48;
   text-align: left;
   pointer-events: none;
   background:
-    linear-gradient(to bottom, rgba(255,255,255,.98) 0 76%, #d84a28 76% 100%);
-  box-shadow: 0 5px 13px rgba(15, 23, 42, .08);
+    linear-gradient(to bottom, rgba(255,255,255,.99) 0 74%, #db4a25 74% 100%);
+  box-shadow: 0 5px 13px rgba(15, 23, 42, .075);
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5)::before {
   position: absolute;
-  z-index: 9;
+  z-index: 10;
   top: 113px;
-  left: 31%;
-  width: 35px;
-  height: 44px;
+  left: 30%;
+  width: 36px;
+  height: 46px;
   content: "";
   pointer-events: none;
   background: url('/media/click-hand.svg') center / contain no-repeat;
-  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .12));
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .13));
 }
 
-/* Give every data-click card the same visual click affordance. */
+/* Give every data-click card the same visible hand/click affordance. */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(1)::after,
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(3)::after,
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(4)::after {
   position: absolute;
-  z-index: 9;
-  top: 128px;
+  z-index: 10;
+  top: 127px;
   left: 18px;
-  width: 31px;
-  height: 39px;
+  width: 32px;
+  height: 41px;
   content: "";
-  opacity: .94;
+  opacity: .96;
   pointer-events: none;
   background: url('/media/click-hand.svg') center / contain no-repeat;
-  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .1));
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .11));
 }
 
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(-n+5):hover [class*="miniVisual"] {
-  border-color: #e6b8a7 !important;
+  border-color: #e5b6a5 !important;
   background-color: #fffaf7 !important;
 }
 
-/* Small orange accents like the reference. */
 .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(-n+5) > small {
   color: #9d321f !important;
 }
@@ -205,8 +238,8 @@
   }
 
   .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::after {
-    right: 16px;
-    width: 128px;
-    font-size: 8.3px;
+    right: 14px;
+    width: 126px;
+    font-size: 8.2px;
   }
 }
