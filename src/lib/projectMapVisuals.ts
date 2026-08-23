@@ -111,7 +111,17 @@ export function investorCountryFlag(value?: string | null) {
 
 export function markerHtml(type: ProjectType, status: ProjectStatus, selected = false, investorCountry?: string | null) {
   const visual = getMarkerVisual(type, status);
-  const scale = selected ? 1.14 : 1;
   const flag = investorCountryFlag(investorCountry);
-  return `<div class="licogi-map-marker licogi-waterdrop-marker status-${status}${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};--status-color:${visual.statusColor};transform:translate(-50%,-100%) scale(${scale})" title="${visual.typeLabel}"><span class="licogi-waterdrop-body"><b>${visual.label}</b></span><em class="licogi-marker-status" aria-hidden="true">${visual.statusSymbol}</em><span class="licogi-marker-country" aria-hidden="true">${flag}</span></div>`;
+  const scale = selected ? 1.13 : 1;
+  const statusText = status === "ongoing" ? "" : visual.statusSymbol;
+
+  return `<div class="licogi-map-marker licogi-waterdrop-marker status-${status}${selected ? " is-selected" : ""}" style="--marker-color:${visual.color};--marker-soft:${visual.softColor};--status-color:${visual.statusColor};transform:scale(${scale})" title="${visual.typeLabel}">
+    <svg class="licogi-waterdrop-svg" viewBox="0 0 44 56" aria-hidden="true" focusable="false">
+      <path class="licogi-waterdrop-shape" d="M22 1.5C11.05 1.5 2.2 10.35 2.2 21.3c0 14.65 19.8 33.2 19.8 33.2s19.8-18.55 19.8-33.2C41.8 10.35 32.95 1.5 22 1.5Z" fill="${visual.color}"/>
+      <circle class="licogi-waterdrop-core" cx="22" cy="21" r="10.4"/>
+      <text class="licogi-waterdrop-label" x="22" y="24.4">${visual.label}</text>
+    </svg>
+    <em class="licogi-marker-status" aria-hidden="true">${statusText}</em>
+    <span class="licogi-marker-country" aria-hidden="true">${flag}</span>
+  </div>`;
 }
