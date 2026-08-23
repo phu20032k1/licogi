@@ -1,7 +1,41 @@
 /* Force browsers/CDNs to request the exact uploaded industrial-park hero asset. */
 #trang-chu > div[class*="heroBg"] {
-  background-image: url("/media/hero-industrial-park.webp?v=20260822-exact-1") !important;
+  inset: 0 !important;
+  background-image: url("/media/hero-industrial-park.webp?v=20260822-exact-2") !important;
   background-size: cover !important;
   background-position: center 52% !important;
   background-repeat: no-repeat !important;
+  filter: saturate(1.04) contrast(1.02) !important;
+}
+
+/* Keep copy readable on the left while leaving the supplied photo clear on the right. */
+#trang-chu::before {
+  background: linear-gradient(
+    90deg,
+    rgba(248, 250, 252, 0.99) 0%,
+    rgba(248, 250, 252, 0.98) 27%,
+    rgba(248, 250, 252, 0.90) 35%,
+    rgba(248, 250, 252, 0.62) 43%,
+    rgba(248, 250, 252, 0.24) 51%,
+    rgba(248, 250, 252, 0.06) 59%,
+    rgba(248, 250, 252, 0) 68%,
+    rgba(248, 250, 252, 0) 100%
+  ) !important;
+}
+
+@media (max-width: 760px) {
+  #trang-chu > div[class*="heroBg"] {
+    inset: 0 !important;
+    background-position: 58% center !important;
+  }
+
+  #trang-chu::before {
+    background: linear-gradient(
+      180deg,
+      rgba(248, 250, 252, 0.95) 0%,
+      rgba(248, 250, 252, 0.88) 42%,
+      rgba(248, 250, 252, 0.46) 70%,
+      rgba(248, 250, 252, 0.18) 100%
+    ) !important;
+  }
 }
