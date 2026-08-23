@@ -1,0 +1,212 @@
+/* Homepage "1 click" cards: visual treatment matched to the supplied reference. */
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"] {
+  position: relative;
+  cursor: pointer !important;
+  border-color: #e7ebef !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .035) !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:hover,
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:focus-visible {
+  border-color: #e7b8a8 !important;
+  box-shadow: 0 11px 26px rgba(15, 23, 42, .08) !important;
+  transform: translateY(-3px) !important;
+  outline: none;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"] > small {
+  color: #1f2937 !important;
+  font-weight: 900 !important;
+  letter-spacing: -.01em !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"] > strong {
+  color: #202b3c !important;
+  font-size: 10.8px !important;
+  font-weight: 800 !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="miniVisual"] {
+  min-height: 168px !important;
+  border-color: #dde3e8 !important;
+  border-radius: 8px !important;
+  background-color: #f7f9fa !important;
+  cursor: pointer !important;
+}
+
+/* Remove the generic grid texture in the two map cards. */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before,
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
+  display: block !important;
+  inset: 0 !important;
+  opacity: 1 !important;
+  background-color: #f1f5f6 !important;
+  background-image: url('/maps/vietnam-accurate.svg') !important;
+  background-repeat: no-repeat !important;
+}
+
+/* --- Click province/city card --- */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before {
+  background-position: 8% 50% !important;
+  background-size: 48% 90% !important;
+  filter: grayscale(.25) brightness(1.14) contrast(.88);
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] {
+  position: absolute !important;
+  z-index: 4 !important;
+  top: 10px !important;
+  right: 7px !important;
+  bottom: 10px !important;
+  width: 48% !important;
+  align-content: center !important;
+  gap: 2px !important;
+  padding: 5px !important;
+  border: 1px solid #e6eaee !important;
+  border-radius: 5px !important;
+  background: rgba(255, 255, 255, .96) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .06) !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] span {
+  min-height: 23px !important;
+  padding: 4px 5px !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #263244 !important;
+  font-size: 8.5px !important;
+  font-weight: 760 !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] span + span {
+  border-top: 1px solid #eef1f3;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2)::after {
+  position: absolute;
+  z-index: 9;
+  top: 112px;
+  left: 26%;
+  width: 36px;
+  height: 45px;
+  content: "";
+  pointer-events: none;
+  background: url('/media/click-hand.svg') center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .12));
+}
+
+/* --- Click map point card --- */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
+  background-position: 10% 48% !important;
+  background-size: 62% 94% !important;
+  filter: grayscale(.28) brightness(1.13) contrast(.88);
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"] > svg {
+  position: absolute !important;
+  z-index: 5 !important;
+  top: 49% !important;
+  left: 38% !important;
+  width: 18px !important;
+  height: 18px !important;
+  transform: translate(-50%, -50%) !important;
+  color: #d84a28 !important;
+  fill: #f7a486 !important;
+  filter: drop-shadow(0 1px 2px rgba(137, 48, 23, .3));
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::after {
+  position: absolute;
+  z-index: 6;
+  top: 45px;
+  right: 8px;
+  width: 112px;
+  min-height: 87px;
+  box-sizing: border-box;
+  border: 1px solid #e2e6e9;
+  border-radius: 5px;
+  padding: 8px 8px 25px;
+  content: "Nhà máy ABC VINA\A• Hải Phòng\A• Công nghiệp\A• Nhật Bản";
+  white-space: pre-line;
+  color: #253246;
+  font-size: 7.8px;
+  font-weight: 720;
+  line-height: 1.55;
+  text-align: left;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,.98) 0 76%, #d84a28 76% 100%);
+  box-shadow: 0 5px 13px rgba(15, 23, 42, .08);
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5)::before {
+  position: absolute;
+  z-index: 9;
+  top: 113px;
+  left: 31%;
+  width: 35px;
+  height: 44px;
+  content: "";
+  pointer-events: none;
+  background: url('/media/click-hand.svg') center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .12));
+}
+
+/* Give every data-click card the same visual click affordance. */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(1)::after,
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(3)::after,
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(4)::after {
+  position: absolute;
+  z-index: 9;
+  top: 128px;
+  left: 18px;
+  width: 31px;
+  height: 39px;
+  content: "";
+  opacity: .94;
+  pointer-events: none;
+  background: url('/media/click-hand.svg') center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .1));
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(-n+5):hover [class*="miniVisual"] {
+  border-color: #e6b8a7 !important;
+  background-color: #fffaf7 !important;
+}
+
+/* Small orange accents like the reference. */
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(-n+5) > small {
+  color: #9d321f !important;
+}
+
+@media (max-width: 1280px) {
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2)::after,
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5)::before {
+    top: 110px;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"] {
+    min-height: 244px !important;
+  }
+
+  .public-site main [class*="exploreGrid"] [class*="miniVisual"] {
+    min-height: 174px !important;
+  }
+
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniList"] {
+    right: 12px !important;
+    width: 46% !important;
+  }
+
+  .public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::after {
+    right: 16px;
+    width: 128px;
+    font-size: 8.3px;
+  }
+}
