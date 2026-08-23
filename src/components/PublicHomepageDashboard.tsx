@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -20,6 +21,8 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { normalizeProvinceNames } from "../data/projects";
+import { vietnamPostMergerProvinces } from "../data/vietnamPostMergerMap";
 import usePublicLanguage, { PublicLanguage } from "../hooks/usePublicLanguage";
 import usePublicProjects from "../hooks/usePublicProjects";
 import { sumProjectMoney } from "../lib/publicProject";
@@ -27,46 +30,15 @@ import styles from "./PublicHomepageDashboard.module.css";
 
 const COPY = {
   vi: {
-    line1: "XÂY DỰNG GIÁ TRỊ",
-    line2: "KIẾN TẠO TƯƠNG LAI",
-    lead: "Tổng thầu xây dựng chuyên nghiệp cho công trình công nghiệp, dân dụng và hạ tầng kỹ thuật.",
-    completed: "Công trình đã hoàn thành",
-    ongoing: "Công trình đang thi công",
-    provinces: "Tỉnh / thành phố đã triển khai",
-    countries: "Quốc gia khách hàng",
-    value: "Tỷ đồng giá trị công trình",
-    investors: "Đồng hành cùng các nhà đầu tư",
-    explore: "Khám phá công trình",
-    map: "Xem bản đồ toàn quốc",
-    national: "Công trình trên toàn quốc",
-    clickTitle: "Khám phá dữ liệu công trình chỉ với 1 click",
-    click: "Click vào",
-    metric: "Số liệu",
-    city: "Tỉnh / thành phố",
-    type: "Loại công trình",
-    customer: "Quốc gia khách hàng",
-    point: "Điểm trên bản đồ",
-    updated: "Tất cả dữ liệu luôn cập nhật",
-    metricDesc: "Xem danh sách công trình tương ứng",
-    cityDesc: "Xem công trình tại địa phương",
-    typeDesc: "Lọc theo loại công trình bạn quan tâm",
-    customerDesc: "Xem công trình theo quốc gia khách hàng",
-    pointDesc: "Xem chi tiết từng công trình",
-    updatedDesc: "Tự động cập nhật khi có dữ liệu mới",
-    experience: "20+ năm",
-    experienceSub: "Kinh nghiệm",
-    commitment: "100% cam kết",
-    commitmentSub: "Tiến độ · Chất lượng · An toàn",
-    engineers: "500+ kỹ sư",
-    engineersSub: "Đội ngũ chuyên nghiệp",
-    standards: "Chuẩn quốc tế",
-    standardsSub: "ISO 9001, 14001, 45001",
-    equipment: "Thiết bị hiện đại",
-    equipmentSub: "Công nghệ thi công tiên tiến",
+    line1: "XÂY DỰNG GIÁ TRỊ", line2: "KIẾN TẠO TƯƠNG LAI", lead: "Tổng thầu xây dựng chuyên nghiệp cho công trình công nghiệp, dân dụng và hạ tầng kỹ thuật.",
+    completed: "Công trình đã hoàn thành", ongoing: "Công trình đang thi công", provinces: "Tỉnh / thành phố đã triển khai", countries: "Quốc gia khách hàng", value: "Tỷ đồng giá trị công trình",
+    investors: "Đồng hành cùng các nhà đầu tư", explore: "Khám phá công trình", map: "Xem bản đồ toàn quốc", national: "Công trình trên toàn quốc", clickTitle: "Khám phá dữ liệu công trình chỉ với 1 click",
+    click: "Click vào", metric: "Số liệu", city: "Tỉnh / thành phố", type: "Loại công trình", customer: "Quốc gia khách hàng", point: "Điểm trên bản đồ", updated: "Tất cả dữ liệu luôn cập nhật",
+    metricDesc: "Xem danh sách công trình tương ứng", cityDesc: "Xem công trình tại địa phương", typeDesc: "Lọc theo loại công trình bạn quan tâm", customerDesc: "Xem công trình theo quốc gia khách hàng", pointDesc: "Xem chi tiết từng công trình", updatedDesc: "Tự động cập nhật khi có dữ liệu mới",
+    experience: "20+ năm", experienceSub: "Kinh nghiệm", commitment: "100% cam kết", commitmentSub: "Tiến độ · Chất lượng · An toàn", engineers: "500+ kỹ sư", engineersSub: "Đội ngũ chuyên nghiệp", standards: "Chuẩn quốc tế", standardsSub: "ISO 9001, 14001, 45001", equipment: "Thiết bị hiện đại", equipmentSub: "Công nghệ thi công tiên tiến",
   },
   en: {
-    line1: "BUILDING VALUE", line2: "CREATING THE FUTURE", lead: "Professional general contractor for industrial, civil and technical infrastructure projects.",
-    completed: "Completed projects", ongoing: "Projects under construction", provinces: "Provinces / cities covered", countries: "Customer countries", value: "VND billion project value", investors: "Trusted by investors", explore: "Explore projects", map: "View nationwide map", national: "Projects nationwide", clickTitle: "Explore project data in just 1 click", click: "Click", metric: "Metrics", city: "Province / city", type: "Project type", customer: "Customer country", point: "Map point", updated: "Data always up to date", metricDesc: "Open the matching project list", cityDesc: "View projects by location", typeDesc: "Filter by project type", customerDesc: "View projects by customer country", pointDesc: "Open project details", updatedDesc: "Automatically refreshes with new data", experience: "20+ years", experienceSub: "Experience", commitment: "100% commitment", commitmentSub: "Schedule · Quality · Safety", engineers: "500+ engineers", engineersSub: "Professional team", standards: "International standards", standardsSub: "ISO 9001, 14001, 45001", equipment: "Modern equipment", equipmentSub: "Advanced construction technology",
+    line1: "BUILDING VALUE", line2: "CREATING THE FUTURE", lead: "Professional general contractor for industrial, civil and technical infrastructure projects.", completed: "Completed projects", ongoing: "Projects under construction", provinces: "Provinces / cities covered", countries: "Customer countries", value: "VND billion project value", investors: "Trusted by investors", explore: "Explore projects", map: "View nationwide map", national: "Projects nationwide", clickTitle: "Explore project data in just 1 click", click: "Click", metric: "Metrics", city: "Province / city", type: "Project type", customer: "Customer country", point: "Map point", updated: "Data always up to date", metricDesc: "Open the matching project list", cityDesc: "View projects by location", typeDesc: "Filter by project type", customerDesc: "View projects by customer country", pointDesc: "Open project details", updatedDesc: "Automatically refreshes with new data", experience: "20+ years", experienceSub: "Experience", commitment: "100% commitment", commitmentSub: "Schedule · Quality · Safety", engineers: "500+ engineers", engineersSub: "Professional team", standards: "International standards", standardsSub: "ISO 9001, 14001, 45001", equipment: "Modern equipment", equipmentSub: "Advanced construction technology",
   },
   ja: {
     line1: "価値を築き", line2: "未来を創る", lead: "産業・民生・技術インフラ工事に対応するプロフェッショナルな総合建設会社。", completed: "完成工事", ongoing: "施工中工事", provinces: "展開した省・都市", countries: "顧客の国・地域", value: "工事価値（10億VND）", investors: "投資家と共に", explore: "工事を見る", map: "全国マップ", national: "全国の工事", clickTitle: "1クリックで工事データを探索", click: "クリック", metric: "数値", city: "省・都市", type: "工事種別", customer: "顧客国", point: "地図ポイント", updated: "常に最新データ", metricDesc: "該当する工事一覧を表示", cityDesc: "地域別の工事を表示", typeDesc: "工事種別で絞り込み", customerDesc: "顧客国別に表示", pointDesc: "工事詳細を表示", updatedDesc: "新しいデータを自動更新", experience: "20年以上", experienceSub: "経験", commitment: "100%の約束", commitmentSub: "工程 · 品質 · 安全", engineers: "500名以上", engineersSub: "専門エンジニア", standards: "国際規格", standardsSub: "ISO 9001, 14001, 45001", equipment: "最新設備", equipmentSub: "先進施工技術",
@@ -83,7 +55,7 @@ const COUNTRY_LABELS: Record<PublicLanguage, Record<string, string>> = {
   vi: { japan: "Nhật Bản", korea: "Hàn Quốc", china: "Trung Quốc", taiwan: "Đài Loan", vietnam: "Việt Nam", other: "Khác" },
   en: { japan: "Japan", korea: "Korea", china: "China", taiwan: "Taiwan", vietnam: "Vietnam", other: "Other" },
   ja: { japan: "日本", korea: "韓国", china: "中国", taiwan: "台湾", vietnam: "ベトナム", other: "その他" },
-  ko: { japan: "일본", korea: "한국", china: "中国", taiwan: "台湾", vietnam: "베트남", other: "기타" },
+  ko: { japan: "일본", korea: "한국", china: "중국", taiwan: "대만", vietnam: "베트남", other: "기타" },
   zh: { japan: "日本", korea: "韩国", china: "中国", taiwan: "台湾", vietnam: "越南", other: "其他" },
 };
 
@@ -101,13 +73,45 @@ function normalize(value?: string) {
   return (value || "").trim().toLocaleLowerCase("vi");
 }
 
-function VietnamDataMap() {
-  return <svg className={styles.mapVisual} viewBox="0 0 260 540" aria-label="Bản đồ công trình Việt Nam" role="img">
-    <path d="M109 14c22 16 49 17 65 41 17 25 4 55 15 78 8 19 35 28 39 50 5 29-25 47-41 67-17 22-16 48-9 74 8 30 11 57-5 85-17 29-47 50-60 82-8 20-8 33-7 36-18-7-35-20-47-36-18-25-7-54 7-77 15-24 35-42 33-72-1-23-17-44-17-68 0-28 22-47 35-68 14-23 7-52-3-73-12-25-4-48 4-67 8-18 13-37 7-55-7-21-28-31-31-47-4-21 23-31 42-26Z"/>
-    <circle cx="136" cy="67" r="7"/><circle cx="166" cy="99" r="6"/><circle cx="151" cy="136" r="6"/><circle cx="174" cy="171" r="5"/>
-    <circle cx="168" cy="204" r="6"/><circle cx="150" cy="252" r="5"/><circle cx="139" cy="303" r="7"/><circle cx="130" cy="347" r="5"/>
-    <circle cx="119" cy="400" r="7"/><circle cx="104" cy="447" r="6"/><circle cx="91" cy="477" r="7"/><circle cx="140" cy="468" r="5"/>
+function classifyCountry(value?: string) {
+  const raw = normalize(value);
+  if (!raw) return "";
+  const known = countryDefs.find((country) => country.aliases.some((alias) => raw.includes(alias)));
+  return known?.key || raw;
+}
+
+function AnimatedNumber({ value, format }: { value: number; format?: (value: number) => string }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplay(value);
+      return;
+    }
+    const started = performance.now();
+    const duration = 780;
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - started) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(value * eased);
+      if (t < 1) frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{format ? format(display) : Math.round(display)}</>;
+}
+
+function MiniPostMergerMap({ activeProvinces, pointMode = false }: { activeProvinces: Set<string>; pointMode?: boolean }) {
+  return <svg viewBox="35 0 375 735" aria-hidden="true" style={{ position: "absolute", zIndex: 2, left: pointMode ? "-2%" : "1%", top: "3px", width: pointMode ? "72%" : "55%", height: "128px", overflow: "visible" }}>
+    {vietnamPostMergerProvinces.map((province) => <path key={province.name} d={province.d} fill={activeProvinces.has(province.name) ? "#dbe9ed" : "#eef4f6"} stroke="#76909b" strokeWidth="1.15" />)}
+    {vietnamPostMergerProvinces.filter((province) => activeProvinces.has(province.name)).slice(0, pointMode ? 6 : 4).map((province) => <g key={`p-${province.name}`} transform={`translate(${province.cx} ${province.cy})`}><circle r="8" fill="rgba(229,73,39,.18)"/><circle r="4.2" fill="#e54927" stroke="#fff" strokeWidth="2"/></g>)}
   </svg>;
+}
+
+function VietnamDataMap() {
+  return <svg className={styles.mapVisual} viewBox="0 0 260 540" aria-label="Bản đồ công trình Việt Nam" role="img" />;
 }
 
 export default function PublicHomepageDashboard() {
@@ -116,75 +120,47 @@ export default function PublicHomepageDashboard() {
   const t = COPY[language];
   const completed = projects.filter((project) => project.status === "completed");
   const ongoing = projects.filter((project) => project.status === "ongoing");
-  const provinces = new Set(projects.map((project) => project.province).filter(Boolean));
-  const customerCountries = new Set(projects.map((project) => normalize(project.investorCountry)).filter(Boolean));
+  const provinceNames = projects.flatMap((project) => normalizeProvinceNames(project.province));
+  const provinces = new Set(provinceNames);
+  const customerCountries = new Set(projects.map((project) => classifyCountry(project.investorCountry)).filter(Boolean));
   const totalBillions = sumProjectMoney(projects) / 1_000_000_000;
   const numberFormat = new Intl.NumberFormat(localeByLanguage[language], { maximumFractionDigits: totalBillions >= 100 ? 0 : 1 });
-  const valueText = loading ? "—" : `${numberFormat.format(totalBillions)}+`;
 
   const metrics = [
-    { icon: Building2, value: loading ? "—" : `${completed.length}+`, label: t.completed, href: "/portfolio/projects?status=completed" },
-    { icon: Construction, value: loading ? "—" : `${ongoing.length}+`, label: t.ongoing, href: "/portfolio/projects?status=ongoing" },
-    { icon: MapPin, value: loading ? "—" : String(provinces.size), label: t.provinces, href: "/portfolio/locations" },
-    { icon: Globe2, value: loading ? "—" : `${customerCountries.size}+`, label: t.countries, href: "/portfolio/projects" },
-    { icon: Coins, value: valueText, label: t.value, href: "/portfolio/overview" },
+    { icon: Building2, value: completed.length, label: t.completed, href: "/portfolio/projects?status=completed", format: (value: number) => String(Math.round(value)) },
+    { icon: Construction, value: ongoing.length, label: t.ongoing, href: "/portfolio/projects?status=ongoing", format: (value: number) => String(Math.round(value)) },
+    { icon: MapPin, value: provinces.size, label: t.provinces, href: "/portfolio/locations", format: (value: number) => String(Math.round(value)) },
+    { icon: Globe2, value: customerCountries.size, label: t.countries, href: "/portfolio/projects", format: (value: number) => String(Math.round(value)) },
+    { icon: Coins, value: totalBillions, label: t.value, href: "/portfolio/overview", format: (value: number) => numberFormat.format(value) },
   ];
 
-  const countryCounts = countryDefs.map((country) => ({
-    ...country,
-    count: projects.filter((project) => country.aliases.some((alias) => alias === normalize(project.investorCountry))).length,
-  }));
-  const recognizedCount = countryCounts.reduce((sum, country) => sum + country.count, 0);
-  const otherCount = Math.max(0, projects.filter((project) => project.investorCountry).length - recognizedCount);
+  const countryCounts = countryDefs.map((country) => ({ ...country, count: projects.filter((project) => country.aliases.some((alias) => normalize(project.investorCountry).includes(alias))).length }));
+  const recognizedProjectIds = new Set(projects.filter((project) => countryDefs.some((country) => country.aliases.some((alias) => normalize(project.investorCountry).includes(alias)))).map((project) => project.id));
+  const otherCount = projects.filter((project) => project.investorCountry && !recognizedProjectIds.has(project.id)).length;
   const labels = COUNTRY_LABELS[language];
-  const provinceItems = Array.from(provinces)
-    .map((province) => ({ province, count: projects.filter((item) => item.province === province).length }))
-    .sort((a, b) => b.count - a.count || a.province.localeCompare(b.province, "vi"));
-
-  const mapImageStyle = {
-    position: "absolute" as const,
-    zIndex: 5,
-    pointerEvents: "none" as const,
-    objectFit: "contain" as const,
-    opacity: 1,
-    filter: "brightness(0) saturate(100%) invert(55%) sepia(17%) saturate(660%) hue-rotate(151deg) brightness(89%) contrast(94%) drop-shadow(0 1px 1px rgba(68, 91, 101, .18))",
-  };
+  const provinceItems = Array.from(provinces).map((province) => ({ province, count: projects.filter((item) => normalizeProvinceNames(item.province).includes(province)).length })).sort((a, b) => b.count - a.count || a.province.localeCompare(b.province, "vi"));
 
   const explorationCards = [
-    { key: "metric", title: `${t.click} ${t.metric}`, desc: t.metricDesc, href: "/portfolio/projects", visual: <div className={styles.miniNumbers}><span>{completed.length}+</span><span>{ongoing.length}+</span><span>{provinces.size}</span></div> },
-    { key: "city", title: `${t.click} ${t.city}`, desc: t.cityDesc, href: "/portfolio/locations", visual: <><img src="/maps/vietnam-accurate.svg?v=20260823-dom-1" alt="" aria-hidden="true" style={{ ...mapImageStyle, left: "2px", top: "-9px", width: "55%", height: "142px" }}/><div className={styles.miniList}>{provinceItems.slice(0, 5).map((item) => <span key={item.province}>{item.province}<b>{item.count}</b></span>)}</div></> },
+    { key: "metric", title: `${t.click} ${t.metric}`, desc: t.metricDesc, href: "/portfolio/projects", visual: <div className={styles.miniNumbers}><span>{completed.length}</span><span>{ongoing.length}</span><span>{provinces.size}</span></div> },
+    { key: "city", title: `${t.click} ${t.city}`, desc: t.cityDesc, href: "/portfolio/locations", visual: <><MiniPostMergerMap activeProvinces={provinces}/><div className={styles.miniList}>{provinceItems.slice(0, 5).map((item) => <span key={item.province}>{item.province}<b>{item.count}</b></span>)}</div></> },
     { key: "type", title: `${t.click} ${t.type}`, desc: t.typeDesc, href: "/portfolio/capabilities", visual: <div className={styles.miniIcons}><span><Factory size={19}/>CN</span><span><Home size={19}/>DD</span><span><Route size={19}/>HT</span><span><Construction size={19}/>GT</span><span><Droplets size={19}/>TL</span><span><Zap size={19}/>NL</span></div> },
     { key: "customer", title: `${t.click} ${t.customer}`, desc: t.customerDesc, href: "/portfolio/projects?q=Nhật%20Bản", visual: <div className={styles.miniList}>{countryCounts.slice(0, 5).map((country) => <span key={country.key}>{country.flag} {labels[country.key]}<b>{country.count}</b></span>)}</div> },
-    { key: "point", title: `${t.click} ${t.point}`, desc: t.pointDesc, href: "/portfolio/projects", visual: <><img src="/maps/vietnam-accurate.svg?v=20260823-dom-1" alt="" aria-hidden="true" style={{ ...mapImageStyle, left: "-3px", top: "-11px", width: "72%", height: "146px" }}/><MapPin size={46} color="#c2410c"/></> },
+    { key: "point", title: `${t.click} ${t.point}`, desc: t.pointDesc, href: "/portfolio/projects", visual: <><MiniPostMergerMap activeProvinces={provinces} pointMode/><MapPin size={38} color="#c2410c"/></> },
     { key: "updated", title: t.updated, desc: t.updatedDesc, href: "/portfolio/overview", visual: <RefreshCw size={52} className={styles.refreshIcon}/> },
   ];
 
   return <>
     <section className={styles.hero} id="trang-chu">
-      <div
-        className={styles.heroBg}
-        aria-hidden="true"
-        style={{
-          backgroundImage: "url('/media/hero-industrial-park.webp?v=20260822-2')",
-          backgroundSize: "cover",
-          backgroundPosition: "center 52%",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
+      <div className={styles.heroBg} aria-hidden="true" style={{ backgroundImage: "url('/media/hero-industrial-park.webp?v=20260822-2')", backgroundSize: "cover", backgroundPosition: "center 52%", backgroundRepeat: "no-repeat" }} />
       <div className={styles.heroInner}>
         <div className={styles.heroCopy}>
           <h1 className={styles.heroTitle}>{t.line1}<span>{t.line2}</span></h1>
           <p className={styles.heroLead}>{t.lead}</p>
-
           <div className={styles.dataPanel}>
             <div className={styles.kpiGrid}>
               {metrics.map((metric) => {
                 const Icon = metric.icon;
-                return <Link key={metric.label} href={metric.href} className={styles.kpi}>
-                  <span className={styles.kpiIcon}><Icon size={24}/></span>
-                  <strong>{metric.value}</strong>
-                  <span>{metric.label}</span>
-                </Link>;
+                return <Link key={metric.label} href={metric.href} className={styles.kpi}><span className={styles.kpiIcon}><Icon size={24}/></span><strong>{loading ? "—" : <AnimatedNumber value={metric.value} format={metric.format}/>}</strong><span>{metric.label}</span></Link>;
               })}
             </div>
             <div className={styles.investors}>
@@ -195,39 +171,16 @@ export default function PublicHomepageDashboard() {
               </div>
             </div>
           </div>
-
-          <div className={styles.actions}>
-            <Link href="/portfolio/projects" className={styles.primaryButton}>{t.explore}<ArrowRight size={15}/></Link>
-            <Link href="/portfolio/locations" className={styles.secondaryButton}><Map size={15}/>{t.map}<ArrowRight size={14}/></Link>
-          </div>
+          <div className={styles.actions}><Link href="/portfolio/projects" className={styles.primaryButton}>{t.explore}<ArrowRight size={15}/></Link><Link href="/portfolio/locations" className={styles.secondaryButton}><Map size={15}/>{t.map}<ArrowRight size={14}/></Link></div>
           {error ? <div className={styles.error}>{error}</div> : null}
         </div>
         <VietnamDataMap />
-        <Link href="/portfolio/projects" className={styles.nationalBadge}><Building2 size={35}/><div><strong>{loading ? "—" : `${projects.length}+`}</strong><span>{t.national}</span></div></Link>
+        <Link href="/portfolio/projects" className={styles.nationalBadge}><Building2 size={35}/><div><strong>{loading ? "—" : <AnimatedNumber value={projects.length}/>}</strong><span>{t.national}</span></div></Link>
       </div>
     </section>
 
-    <section className={styles.explore} aria-label={t.clickTitle}>
-      <div className={styles.exploreInner}>
-        <h2 className={styles.exploreTitle}>{t.clickTitle}</h2>
-        <div className={styles.exploreGrid}>
-          {explorationCards.map((card) => <Link key={card.key} href={card.href} className={styles.exploreCard}>
-            <small>{card.title}</small>
-            <div className={styles.miniVisual}>{card.visual}</div>
-            <strong>{card.desc}</strong>
-          </Link>)}
-        </div>
-      </div>
-    </section>
+    <section className={styles.explore} aria-label={t.clickTitle}><div className={styles.exploreInner}><h2 className={styles.exploreTitle}>{t.clickTitle}</h2><div className={styles.exploreGrid}>{explorationCards.map((card) => <Link key={card.key} href={card.href} className={styles.exploreCard}><small>{card.title}</small><div className={styles.miniVisual}>{card.visual}</div><strong>{card.desc}</strong></Link>)}</div></div></section>
 
-    <section className={styles.trustStrip} aria-label="LICOGI 18.3">
-      <div className={styles.trustInner}>
-        <div className={styles.trustItem}><Building2 size={25}/><div><strong>{t.experience}</strong><span>{t.experienceSub}</span></div></div>
-        <div className={styles.trustItem}><ShieldCheck size={25}/><div><strong>{t.commitment}</strong><span>{t.commitmentSub}</span></div></div>
-        <div className={styles.trustItem}><Users size={25}/><div><strong>{t.engineers}</strong><span>{t.engineersSub}</span></div></div>
-        <div className={styles.trustItem}><BadgeCheck size={25}/><div><strong>{t.standards}</strong><span>{t.standardsSub}</span></div></div>
-        <div className={styles.trustItem}><Cpu size={25}/><div><strong>{t.equipment}</strong><span>{t.equipmentSub}</span></div></div>
-      </div>
-    </section>
+    <section className={styles.trustStrip} aria-label="LICOGI 18.3"><div className={styles.trustInner}><div className={styles.trustItem}><Building2 size={25}/><div><strong>{t.experience}</strong><span>{t.experienceSub}</span></div></div><div className={styles.trustItem}><ShieldCheck size={25}/><div><strong>{t.commitment}</strong><span>{t.commitmentSub}</span></div></div><div className={styles.trustItem}><Users size={25}/><div><strong>{t.engineers}</strong><span>{t.engineersSub}</span></div></div><div className={styles.trustItem}><BadgeCheck size={25}/><div><strong>{t.standards}</strong><span>{t.standardsSub}</span></div></div><div className={styles.trustItem}><Cpu size={25}/><div><strong>{t.equipment}</strong><span>{t.equipmentSub}</span></div></div></div></section>
   </>;
 }
