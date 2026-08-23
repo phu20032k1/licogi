@@ -83,7 +83,7 @@ const COUNTRY_LABELS: Record<PublicLanguage, Record<string, string>> = {
   vi: { japan: "Nhật Bản", korea: "Hàn Quốc", china: "Trung Quốc", taiwan: "Đài Loan", vietnam: "Việt Nam", other: "Khác" },
   en: { japan: "Japan", korea: "Korea", china: "China", taiwan: "Taiwan", vietnam: "Vietnam", other: "Other" },
   ja: { japan: "日本", korea: "韓国", china: "中国", taiwan: "台湾", vietnam: "ベトナム", other: "その他" },
-  ko: { japan: "일본", korea: "한국", china: "중국", taiwan: "대만", vietnam: "베트남", other: "기타" },
+  ko: { japan: "일본", korea: "한국", china: "中国", taiwan: "台湾", vietnam: "베트남", other: "기타" },
   zh: { japan: "日本", korea: "韩国", china: "中国", taiwan: "台湾", vietnam: "越南", other: "其他" },
 };
 
@@ -141,12 +141,21 @@ export default function PublicHomepageDashboard() {
     .map((province) => ({ province, count: projects.filter((item) => item.province === province).length }))
     .sort((a, b) => b.count - a.count || a.province.localeCompare(b.province, "vi"));
 
+  const mapImageStyle = {
+    position: "absolute" as const,
+    zIndex: 5,
+    pointerEvents: "none" as const,
+    objectFit: "contain" as const,
+    opacity: 1,
+    filter: "brightness(0) saturate(100%) invert(55%) sepia(17%) saturate(660%) hue-rotate(151deg) brightness(89%) contrast(94%) drop-shadow(0 1px 1px rgba(68, 91, 101, .18))",
+  };
+
   const explorationCards = [
     { key: "metric", title: `${t.click} ${t.metric}`, desc: t.metricDesc, href: "/portfolio/projects", visual: <div className={styles.miniNumbers}><span>{completed.length}+</span><span>{ongoing.length}+</span><span>{provinces.size}</span></div> },
-    { key: "city", title: `${t.click} ${t.city}`, desc: t.cityDesc, href: "/portfolio/locations", visual: <div className={styles.miniList}>{provinceItems.slice(0, 5).map((item) => <span key={item.province}>{item.province}<b>{item.count}</b></span>)}</div> },
+    { key: "city", title: `${t.click} ${t.city}`, desc: t.cityDesc, href: "/portfolio/locations", visual: <><img src="/maps/vietnam-accurate.svg?v=20260823-dom-1" alt="" aria-hidden="true" style={{ ...mapImageStyle, left: "2px", top: "-9px", width: "55%", height: "142px" }}/><div className={styles.miniList}>{provinceItems.slice(0, 5).map((item) => <span key={item.province}>{item.province}<b>{item.count}</b></span>)}</div></> },
     { key: "type", title: `${t.click} ${t.type}`, desc: t.typeDesc, href: "/portfolio/capabilities", visual: <div className={styles.miniIcons}><span><Factory size={19}/>CN</span><span><Home size={19}/>DD</span><span><Route size={19}/>HT</span><span><Construction size={19}/>GT</span><span><Droplets size={19}/>TL</span><span><Zap size={19}/>NL</span></div> },
     { key: "customer", title: `${t.click} ${t.customer}`, desc: t.customerDesc, href: "/portfolio/projects?q=Nhật%20Bản", visual: <div className={styles.miniList}>{countryCounts.slice(0, 5).map((country) => <span key={country.key}>{country.flag} {labels[country.key]}<b>{country.count}</b></span>)}</div> },
-    { key: "point", title: `${t.click} ${t.point}`, desc: t.pointDesc, href: "/portfolio/projects", visual: <MapPin size={46} color="#c2410c"/> },
+    { key: "point", title: `${t.click} ${t.point}`, desc: t.pointDesc, href: "/portfolio/projects", visual: <><img src="/maps/vietnam-accurate.svg?v=20260823-dom-1" alt="" aria-hidden="true" style={{ ...mapImageStyle, left: "-3px", top: "-11px", width: "72%", height: "146px" }}/><MapPin size={46} color="#c2410c"/></> },
     { key: "updated", title: t.updated, desc: t.updatedDesc, href: "/portfolio/overview", visual: <RefreshCw size={52} className={styles.refreshIcon}/> },
   ];
 
