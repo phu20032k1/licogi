@@ -2,31 +2,27 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MapContainer, Marker, Popup, ScaleControl, TileLayer, Tooltip } from "react-leaflet";
+import { MapContainer, Marker, Popup, ScaleControl, SVGOverlay, TileLayer, Tooltip } from "react-leaflet";
 import {
-  Activity,
   Building2,
-  CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
   CircleDot,
   Expand,
-  FileText,
   Globe2,
   Layers3,
   MapPin,
   Maximize2,
   RefreshCcw,
-  Ruler,
   Search,
-  ShieldCheck,
-  Wrench,
   X,
 } from "lucide-react";
-import { ProjectStatus, ProjectType, projectTypes, statusLabels } from "../data/projects";
-import { markerHtml, projectStatusVisuals, projectTypeVisuals } from "../lib/projectMapVisuals";
+import { normalizeProvinceNames, ProjectStatus, ProjectType, projectTypes, statusLabels } from "../data/projects";
+import { vietnamPostMergerProvinces } from "../data/vietnamPostMergerMap";
+import { investorCountryFlag, markerHtml, projectStatusVisuals, projectTypeVisuals } from "../lib/projectMapVisuals";
 import { siteConfig } from "../lib/siteConfig";
 import MapViewportController from "./map/MapViewportController";
 
@@ -82,16 +78,24 @@ type PublicProject = {
 type PublicProjectsResponse = { ok: boolean; projects?: PublicProject[]; message?: string };
 type FilterDetail = { search?: string; type?: string; status?: string; projectId?: string | null };
 type LoadMode = "initial" | "refresh" | "silent";
-
-type CachedMapProjects = {
-  savedAt: number;
+type CachedMapProjects = { savedAt: number; projects: PublicProject[] };
+type ProvinceSummary = {
+  name: string;
   projects: PublicProject[];
+  ongoing: number;
+  completed: number;
+  totalValue: number;
+  averageProgress: number;
+  dominantType: ProjectType;
+  types: Partial<Record<ProjectType, number>>;
+  score: number;
 };
 
-const MAP_CACHE_KEY = "licogi-public-map-projects-v2";
+const MAP_CACHE_KEY = "licogi-public-map-projects-v3";
 const MAP_CACHE_MAX_AGE = 1000 * 60 * 60 * 6;
 const MAP_REQUEST_TIMEOUT = 8000;
 const MOBILE_MARKER_LIMIT = 220;
+const VIETNAM_SVG_BOUNDS: [[number, number], [number, number]] = [[8.15, 102.0], [23.7, 109.85]];
 
 function readCachedMapProjects() {
   if (typeof window === "undefined") return [] as PublicProject[];
@@ -113,7 +117,7 @@ function cacheMapProjects(projects: PublicProject[]) {
     try {
       window.localStorage.setItem(MAP_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), projects } satisfies CachedMapProjects));
     } catch {
-      // Safari private mode / quota errors should never block the live map.
+      // Local cache is an optional acceleration layer only.
     }
   }, 0);
 }
@@ -121,7 +125,12 @@ function cacheMapProjects(projects: PublicProject[]) {
 function isVietnamProject(project: PublicProject) {
   const country = (project.projectCountry || "Việt Nam").trim().toLocaleLowerCase("vi");
   if (country === "việt nam" || country === "vietnam" || country === "viet nam") return true;
-  return project.lat >= 8 && project.lat <= 24.5 && project.lng >= 102 && project.lng <= 110.8;
+  return isMappable(project);
+}
+
+function isMappable(project: Pick<PublicProject, "lat" | "lng">) {
+  return Number.isFinite(project.lat) && Number.isFinite(project.lng)
+    && project.lat >= 8 && project.lat <= 24.5 && project.lng >= 102 && project.lng <= 110.8;
 }
 
 function formatContractValue(value?: number | null, fallback?: string) {
@@ -135,26 +144,60 @@ function formatContractValue(value?: number | null, fallback?: string) {
   return fallback && fallback !== "Chưa cập nhật" ? fallback : "Chưa cập nhật";
 }
 
-function formatDate(value?: string) {
-  if (!value) return "Chưa cập nhật";
-  const parsed = new Date(value);
-  if (!Number.isNaN(parsed.getTime())) return new Intl.DateTimeFormat("vi-VN").format(parsed);
-  return value;
+function shortValue(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "—";
+  const billions = value / 1_000_000_000;
+  return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: billions >= 100 ? 0 : 1 }).format(billions)} tỷ`;
 }
 
-function riskLabel(value?: string) {
-  if (value === "high") return "Cao";
-  if (value === "medium") return "Trung bình";
-  return "Thấp";
+function buildProvinceSummaries(projects: PublicProject[]) {
+  const buckets = new Map<string, PublicProject[]>();
+  for (const project of projects) {
+    for (const province of normalizeProvinceNames(project.province)) {
+      if (!vietnamPostMergerProvinces.some((item) => item.name === province)) continue;
+      const bucket = buckets.get(province) || [];
+      if (!bucket.some((item) => item.id === project.id)) bucket.push(project);
+      buckets.set(province, bucket);
+    }
+  }
+
+  const summaries = new Map<string, ProvinceSummary>();
+  for (const [name, provinceProjects] of buckets) {
+    const types: Partial<Record<ProjectType, number>> = {};
+    provinceProjects.forEach((project) => { types[project.type] = (types[project.type] || 0) + 1; });
+    const dominantType = (Object.entries(types).sort((a, b) => Number(b[1]) - Number(a[1]))[0]?.[0] || "Công nghiệp") as ProjectType;
+    const ongoingProjects = provinceProjects.filter((item) => item.status === "ongoing");
+    const totalValue = provinceProjects.reduce((sum, item) => sum + Number(item.contractValueVnd || 0), 0);
+    const industrialCount = Number(types["Công nghiệp"] || 0);
+    summaries.set(name, {
+      name,
+      projects: provinceProjects,
+      ongoing: ongoingProjects.length,
+      completed: provinceProjects.filter((item) => item.status === "completed").length,
+      totalValue,
+      averageProgress: ongoingProjects.length ? Math.round(ongoingProjects.reduce((sum, item) => sum + item.progress, 0) / ongoingProjects.length) : 100,
+      dominantType,
+      types,
+      score: provinceProjects.length * 2 + industrialCount * 2.5 + Math.min(5, totalValue / 250_000_000_000),
+    });
+  }
+  return summaries;
 }
 
-function InfoRow({ label, value, note }: { label: string; value?: string | number | null; note?: string }) {
-  if (value === null || value === undefined || String(value).trim() === "") return null;
-  return <div className="public-project-info-row"><span>{label}</span><strong>{value}</strong>{note ? <small>{note}</small> : null}</div>;
+function provinceFill(score: number, maxScore: number) {
+  if (!score || !maxScore) return "rgba(148,163,184,.12)";
+  const ratio = score / maxScore;
+  if (ratio >= .67) return "rgba(239,90,50,.68)";
+  if (ratio >= .36) return "rgba(251,146,60,.58)";
+  return "rgba(248,201,91,.55)";
 }
 
-function RelatedItem({ value = 0, label, icon }: { value?: number; label: string; icon: React.ReactNode }) {
-  return <div>{icon}<strong>{value}</strong><span>{label}</span></div>;
+function projectRank(a: PublicProject, b: PublicProject) {
+  const rank: Record<ProjectStatus, number> = { ongoing: 0, warranty: 1, completed: 2 };
+  const byStatus = rank[a.status] - rank[b.status];
+  if (byStatus) return byStatus;
+  if (a.status === "ongoing" && b.status === "ongoing") return b.progress - a.progress;
+  return Number(b.contractValueVnd || 0) - Number(a.contractValueVnd || 0);
 }
 
 export default function PublicProjectMap() {
@@ -168,6 +211,7 @@ export default function PublicProjectMap() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredProvince, setHoveredProvince] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [legendOpen, setLegendOpen] = useState(true);
   const [mobileMap, setMobileMap] = useState(false);
@@ -175,7 +219,6 @@ export default function PublicProjectMap() {
   const load = useCallback(async (mode: LoadMode = "initial") => {
     if (mode === "initial") setLoading(true);
     if (mode === "refresh") setRefreshing(true);
-
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), MAP_REQUEST_TIMEOUT);
     try {
@@ -225,19 +268,18 @@ export default function PublicProjectMap() {
     }
 
     const refresh = () => void load("silent");
-    const reloadWhenOnline = () => void load("silent");
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible" && navigator.onLine) void load("silent");
     }, 300000);
     window.addEventListener("licogi-data-imported", refresh);
     window.addEventListener("licogi-projects-updated", refresh);
-    window.addEventListener("online", reloadWhenOnline);
+    window.addEventListener("online", refresh);
     return () => {
       window.clearInterval(interval);
       media.removeEventListener?.("change", syncMobile);
       window.removeEventListener("licogi-data-imported", refresh);
       window.removeEventListener("licogi-projects-updated", refresh);
-      window.removeEventListener("online", reloadWhenOnline);
+      window.removeEventListener("online", refresh);
     };
   }, [load]);
 
@@ -258,32 +300,8 @@ export default function PublicProjectMap() {
   const searchAndTypeFiltered = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase("vi");
     return projects.filter((project) => {
-      const haystack = [
-        project.name,
-        project.province,
-        project.legacyProvince || "",
-        project.projectCountry || "Việt Nam",
-        project.investor,
-        project.customerCode || "",
-        project.customerIndustry || "",
-        project.investorCountry || "",
-        project.type,
-        project.rawType || "",
-        project.code,
-        project.valueRange,
-        project.contractValueVnd ? String(project.contractValueVnd) : "",
-        project.scale || "",
-        project.constructionArea || "",
-        project.floorArea || "",
-        project.contractorRole || "",
-        project.contractNumber || "",
-        project.packageName || "",
-        project.source || "",
-        project.description || "",
-      ].join(" ").toLocaleLowerCase("vi");
-      return (!keyword || haystack.includes(keyword))
-        && (type === "all" || project.type === type)
-        && !hiddenTypes.has(project.type);
+      const haystack = [project.name, project.province, project.legacyProvince || "", project.projectCountry || "Việt Nam", project.investor, project.customerCode || "", project.customerIndustry || "", project.investorCountry || "", project.type, project.rawType || "", project.code, project.valueRange, project.scale || "", project.contractNumber || "", project.packageName || ""].join(" ").toLocaleLowerCase("vi");
+      return (!keyword || haystack.includes(keyword)) && (type === "all" || project.type === type) && !hiddenTypes.has(project.type);
     });
   }, [projects, search, type, hiddenTypes]);
 
@@ -298,19 +316,20 @@ export default function PublicProjectMap() {
     warranty: searchAndTypeFiltered.filter((item) => item.status === "warranty").length,
   }), [searchAndTypeFiltered]);
 
-  const typeCounts = useMemo(() => Object.fromEntries(projectTypes.map((projectType) => [
-    projectType,
-    projects.filter((project) => project.type === projectType).length,
-  ])) as Record<ProjectType, number>, [projects]);
-
+  const typeCounts = useMemo(() => Object.fromEntries(projectTypes.map((projectType) => [projectType, projects.filter((project) => project.type === projectType).length])) as Record<ProjectType, number>, [projects]);
   const selectedProject = selectedId ? projects.find((project) => project.id === selectedId) || null : null;
   const hasExplicitFilter = Boolean(search.trim()) || type !== "all" || status !== "all" || hiddenTypes.size > 0 || hiddenStatuses.size > 0;
   const vietnamProjects = useMemo(() => filtered.filter(isVietnamProject), [filtered]);
-  const mapProjects = !hasExplicitFilter && !selectedProject && vietnamProjects.length ? vietnamProjects : filtered;
+  const mapProjects = useMemo(() => (hasExplicitFilter || selectedProject ? filtered : vietnamProjects).filter(isMappable), [filtered, hasExplicitFilter, selectedProject, vietnamProjects]);
   const renderedMapProjects = useMemo(() => {
     if (!mobileMap || hasExplicitFilter || selectedProject || mapProjects.length <= MOBILE_MARKER_LIMIT) return mapProjects;
     return mapProjects.slice(0, MOBILE_MARKER_LIMIT);
   }, [hasExplicitFilter, mapProjects, mobileMap, selectedProject]);
+  const rankedProjects = useMemo(() => [...filtered].sort(projectRank), [filtered]);
+  const provinceSummaries = useMemo(() => buildProvinceSummaries(filtered), [filtered]);
+  const maxProvinceScore = useMemo(() => Math.max(0, ...Array.from(provinceSummaries.values()).map((item) => item.score)), [provinceSummaries]);
+  const provinceRanking = useMemo(() => [...provinceSummaries.values()].sort((a, b) => b.score - a.score), [provinceSummaries]);
+  const hoveredSummary = hoveredProvince ? provinceSummaries.get(hoveredProvince) || null : null;
 
   useEffect(() => {
     if (selectedId && hasExplicitFilter && !filtered.some((project) => project.id === selectedId)) setSelectedId(null);
@@ -318,6 +337,15 @@ export default function PublicProjectMap() {
 
   function resetFilters() {
     setSearch("");
+    setType("all");
+    setStatus("all");
+    setHiddenTypes(new Set());
+    setHiddenStatuses(new Set());
+    setSelectedId(null);
+  }
+
+  function selectProvince(province: string) {
+    setSearch(province);
     setType("all");
     setStatus("all");
     setHiddenTypes(new Set());
@@ -343,27 +371,22 @@ export default function PublicProjectMap() {
     });
   }
 
-  function selectProject(project: PublicProject) {
-    setSelectedId(project.id);
-  }
-
-  const mapHref = selectedProject?.mapsUrl || (selectedProject ? `https://www.google.com/maps/search/?api=1&query=${selectedProject.lat},${selectedProject.lng}` : "#");
-  const related = selectedProject?.related || {};
-  const relatedTotal = Object.values(related).reduce((sum, value) => sum + Number(value || 0), 0);
+  const selectedMappable = selectedProject && isMappable(selectedProject) ? selectedProject : null;
+  const mapHref = selectedProject?.mapsUrl || (selectedMappable ? `https://www.google.com/maps/search/?api=1&query=${selectedMappable.lat},${selectedMappable.lng}` : "#");
 
   return (
-    <div className={`public-map-shell public-project-map-shell ${expanded ? "is-expanded" : ""}`}>
+    <div className={`public-map-shell public-project-map-shell public-project-map-2026 ${expanded ? "is-expanded" : ""}`}>
       <div className="public-map-toolbar">
-        <div><h3>Danh mục dự án</h3><p>{mapProjects.length} dự án trên bản đồ · {filtered.length}/{projects.length} dự án theo bộ lọc{renderedMapProjects.length < mapProjects.length ? ` · đang tối ưu ${renderedMapProjects.length} điểm cho điện thoại` : ""}</p></div>
+        <div><h3>Bản đồ & danh mục công trình</h3><p>{mapProjects.length} vị trí hợp lệ · {filtered.length}/{projects.length} dự án theo bộ lọc</p></div>
         <div className="public-map-toolbar-actions">
           {hasExplicitFilter ? <button type="button" onClick={resetFilters} className="public-map-reset"><X size={14} /> Xóa lọc</button> : null}
           <button type="button" onClick={() => setExpanded((value) => !value)} className="public-icon-button" aria-label={expanded ? "Thu nhỏ bản đồ" : "Phóng lớn bản đồ"}>{expanded ? <Expand size={17} /> : <Maximize2 size={17} />}</button>
-          <button type="button" onClick={() => void load("refresh")} className="public-icon-button" aria-label="Tải lại dự án" disabled={refreshing}><RefreshCcw size={17} className={refreshing ? "animate-spin" : ""} /></button>
+          <button type="button" onClick={() => void load("refresh")} className="public-icon-button" aria-label="Tải lại dữ liệu" disabled={refreshing}><RefreshCcw size={17} className={refreshing ? "animate-spin" : ""} /></button>
         </div>
       </div>
 
       <div className="public-map-controls">
-        <label aria-label="Tìm dự án"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm dự án, tỉnh mới/cũ, chủ đầu tư, hợp đồng..." /></label>
+        <label aria-label="Tìm dự án"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm công trình, tỉnh mới/cũ, chủ đầu tư..." /></label>
         <select aria-label="Lọc lĩnh vực" value={type} onChange={(event) => setType(event.target.value as "all" | ProjectType)}><option value="all">Tất cả lĩnh vực</option>{projectTypes.map((item) => <option key={item} value={item}>{item}</option>)}</select>
         <select aria-label="Lọc trạng thái" value={status} onChange={(event) => setStatus(event.target.value as "all" | ProjectStatus)}><option value="all">Tất cả trạng thái</option><option value="ongoing">Đang thi công</option><option value="completed">Hoàn thành</option><option value="warranty">Bảo hành</option></select>
       </div>
@@ -379,13 +402,15 @@ export default function PublicProjectMap() {
         <div className="public-map-canvas">
           <div className="public-map-zoom-hint"><CircleDot size={12} /> Kéo / cuộn để zoom</div>
           <button type="button" className={`public-map-legend-toggle ${legendOpen ? "is-open" : ""}`} onClick={() => setLegendOpen((value) => !value)}><Layers3 size={13} /> Chú thích</button>
-          {legendOpen ? <div className="public-map-overlay-legend" aria-label="Chú thích bản đồ">
-            <div className="public-map-overlay-title"><Layers3 size={13} /><span>Màu theo lĩnh vực</span><button type="button" onClick={() => setLegendOpen(false)} aria-label="Đóng chú thích"><X size={12} /></button></div>
+
+          {legendOpen ? <div className="public-map-overlay-legend public-map-overlay-legend-2026" aria-label="Chú thích bản đồ">
+            <div className="public-map-overlay-title"><Layers3 size={13} /><span>Màu dữ liệu LICOGI</span><button type="button" onClick={() => setLegendOpen(false)} aria-label="Đóng chú thích"><X size={12} /></button></div>
+            <div className="public-vn-development-legend"><span><i className="is-strong"/>Hoạt động mạnh</span><span><i className="is-growing"/>Đang phát triển</span><span><i className="is-active"/>Có dự án</span></div>
             <div className="public-map-overlay-types">
               {projectTypes.filter((projectType) => typeCounts[projectType] > 0).map((projectType) => {
                 const visual = projectTypeVisuals[projectType];
                 const hidden = hiddenTypes.has(projectType);
-                return <button key={projectType} type="button" onClick={() => toggleType(projectType)} className={hidden ? "is-muted" : ""} title={hidden ? `Hiện ${projectType}` : `Ẩn ${projectType}`}><i style={{ background: visual.color }} /><span>{projectType}</span><b>{typeCounts[projectType]}</b></button>;
+                return <button key={projectType} type="button" onClick={() => toggleType(projectType)} className={hidden ? "is-muted" : ""}><i style={{ background: visual.color }} /><span>{projectType}</span><b>{typeCounts[projectType]}</b></button>;
               })}
             </div>
             <div className="public-map-overlay-status">
@@ -397,16 +422,41 @@ export default function PublicProjectMap() {
             </div>
           </div> : null}
 
-          <MapContainer center={[16.15, 106.4]} zoom={5.45} minZoom={3} maxZoom={18} zoomSnap={0.25} zoomDelta={0.5} wheelPxPerZoomLevel={80} scrollWheelZoom preferCanvas worldCopyJump className={expanded ? "h-[78vh] w-full" : "public-map-leaflet-size w-full"}>
+          {hoveredSummary ? <div className="public-vn-hover-card">
+            <div><strong>{hoveredSummary.name}</strong><b>{hoveredSummary.projects.length} dự án</b></div>
+            <p>{hoveredSummary.ongoing} đang thi công{hoveredSummary.ongoing ? ` · TB ${hoveredSummary.averageProgress}%` : ""}</p>
+            <p>{Object.entries(hoveredSummary.types).filter(([, count]) => Number(count) > 0).map(([name, count]) => `${name} ${count}`).join(" · ")}</p>
+            <span>Tổng giá trị: <b>{shortValue(hoveredSummary.totalValue)}</b> · bấm tỉnh để lọc</span>
+          </div> : null}
+
+          <MapContainer center={[16.15, 106.4]} zoom={5.15} minZoom={3} maxZoom={18} zoomSnap={.25} zoomDelta={.5} wheelPxPerZoomLevel={80} scrollWheelZoom preferCanvas className={expanded ? "h-[78vh] w-full" : "public-map-leaflet-size w-full"}>
             <TileLayer attribution={siteConfig.map.attribution} url={siteConfig.map.tileUrl} />
+            <SVGOverlay
+              bounds={VIETNAM_SVG_BOUNDS}
+              attributes={{ viewBox: "35 0 375 735", preserveAspectRatio: "none", className: "public-vietnam-province-overlay" }}
+              interactive
+            >
+              {vietnamPostMergerProvinces.map((province) => {
+                const summary = provinceSummaries.get(province.name);
+                return <path
+                  key={province.name}
+                  d={province.d}
+                  fill={provinceFill(summary?.score || 0, maxProvinceScore)}
+                  className={`public-vn-province-shape ${summary ? "has-data" : ""}`}
+                  onMouseEnter={() => setHoveredProvince(province.name)}
+                  onMouseLeave={() => setHoveredProvince((current) => current === province.name ? null : current)}
+                  onClick={() => summary && selectProvince(province.name)}
+                ><title>{province.name}{summary ? ` · ${summary.projects.length} dự án · ${shortValue(summary.totalValue)}` : " · chưa có dự án trong dữ liệu"}</title></path>;
+              })}
+            </SVGOverlay>
             <ScaleControl position="bottomleft" imperial={false} metric />
             <MapViewportController
               points={renderedMapProjects.map(({ lat, lng }) => ({ lat, lng }))}
-              selected={selectedProject ? { lat: selectedProject.lat, lng: selectedProject.lng } : null}
-              focusVietnam={!hasExplicitFilter && !selectedProject}
-              maxZoom={8}
-              selectedZoom={8}
-              singlePointZoom={7}
+              selected={selectedMappable ? { lat: selectedMappable.lat, lng: selectedMappable.lng } : null}
+              focusVietnam={!hasExplicitFilter && !selectedMappable}
+              maxZoom={9}
+              selectedZoom={9}
+              singlePointZoom={8}
             />
             {renderedMapProjects.map((project) => {
               const selected = selectedId === project.id;
@@ -414,22 +464,27 @@ export default function PublicProjectMap() {
               return <Marker
                 key={project.id}
                 position={[project.lat, project.lng]}
-                icon={L.divIcon({ html: markerHtml(project.type, project.status, selected), className: "licogi-div-icon", iconSize: selected ? [50, 60] : [42, 52], iconAnchor: selected ? [25, 58] : [21, 50], popupAnchor: [0, -44] })}
-                eventHandlers={{ click: () => selectProject(project) }}
+                icon={L.divIcon({ html: markerHtml(project.type, project.status, selected, project.investorCountry), className: "licogi-div-icon", iconSize: selected ? [52, 64] : [44, 56], iconAnchor: selected ? [26, 62] : [22, 54], popupAnchor: [0, -46] })}
+                eventHandlers={{ click: () => setSelectedId(project.id) }}
               >
-                <Tooltip direction="top" offset={[0, -38]} opacity={0.98}>
-                  <div className="public-map-tooltip"><span style={{ background: visual.color }} /><b>{project.name}</b><small>{project.province} · {project.type}</small></div>
+                <Tooltip direction="top" offset={[0, -40]} opacity={.98}>
+                  <div className="public-map-tooltip public-map-tooltip-rich">
+                    <span style={{ background: visual.color }} />
+                    <b>{project.name}</b>
+                    <small>{investorCountryFlag(project.investorCountry)} {project.province} · {project.type}</small>
+                    <em>{formatContractValue(project.contractValueVnd, project.valueRange)} · {project.status === "completed" ? "Hoàn thành" : `Tiến độ ${project.progress}%`}</em>
+                  </div>
                 </Tooltip>
-                <Popup minWidth={270} maxWidth={330}>
+                <Popup minWidth={280} maxWidth={340}>
                   <div className="public-map-popup public-map-popup-rich">
                     <div className="public-map-popup-top"><span className="public-map-popup-code">{project.code}</span><i style={{ background: visual.color }}>{project.type}</i></div>
                     <strong>{project.name}</strong>
                     <p><MapPin size={13} /> {project.province} · {project.projectCountry || "Việt Nam"}</p>
-                    <p><Building2 size={13} /> {project.investor}</p>
+                    <p><Building2 size={13} /> {investorCountryFlag(project.investorCountry)} {project.investor}</p>
                     <div className="public-map-popup-value"><small>Giá trị hợp đồng</small><b>{formatContractValue(project.contractValueVnd, project.valueRange)}</b></div>
                     <div className="public-map-popup-progress"><span style={{ width: `${project.progress}%` }} /></div>
                     <div className="public-map-popup-meta"><span>{statusLabels[project.status]}</span><b>{project.progress}%</b></div>
-                    <button type="button" className="public-map-popup-detail" onClick={() => selectProject(project)}>Mở hồ sơ dự án <ChevronRight size={14} /></button>
+                    <button type="button" className="public-map-popup-detail" onClick={() => setSelectedId(project.id)}>Xem sơ lược <ChevronRight size={14} /></button>
                   </div>
                 </Popup>
               </Marker>;
@@ -437,95 +492,50 @@ export default function PublicProjectMap() {
           </MapContainer>
           {loading && projects.length === 0 ? <div className="public-map-loading">Đang tải dữ liệu dự án...</div> : null}
           {error ? <div className="public-map-error"><span>{error}</span><button type="button" onClick={() => void load("refresh")}>Thử lại</button></div> : null}
-          {!loading && !error && mapProjects.length === 0 ? <div className="public-map-empty">Không có dự án phù hợp bộ lọc.</div> : null}
+          {!loading && !error && mapProjects.length === 0 ? <div className="public-map-empty">Không có vị trí hợp lệ cho bộ lọc này. Danh sách bên phải vẫn hiển thị dữ liệu dự án.</div> : null}
         </div>
 
-        <aside className="public-project-sidepanel" aria-label="Hồ sơ dự án">
+        <aside className="public-project-sidepanel public-project-sidepanel-2026" aria-label="Hồ sơ dự án">
           {selectedProject ? <>
             <div className="public-project-sidepanel-head">
               <button type="button" onClick={() => setSelectedId(null)}><ChevronLeft size={15} /> Danh sách</button>
               <span className={`status-${selectedProject.status}`}>{statusLabels[selectedProject.status]}</span>
             </div>
-            <div className="public-project-sidepanel-scroll">
-              <div className="public-project-title-block">
-                <span>{selectedProject.code} · {selectedProject.type}</span>
+            <div className="public-project-preview">
+              <div className="public-project-preview-title">
+                <span style={{ background: projectTypeVisuals[selectedProject.type].color }}>{selectedProject.type}</span>
+                <small>{selectedProject.code}</small>
                 <h4>{selectedProject.name}</h4>
-                <p><MapPin size={13} /> {selectedProject.province}, {selectedProject.projectCountry || "Việt Nam"}</p>
-                {selectedProject.legacyProvince ? <small className="public-project-legacy-province">Dữ liệu lịch sử: {selectedProject.legacyProvince} → {selectedProject.province}</small> : null}
+                <p><MapPin size={13}/>{selectedProject.province}{selectedProject.legacyProvince ? ` · dữ liệu cũ: ${selectedProject.legacyProvince}` : ""}</p>
               </div>
-
-              <div className="public-project-key-metrics public-project-key-metrics-four">
+              <div className="public-project-preview-grid">
                 <div><small>Giá trị hợp đồng</small><strong>{formatContractValue(selectedProject.contractValueVnd, selectedProject.valueRange)}</strong></div>
-                <div><small>Tiến độ</small><strong>{selectedProject.progress}%</strong><span className="is-progress"><i style={{ width: `${selectedProject.progress}%` }} /></span></div>
-                <div><small>Sức khỏe dự án</small><strong>{selectedProject.healthScore ?? "—"}<em>/100</em></strong></div>
-                <div><small>Độ đầy đủ dữ liệu</small><strong>{selectedProject.dataCompleteness ?? 0}%</strong></div>
+                <div><small>Tiến độ</small><strong>{selectedProject.progress}%</strong><span><i style={{ width: `${selectedProject.progress}%`, background: projectTypeVisuals[selectedProject.type].color }} /></span></div>
+                <div><small>Chủ đầu tư</small><strong>{investorCountryFlag(selectedProject.investorCountry)} {selectedProject.investor}</strong></div>
+                <div><small>Quốc gia</small><strong>{selectedProject.projectCountry || "Việt Nam"}</strong></div>
               </div>
-
-              <section className="public-project-info-section">
-                <h5><Globe2 size={14} /> Nhận diện dự án</h5>
-                <InfoRow label="Mã dự án" value={selectedProject.code} />
-                <InfoRow label="Lĩnh vực" value={selectedProject.rawType || selectedProject.type} />
-                <InfoRow label="Tỉnh/thành hiện hành" value={selectedProject.province} note={selectedProject.legacyProvince ? `Tên trong dữ liệu cũ: ${selectedProject.legacyProvince}` : undefined} />
-                <InfoRow label="Quốc gia dự án" value={selectedProject.projectCountry || "Việt Nam"} />
-                <InfoRow label="Tọa độ" value={`${selectedProject.lat.toFixed(5)}, ${selectedProject.lng.toFixed(5)}`} />
-              </section>
-
-              <section className="public-project-info-section">
-                <h5><Building2 size={14} /> Chủ đầu tư & hợp đồng</h5>
-                <InfoRow label="Chủ đầu tư" value={selectedProject.investor} note={[selectedProject.customerCode, selectedProject.customerIndustry, selectedProject.investorCountry].filter(Boolean).join(" · ")} />
-                <InfoRow label="Số hợp đồng" value={selectedProject.contractNumber} />
-                <InfoRow label="Gói thầu" value={selectedProject.packageName} />
-                <InfoRow label="Vai trò nhà thầu" value={selectedProject.contractorRole} />
-                <InfoRow label="Giá trị" value={formatContractValue(selectedProject.contractValueVnd, selectedProject.valueRange)} />
-              </section>
-
-              <section className="public-project-info-section">
-                <h5><Ruler size={14} /> Quy mô thi công</h5>
-                <InfoRow label="Quy mô / phạm vi" value={selectedProject.scale} />
-                <InfoRow label="Diện tích xây dựng" value={selectedProject.constructionArea} />
-                <InfoRow label="Tổng diện tích sàn" value={selectedProject.floorArea} />
-                <InfoRow label="Khoảng giá trị" value={selectedProject.valueRange !== "Chưa cập nhật" ? selectedProject.valueRange : ""} />
-              </section>
-
-              <section className="public-project-info-section">
-                <h5><CalendarDays size={14} /> Tiến độ & quản trị</h5>
-                <InfoRow label="Trạng thái" value={statusLabels[selectedProject.status]} />
-                <InfoRow label="Tiến độ" value={`${selectedProject.progress}%`} />
-                <InfoRow label="Thời gian" value={selectedProject.startDate || selectedProject.endDate ? `${formatDate(selectedProject.startDate)} — ${formatDate(selectedProject.endDate)}` : ""} />
-                <InfoRow label="Mức rủi ro" value={riskLabel(selectedProject.risk)} />
-                <InfoRow label="Nguồn dữ liệu" value={selectedProject.source} />
-                <InfoRow label="Ngày tạo" value={formatDate(selectedProject.createdAt)} />
-                <InfoRow label="Cập nhật gần nhất" value={formatDate(selectedProject.updatedAt)} />
-              </section>
-
-              {relatedTotal > 0 ? <section className="public-project-info-section">
-                <h5><Activity size={14} /> Dữ liệu liên quan</h5>
-                <div className="public-project-related-grid public-project-related-grid-seven">
-                  <RelatedItem icon={<Building2 />} value={related.contracts} label="Hợp đồng" />
-                  <RelatedItem icon={<FileText />} value={related.documents} label="Hồ sơ" />
-                  <RelatedItem icon={<Wrench />} value={related.equipment} label="Thiết bị" />
-                  <RelatedItem icon={<Check />} value={related.tasks} label="Công việc" />
-                  <RelatedItem icon={<ShieldCheck />} value={related.warranties} label="Bảo hành" />
-                  <RelatedItem icon={<CalendarDays />} value={related.dailyReports} label="Nhật ký" />
-                  <RelatedItem icon={<Layers3 />} value={related.bimModels} label="BIM" />
-                </div>
-              </section> : null}
-
-              {selectedProject.description ? <section className="public-project-info-section"><h5><FileText size={14} /> Ghi chú dự án</h5><p className="public-project-description-text">{selectedProject.description}</p></section> : null}
-            </div>
-            <div className="public-project-sidepanel-actions">
-              <a href={mapHref} target="_blank" rel="noreferrer"><MapPin size={14} /> Mở vị trí</a>
-              <button type="button" onClick={() => { setSearch(selectedProject.code); setType("all"); setStatus("all"); }}><Search size={14} /> Chỉ xem dự án này</button>
+              {selectedProject.scale ? <div className="public-project-preview-note"><small>Quy mô / phạm vi</small><p>{selectedProject.scale}</p></div> : null}
+              <div className="public-project-preview-actions">
+                <Link href={`/portfolio/projects/${encodeURIComponent(selectedProject.id)}`} className="is-primary">Xem chi tiết đầy đủ <ChevronRight size={14}/></Link>
+                {mapHref !== "#" ? <a href={mapHref} target="_blank" rel="noreferrer"><MapPin size={14}/> Mở vị trí</a> : null}
+              </div>
             </div>
           </> : <>
-            <div className="public-project-sidepanel-head"><strong>Dự án đang hiển thị</strong><span>{filtered.length}</span></div>
-            <div className="public-project-list-panel">
-              {filtered.slice(0, 80).map((project) => {
+            <div className="public-project-sidepanel-head"><strong>Địa phương & công trình</strong><span>{filtered.length}</span></div>
+            <div className="public-province-ranking">
+              <div className="public-province-ranking-head"><span>Tỉnh/thành có dự án</span><small>theo dữ liệu đang lọc</small></div>
+              {provinceRanking.slice(0, 6).map((province, index) => <button key={province.name} type="button" onClick={() => selectProvince(province.name)}>
+                <em>{index + 1}</em><span><b>{province.name}</b><small>{province.projects.length} dự án · {shortValue(province.totalValue)}</small></span><strong>{province.ongoing ? `${province.averageProgress}%` : <Check size={13}/>}</strong>
+              </button>)}
+            </div>
+            <div className="public-project-list-panel public-project-ranked-list">
+              {rankedProjects.slice(0, 80).map((project, index) => {
                 const visual = projectTypeVisuals[project.type];
-                return <button key={project.id} type="button" onClick={() => selectProject(project)}>
+                return <button key={project.id} type="button" onClick={() => setSelectedId(project.id)}>
+                  <em className="public-project-rank">{index + 1}</em>
                   <i style={{ background: visual.color }} />
-                  <span><b>{project.name}</b><small>{project.province} · {project.type} · {formatContractValue(project.contractValueVnd, project.valueRange)}</small></span>
-                  <em>{project.status === "completed" ? <Check size={13} /> : `${project.progress}%`}</em>
+                  <span><b>{project.name}</b><small>{investorCountryFlag(project.investorCountry)} {project.province} · {project.type} · {formatContractValue(project.contractValueVnd, project.valueRange)}</small><label><u style={{ width: `${project.progress}%`, background: visual.color }}/></label></span>
+                  <strong className={`status-${project.status}`}>{project.status === "completed" ? <Check size={13}/> : `${project.progress}%`}</strong>
                   <ChevronRight size={14} />
                 </button>;
               })}
