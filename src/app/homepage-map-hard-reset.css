@@ -70,7 +70,7 @@ body {
 .public-site > aside[aria-label*="LICOGI"] {
   position: absolute !important;
   top: 82px !important;
-  right: clamp(205px, 16vw, 225px) !important;
+  right: clamp(238px, 18vw, 258px) !important;
   bottom: auto !important;
   left: auto !important;
   width: auto !important;
@@ -97,6 +97,28 @@ body {
   overflow: visible !important;
   object-fit: contain !important;
   transform: none !important;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 255, 255, .72))
+    drop-shadow(0 0 14px rgba(113, 209, 255, .34)) !important;
+}
+
+/* Brighter province borders + restrained glow so boundaries stay readable
+ * on both the bright factory roofs and the darker vegetation. */
+.public-site > aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] [stroke] {
+  stroke: rgba(255, 255, 255, .98) !important;
+  stroke-width: 1.65 !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  vector-effect: non-scaling-stroke !important;
+}
+
+.public-site > aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] path,
+.public-site > aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] polygon,
+.public-site > aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] polyline,
+.public-site > aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] line {
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, .95))
+    drop-shadow(0 0 5px rgba(140, 220, 255, .45));
 }
 
 /* Legend is outside the silhouette but still INSIDE the viewport. The desktop
@@ -135,7 +157,7 @@ body {
 
   .public-site > aside[aria-label*="LICOGI"] {
     top: 82px !important;
-    right: 82px !important;
+    right: 108px !important;
     width: auto !important;
     height: 548px !important;
   }
@@ -152,7 +174,7 @@ body {
 
   .public-site > aside[aria-label*="LICOGI"] {
     top: 86px !important;
-    right: 50px !important;
+    right: 68px !important;
     width: 220px !important;
     height: auto !important;
     aspect-ratio: 375 / 735 !important;
@@ -166,7 +188,7 @@ body {
 
   .public-site > aside[aria-label*="LICOGI"] {
     top: 82px !important;
-    right: 34px !important;
+    right: 46px !important;
     width: 180px !important;
     height: auto !important;
   }
