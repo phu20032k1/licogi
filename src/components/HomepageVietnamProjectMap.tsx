@@ -20,6 +20,7 @@ const LAT_MIN = 8.0;
 const LAT_MAX = 23.6;
 const LNG_MIN = 102.0;
 const LNG_MAX = 109.6;
+const MAP_HREF = "/maps/vietnam-accurate.svg";
 
 const COPY: Record<PublicLanguage, { title: string; status: string; progress: string }> = {
   vi: { title: "Công trình đang thi công", status: "Đang thi công", progress: "Tiến độ" },
@@ -109,8 +110,28 @@ export default function HomepageVietnamProjectMap({ language }: { language: Publ
         </defs>
 
         <image
-          className={styles.mapImage}
-          href="/maps/vietnam-accurate.svg"
+          className={`${styles.mapImage} ${styles.mapImageSoft}`}
+          href={MAP_HREF}
+          x={VIEW_X}
+          y={VIEW_Y}
+          width={VIEW_WIDTH}
+          height={VIEW_HEIGHT}
+          preserveAspectRatio="xMidYMid meet"
+          aria-hidden="true"
+        />
+        <image
+          className={`${styles.mapImage} ${styles.mapImageBase}`}
+          href={MAP_HREF}
+          x={VIEW_X}
+          y={VIEW_Y}
+          width={VIEW_WIDTH}
+          height={VIEW_HEIGHT}
+          preserveAspectRatio="xMidYMid meet"
+          aria-hidden="true"
+        />
+        <image
+          className={`${styles.mapImage} ${styles.mapImageBoost}`}
+          href={MAP_HREF}
           x={VIEW_X}
           y={VIEW_Y}
           width={VIEW_WIDTH}
