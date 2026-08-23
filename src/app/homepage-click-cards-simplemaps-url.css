@@ -1,0 +1,30 @@
+/* Exact Vietnam admin1 SVG supplied by the user. Loaded after v2 overrides. */
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"],
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"] {
+  background-color: #e7f0f3 !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(2) [class*="miniVisual"]::before {
+  display: block !important;
+  inset: 4px 47% 4px 3px !important;
+  opacity: 1 !important;
+  background-color: transparent !important;
+  background-image: url('https://simplemaps.com/static/svg/country/vn/admin1/vn.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: contain !important;
+  filter: none !important;
+}
+
+.public-site main [class*="exploreGrid"] [class*="exploreCard"]:nth-child(5) [class*="miniVisual"]::before {
+  display: block !important;
+  inset: 3px 24% 3px 3px !important;
+  opacity: 1 !important;
+  background-color: transparent !important;
+  background-image: url('https://simplemaps.com/static/svg/country/vn/admin1/vn.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: contain !important;
+  filter: none !important;
+}
