@@ -1,0 +1,275 @@
+/* Final visual/layout correction after the post-merger map rollout.
+ * Loaded last on purpose: several legacy public-map styles still compete for
+ * height/position. Keep this file focused on containment and list visibility.
+ */
+
+/* ---------------- Homepage Vietnam map ---------------- */
+.public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) {
+  top: 12px !important;
+  right: clamp(150px, 12.8vw, 182px) !important;
+  width: clamp(255px, 20vw, 276px) !important;
+  max-height: calc(100% - 24px) !important;
+  overflow: visible !important;
+  z-index: 18 !important;
+}
+
+.public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) > svg {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: calc(100% - 2px) !important;
+  overflow: visible !important;
+}
+
+/* Put the industrial-development legend beside the map, not on top of it. */
+.public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) > div[aria-label] {
+  right: -126px !important;
+  bottom: 18px !important;
+  min-width: 150px !important;
+  max-width: 156px !important;
+  padding: 9px 10px !important;
+  gap: 6px !important;
+  z-index: 25 !important;
+}
+
+/* Keep the project count badge readable without covering the map/legend. */
+.public-site main > #trang-chu [class*="hero"] [class*="mapStat"],
+.public-site main > #trang-chu [class*="hero"] [class*="mapBadge"] {
+  right: 28px !important;
+}
+
+@media (max-width: 1180px) {
+  .public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) {
+    top: 14px !important;
+    right: 118px !important;
+    width: 244px !important;
+  }
+
+  .public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) > div[aria-label] {
+    right: -104px !important;
+    min-width: 138px !important;
+    max-width: 142px !important;
+  }
+}
+
+@media (max-width: 1040px) {
+  .public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) {
+    top: 18px !important;
+    right: 58px !important;
+    width: 218px !important;
+  }
+
+  .public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) > div[aria-label] {
+    display: none !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .public-site main > #trang-chu aside:has(> svg[aria-label^="Bản đồ Việt Nam"]) {
+    top: 22px !important;
+    right: 24px !important;
+    width: 184px !important;
+  }
+}
+
+/* ---------------- Public project map workspace ---------------- */
+.public-project-map-2026 .public-map-workspace {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) clamp(390px, 31vw, 430px) !important;
+  width: 100% !important;
+  height: clamp(540px, 70vh, 650px) !important;
+  min-height: 540px !important;
+  max-height: 650px !important;
+  overflow: hidden !important;
+}
+
+.public-project-map-2026 .public-map-canvas {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+.public-project-map-2026 .public-map-leaflet-size,
+.public-project-map-2026 .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Sidebar must be one controlled flex column. */
+.public-project-map-2026 .public-project-sidepanel-2026 {
+  position: relative !important;
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+
+.public-project-map-2026 .public-project-sidepanel-head {
+  position: relative !important;
+  flex: 0 0 auto !important;
+  min-height: 44px !important;
+  overflow: hidden !important;
+}
+
+/* Province ranking gets a predictable upper section. */
+.public-project-map-2026 .public-province-ranking {
+  position: relative !important;
+  display: block !important;
+  flex: 0 0 246px !important;
+  width: 100% !important;
+  height: 246px !important;
+  min-height: 0 !important;
+  max-height: 246px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+.public-project-map-2026 .public-province-ranking > button {
+  position: relative !important;
+  display: grid !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* The project list fills ALL remaining sidebar height.
+ * height:0 + flex-grow is intentional: it prevents an old intrinsic-height
+ * rule from collapsing the list to a single row. */
+.public-project-map-2026 .public-project-ranked-list,
+.public-project-map-2026 .public-project-list-panel.public-project-ranked-list {
+  position: relative !important;
+  display: block !important;
+  flex: 1 1 0 !important;
+  width: 100% !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin;
+  background: #fff !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button,
+.public-project-map-2026 .public-project-list-panel.public-project-ranked-list > button,
+.public-project-map-2026 .public-project-ranked-list > button:nth-child(n) {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 58px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 9px 10px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button:hover {
+  background: #fff8f3 !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > span b,
+.public-project-map-2026 .public-project-ranked-list > button > span small {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Selected project preview should use the full panel instead of the ranking split. */
+.public-project-map-2026 .public-project-sidepanel-2026:has(.public-project-preview) .public-project-preview {
+  position: relative !important;
+  display: block !important;
+  flex: 1 1 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+/* Keep map controls readable and inside the canvas. */
+.public-project-map-2026 .public-map-overlay-legend,
+.public-project-map-2026 .public-map-overlay-legend-2026 {
+  left: 12px !important;
+  top: 12px !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 184px !important;
+  max-height: calc(100% - 24px) !important;
+  overflow-y: auto !important;
+}
+
+.public-project-map-2026 .public-map-zoom-hint {
+  right: 12px !important;
+  top: 12px !important;
+}
+
+@media (max-width: 1120px) {
+  .public-project-map-2026 .public-map-workspace {
+    grid-template-columns: minmax(0, 1fr) 350px !important;
+    height: 570px !important;
+    min-height: 570px !important;
+  }
+
+  .public-project-map-2026 .public-province-ranking {
+    flex-basis: 230px !important;
+    height: 230px !important;
+    max-height: 230px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .public-project-map-2026 .public-map-workspace {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .public-project-map-2026 .public-map-canvas {
+    height: 470px !important;
+    min-height: 470px !important;
+  }
+
+  .public-project-map-2026 .public-project-sidepanel-2026 {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .public-project-map-2026 .public-province-ranking {
+    flex: none !important;
+    height: auto !important;
+    max-height: 310px !important;
+  }
+
+  .public-project-map-2026 .public-project-ranked-list,
+  .public-project-map-2026 .public-project-list-panel.public-project-ranked-list {
+    flex: none !important;
+    height: auto !important;
+    max-height: 420px !important;
+  }
+}
