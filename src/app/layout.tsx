@@ -29,6 +29,7 @@ import "./homepage-kpi-selector-fix.css";
 import "./homepage-hero-cache-final.css";
 import "./homepage-click-cards-reference.css";
 import "./homepage-click-cards-reference-v2.css";
+import "./homepage-click-cards-simplemaps-url.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
