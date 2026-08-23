@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 76" role="img" aria-label="Con trỏ bàn tay">
+  <g fill="none" stroke="#172033" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path fill="#fff" d="M24.2 7.5c4 0 6.2 2.8 6.2 6.5v20.6l2.8-2.7c3.3-3.1 7.9 1.6 5.2 5.1l1.4-1.4c3.6-3.1 8 1.7 5.5 5.1l1.4-1.2c3.5-2.7 7.4 1.9 5.2 5.3l-8.6 13.6c-3.4 5.4-8.3 8.6-14.4 8.6h-2.6c-4.9 0-9.4-2.5-12-6.7L7.1 48.6c-2.1-3.4-1-7.5 2.2-9.4 2.9-1.7 6.2-.6 8.3 2.3V14c0-3.7 2.5-6.5 6.6-6.5Z"/>
+    <path d="M30.4 34.6v7.9M38.4 37v7.3M45.3 40.7v6.8"/>
+  </g>
+  <path fill="#fff" stroke="#172033" stroke-width="2" d="M18.3 4.5l-5-3.2M15.2 11.2H9.1M33.2 6l4.3-4.4"/>
+</svg>
