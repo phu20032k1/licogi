@@ -1,6 +1,6 @@
 /* Hard reset for the public homepage hero map.
- * This file is intentionally loaded LAST. Do not use :has() here: the hero
- * map exposes a stable aria-label containing LICOGI in every supported locale.
+ * Loaded LAST. The homepage map is a DIRECT CHILD of .public-site, between
+ * the header and <main>; it is NOT a child of #trang-chu.
  */
 
 html,
@@ -10,10 +10,16 @@ body {
   overflow-x: hidden !important;
 }
 
-.public-site,
-.public-site main {
+.public-site {
+  position: relative !important;
   width: 100% !important;
   max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.public-site main {
+  width: 100% !important;
+  max-width: 100% !important;
   overflow-x: hidden !important;
 }
 
@@ -27,15 +33,22 @@ body {
   box-sizing: border-box !important;
 }
 
-/* Stable target: HomepageVietnamProjectMap's aside aria-label always contains LICOGI. */
-.public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+/* REAL production DOM:
+ * .public-site
+ *   > header
+ *   > aside[aria-label="...LICOGI..."]   <-- map
+ *   > main > #trang-chu
+ * Anchor the map below the desktop header and size it from its height so the
+ * whole North-South silhouette is always visible.
+ */
+.public-site > aside[aria-label*="LICOGI"] {
   position: absolute !important;
-  top: 8px !important;
-  right: clamp(164px, 12.5vw, 184px) !important;
-  bottom: 8px !important;
+  top: 82px !important;
+  right: clamp(170px, 13vw, 190px) !important;
+  bottom: auto !important;
   left: auto !important;
   width: auto !important;
-  height: auto !important;
+  height: 574px !important;
   max-width: none !important;
   max-height: none !important;
   aspect-ratio: 375 / 735 !important;
@@ -45,9 +58,10 @@ body {
   transform: none !important;
   z-index: 18 !important;
   box-sizing: border-box !important;
+  pointer-events: auto !important;
 }
 
-.public-site main > #trang-chu aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] {
+.public-site > aside[aria-label*="LICOGI"] > svg[aria-label^="Bản đồ Việt Nam"] {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
@@ -59,11 +73,11 @@ body {
   transform: none !important;
 }
 
-/* Legend sits immediately to the right of the country silhouette, but the
- * reserved right gap above guarantees that it remains inside the viewport. */
-.public-site main > #trang-chu aside[aria-label*="LICOGI"] > div[aria-label] {
+/* Legend is outside the silhouette but still INSIDE the viewport. The desktop
+ * right reservation above is intentionally large enough for this box. */
+.public-site > aside[aria-label*="LICOGI"] > div[aria-label] {
   position: absolute !important;
-  left: calc(100% + 12px) !important;
+  left: calc(100% + 10px) !important;
   right: auto !important;
   bottom: 92px !important;
   width: 148px !important;
@@ -77,9 +91,15 @@ body {
   z-index: 26 !important;
 }
 
-/* Never let a hover summary make the document wider. */
-.public-site main > #trang-chu aside[aria-label*="LICOGI"] > div:not([aria-label]) {
+/* Hover cards must never make the page wider. */
+.public-site > aside[aria-label*="LICOGI"] > div:not([aria-label]) {
   max-width: min(230px, 28vw) !important;
+}
+
+/* Header always stays above the hero/map. */
+.public-site > .public-header {
+  position: relative !important;
+  z-index: 100 !important;
 }
 
 @media (max-width: 1199px) {
@@ -87,13 +107,14 @@ body {
     min-height: 570px !important;
   }
 
-  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
-    top: 10px !important;
+  .public-site > aside[aria-label*="LICOGI"] {
+    top: 82px !important;
     right: 58px !important;
-    bottom: 10px !important;
+    width: auto !important;
+    height: 548px !important;
   }
 
-  .public-site main > #trang-chu aside[aria-label*="LICOGI"] > div[aria-label] {
+  .public-site > aside[aria-label*="LICOGI"] > div[aria-label] {
     display: none !important;
   }
 }
@@ -103,10 +124,9 @@ body {
     min-height: 550px !important;
   }
 
-  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
-    top: 18px !important;
+  .public-site > aside[aria-label*="LICOGI"] {
+    top: 86px !important;
     right: 24px !important;
-    bottom: 18px !important;
     width: 220px !important;
     height: auto !important;
     aspect-ratio: 375 / 735 !important;
@@ -118,17 +138,16 @@ body {
     min-height: initial !important;
   }
 
-  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
-    top: 18px !important;
+  .public-site > aside[aria-label*="LICOGI"] {
+    top: 82px !important;
     right: 18px !important;
-    bottom: auto !important;
     width: 180px !important;
     height: auto !important;
   }
 }
 
 @media (max-width: 760px) {
-  .public-site main > #trang-chu aside[aria-label*="LICOGI"] {
+  .public-site > aside[aria-label*="LICOGI"] {
     display: none !important;
   }
 }
