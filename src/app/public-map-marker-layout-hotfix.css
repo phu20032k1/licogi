@@ -1,0 +1,222 @@
+/* Final containment + marker reset for the 2026 public project map. */
+
+.public-project-map-2026 {
+  max-width: 100%;
+}
+
+.public-project-map-2026 .public-map-workspace {
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 29vw, 390px) !important;
+  height: clamp(540px, calc(100vh - 190px), 690px);
+  min-height: 540px;
+  overflow: hidden;
+}
+
+.public-project-map-2026 .public-map-canvas,
+.public-project-map-2026 .public-project-sidepanel-2026 {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.public-project-map-2026 .public-map-leaflet-size,
+.public-project-map-2026 .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.public-project-map-2026 .public-project-sidepanel-2026 {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #e2e8f0;
+}
+
+.public-project-map-2026 .public-project-sidepanel-head {
+  flex: 0 0 auto;
+}
+
+.public-project-map-2026 .public-province-ranking {
+  flex: 0 0 auto;
+  max-height: 245px;
+  overflow: auto;
+}
+
+.public-project-map-2026 .public-project-ranked-list,
+.public-project-map-2026 .public-project-preview {
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: none !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.public-project-map-2026 .public-map-overlay-legend,
+.public-project-map-2026 .public-map-overlay-legend-2026 {
+  left: 12px !important;
+  top: 12px !important;
+  right: auto !important;
+  max-width: min(210px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+
+.public-project-map-2026 .public-vn-hover-card {
+  top: 12px;
+  width: min(320px, calc(100% - 250px));
+  max-width: calc(100% - 30px);
+}
+
+/* Leaflet divIcon must be visually empty. Only the waterdrop SVG is visible. */
+.public-project-map-2026 .leaflet-marker-icon.licogi-div-icon,
+.public-project-map-2026 .licogi-div-icon,
+.leaflet-marker-icon.licogi-div-icon {
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.public-project-map-2026 .licogi-div-icon::before,
+.public-project-map-2026 .licogi-div-icon::after {
+  display: none !important;
+  content: none !important;
+}
+
+.public-project-map-2026 .licogi-waterdrop-marker {
+  position: relative;
+  width: 44px;
+  height: 56px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform-origin: 50% 100%;
+  transition: transform .16s ease, filter .16s ease;
+}
+
+.public-project-map-2026 .licogi-waterdrop-svg {
+  display: block;
+  width: 44px;
+  height: 56px;
+  overflow: visible;
+  filter: drop-shadow(0 5px 8px rgba(15, 23, 42, .24));
+}
+
+.public-project-map-2026 .licogi-waterdrop-shape {
+  stroke: #fff;
+  stroke-width: 2.25px;
+  vector-effect: non-scaling-stroke;
+}
+
+.public-project-map-2026 .licogi-waterdrop-core {
+  fill: rgba(255,255,255,.96);
+  stroke: rgba(15,23,42,.10);
+  stroke-width: 1px;
+}
+
+.public-project-map-2026 .licogi-waterdrop-label {
+  fill: #172033;
+  font-size: 9.5px;
+  font-weight: 950;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.public-project-map-2026 .licogi-marker-status {
+  right: -1px;
+  top: 2px;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--status-color);
+  box-shadow: 0 3px 7px rgba(15,23,42,.18);
+  font-size: 9px;
+}
+
+.public-project-map-2026 .licogi-waterdrop-marker.status-ongoing .licogi-marker-status {
+  right: 1px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+
+.public-project-map-2026 .licogi-waterdrop-marker.status-ongoing .licogi-marker-status::after {
+  width: 4px;
+  height: 4px;
+}
+
+.public-project-map-2026 .licogi-marker-country {
+  left: -4px;
+  top: 2px;
+  min-width: 18px;
+  height: 18px;
+  border-width: 1.5px;
+  font-size: 9px;
+}
+
+.public-project-map-2026 .licogi-waterdrop-marker:hover {
+  z-index: 999;
+  filter: brightness(1.04);
+}
+
+.public-project-map-2026 .leaflet-tooltip,
+.public-project-map-2026 .leaflet-popup-content-wrapper {
+  max-width: min(340px, calc(100vw - 36px));
+}
+
+@media (max-width: 1100px) {
+  .public-project-map-2026 .public-map-workspace {
+    grid-template-columns: minmax(0, 1fr) 300px !important;
+    height: clamp(510px, calc(100vh - 180px), 640px);
+    min-height: 510px;
+  }
+
+  .public-project-map-2026 .public-vn-hover-card {
+    width: min(285px, calc(100% - 230px));
+  }
+}
+
+@media (max-width: 900px) {
+  .public-project-map-2026 .public-map-workspace {
+    display: block !important;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .public-project-map-2026 .public-map-canvas {
+    height: 470px;
+    min-height: 470px;
+    border-right: 0;
+  }
+
+  .public-project-map-2026 .public-project-sidepanel-2026 {
+    height: auto;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .public-project-map-2026 .public-project-ranked-list,
+  .public-project-map-2026 .public-project-preview,
+  .public-project-map-2026 .public-province-ranking {
+    max-height: 340px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-project-map-2026 .public-map-canvas {
+    height: 430px;
+    min-height: 430px;
+  }
+
+  .public-project-map-2026 .public-map-overlay-legend,
+  .public-project-map-2026 .public-map-overlay-legend-2026 {
+    max-width: 180px;
+    max-height: 250px;
+  }
+}
