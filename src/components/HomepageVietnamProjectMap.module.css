@@ -6,14 +6,20 @@
   background:
     linear-gradient(
       90deg,
-      rgba(255, 255, 255, .98) 0%,
-      rgba(255, 255, 255, .95) 24%,
-      rgba(255, 255, 255, .82) 42%,
-      rgba(255, 255, 255, .48) 58%,
-      rgba(255, 255, 255, .18) 74%,
-      rgba(255, 255, 255, .06) 100%
+      rgba(255, 255, 255, .995) 0%,
+      rgba(255, 255, 255, .975) 24%,
+      rgba(255, 255, 255, .91) 42%,
+      rgba(255, 255, 255, .68) 58%,
+      rgba(255, 255, 255, .34) 74%,
+      rgba(255, 255, 255, .12) 100%
     ),
-    #eef2f5 url("/media/hero-industrial-park.webp") center 49% / cover no-repeat !important;
+    radial-gradient(
+      ellipse at 73% 46%,
+      rgba(244, 249, 252, .28) 0%,
+      rgba(244, 249, 252, .14) 38%,
+      transparent 66%
+    ),
+    #f3f6f8 url("/media/hero-industrial-park.webp") center 49% / cover no-repeat !important;
 }
 
 :global(.public-site main > #trang-chu [class*="heroBg"] > img) {
@@ -30,39 +36,39 @@
   isolation: isolate;
 }
 
-/* Reference look: the Vietnam silhouette itself is white/translucent, not a
-   dark island. Keep only a soft white halo behind it. */
+/* Keep the area around Vietnam bright and airy like the supplied reference. */
 .wrap::before {
   content: "";
   position: absolute;
   z-index: 0;
-  inset: 3% -8% 2% -10%;
+  inset: 1% -12% 0% -14%;
   border-radius: 48% 46% 47% 44%;
   background:
     radial-gradient(
       ellipse at 50% 47%,
-      rgba(255, 255, 255, .16) 0%,
-      rgba(255, 255, 255, .09) 42%,
-      rgba(255, 255, 255, .03) 68%,
+      rgba(255, 255, 255, .40) 0%,
+      rgba(255, 255, 255, .22) 40%,
+      rgba(255, 255, 255, .09) 65%,
       transparent 82%
     );
-  filter: blur(5px);
+  filter: blur(7px);
   pointer-events: none;
 }
 
 .mapGlow {
   position: absolute;
   z-index: -1;
-  inset: -1% -18% -2% -18%;
+  inset: -2% -23% -3% -23%;
   border-radius: 50%;
   background:
     radial-gradient(
       ellipse at 52% 45%,
-      rgba(255, 255, 255, .12) 0%,
-      rgba(255, 255, 255, .055) 44%,
-      transparent 76%
+      rgba(255, 255, 255, .34) 0%,
+      rgba(255, 255, 255, .18) 43%,
+      rgba(255, 255, 255, .06) 65%,
+      transparent 79%
     );
-  filter: blur(8px);
+  filter: blur(10px);
   pointer-events: none;
 }
 
@@ -74,22 +80,42 @@
   height: auto;
   overflow: visible;
   filter:
-    drop-shadow(0 1px 1px rgba(5, 18, 31, .42))
-    drop-shadow(0 7px 16px rgba(5, 18, 31, .18));
+    drop-shadow(0 1px 1px rgba(10, 24, 38, .24))
+    drop-shadow(0 6px 14px rgba(10, 24, 38, .10));
 }
 
-/* The source SVG already uses white fill/strokes. Do not recolor it through a
-   dark contrast filter; screen blending keeps the provinces bright and white
-   exactly like the supplied reference image. */
+/* The source SVG is intentionally translucent white. Rendering it in multiple
+   layers increases the white body and province-line brightness without turning
+   it into a dark silhouette or losing the accurate geometry. */
 .mapImage {
-  opacity: 1;
   pointer-events: none;
   mix-blend-mode: screen;
+}
+
+.mapImageSoft {
+  opacity: .44;
   filter:
-    brightness(1.42)
+    brightness(1.85)
+    contrast(1.02)
+    blur(.35px)
+    drop-shadow(0 0 5px rgba(255, 255, 255, .58));
+}
+
+.mapImageBase {
+  opacity: .92;
+  filter:
+    brightness(1.52)
+    contrast(1.05)
+    drop-shadow(0 1px 1px rgba(12, 28, 42, .18));
+}
+
+.mapImageBoost {
+  opacity: .80;
+  filter:
+    brightness(1.78)
     contrast(1.08)
-    drop-shadow(0 1px 1px rgba(8, 22, 35, .42))
-    drop-shadow(0 0 3px rgba(255, 255, 255, .36));
+    drop-shadow(0 0 2px rgba(255, 255, 255, .78))
+    drop-shadow(0 1px 1px rgba(12, 28, 42, .14));
 }
 
 .pinLink {
@@ -104,9 +130,9 @@
 }
 
 .pinPulse {
-  fill: rgba(255, 91, 31, .34);
-  stroke: rgba(255, 255, 255, .76);
-  stroke-width: 2;
+  fill: rgba(255, 91, 31, .36);
+  stroke: rgba(255, 255, 255, .84);
+  stroke-width: 2.2;
   transform-box: fill-box;
   transform-origin: center;
   animation: licogiMapPulse 1.9s ease-out infinite;
@@ -116,7 +142,7 @@
 .pinCore {
   fill: #ff521b;
   stroke: #fff;
-  stroke-width: 3.7;
+  stroke-width: 3.9;
   transition: r .16s ease, fill .16s ease;
   pointer-events: none;
 }
@@ -135,12 +161,12 @@
   min-width: 190px;
   align-items: center;
   gap: 9px;
-  border: 1px solid rgba(255, 255, 255, .26);
+  border: 1px solid rgba(255, 255, 255, .30);
   border-radius: 12px;
   padding: 9px 11px;
-  background: rgba(8, 27, 45, .79);
+  background: rgba(8, 27, 45, .74);
   color: #fff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, .2);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .18);
   backdrop-filter: blur(10px);
   pointer-events: none;
 }
@@ -149,7 +175,7 @@
   width: 9px;
   height: 9px;
   flex: 0 0 auto;
-  border: 2px solid rgba(255,255,255,.86);
+  border: 2px solid rgba(255,255,255,.90);
   border-radius: 50%;
   background: #ff6527;
   box-shadow: 0 0 0 5px rgba(255, 101, 39, .16);
@@ -169,7 +195,7 @@
 
 .caption span {
   margin-top: 2px;
-  color: #dbe4ec;
+  color: #e7edf2;
   font-size: 8.5px;
   font-weight: 650;
   line-height: 1.2;
@@ -181,12 +207,12 @@
   width: min(230px, 24vw);
   min-width: 175px;
   transform: translate(12px, -50%);
-  border: 1px solid rgba(255, 255, 255, .26);
+  border: 1px solid rgba(255, 255, 255, .28);
   border-radius: 11px;
   padding: 9px 10px;
-  background: rgba(7, 24, 41, .94);
+  background: rgba(7, 24, 41, .92);
   color: #fff;
-  box-shadow: 0 12px 28px rgba(2, 10, 18, .28);
+  box-shadow: 0 12px 28px rgba(2, 10, 18, .24);
   backdrop-filter: blur(12px);
   pointer-events: none;
 }
@@ -209,7 +235,7 @@
 
 .tooltip span {
   margin-top: 3px;
-  color: #d9e1e9;
+  color: #e2e9ef;
   font-size: 8.5px;
   font-weight: 650;
   line-height: 1.25;
@@ -217,7 +243,7 @@
 
 .tooltip small {
   margin-top: 5px;
-  color: #ffb38e;
+  color: #ffc0a1;
   font-size: 8.5px;
   font-weight: 800;
 }
