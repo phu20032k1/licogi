@@ -1,0 +1,493 @@
+/* Final polish for public project catalog + investment overview. Loaded LAST. */
+
+/* =========================================================
+   PROJECT CATALOG HERO — compact, premium, map visible sooner
+   ========================================================= */
+.public-projects-route > .public-projects-hero-tight {
+  min-height: 118px !important;
+  height: auto !important;
+  padding: 18px 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  border-bottom: 1px solid #e6edf3 !important;
+  background: linear-gradient(180deg, #fbfcfd 0%, #f6f8fa 100%) !important;
+}
+
+.public-projects-route > .public-projects-hero-tight .public-container {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 470px) !important;
+  align-items: end !important;
+  gap: 28px !important;
+}
+
+.public-projects-route > .public-projects-hero-tight span {
+  display: inline-block !important;
+  margin: 0 0 5px !important;
+  color: #cc4826 !important;
+  font-size: 10.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: .065em !important;
+  text-transform: uppercase !important;
+}
+
+.public-projects-route > .public-projects-hero-tight h1 {
+  margin: 0 !important;
+  color: #172033 !important;
+  font-size: clamp(31px, 3.1vw, 43px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.045em !important;
+  font-weight: 900 !important;
+}
+
+.public-projects-route > .public-projects-hero-tight p {
+  max-width: 470px !important;
+  margin: 0 0 2px auto !important;
+  color: #69798c !important;
+  font-size: 12.5px !important;
+  font-weight: 650 !important;
+  line-height: 1.55 !important;
+  text-align: right !important;
+}
+
+.public-projects-route .public-projects-page-section {
+  padding-top: 12px !important;
+}
+
+/* =========================================================
+   PROJECT CATALOG — professional workspace shell
+   ========================================================= */
+.public-project-map-2026 {
+  overflow: hidden !important;
+  border: 1px solid #d8e2ea !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, .075) !important;
+}
+
+.public-project-map-2026 .public-map-toolbar {
+  min-height: 64px !important;
+  padding: 14px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  border-bottom: 1px solid #edf2f6 !important;
+  background: linear-gradient(180deg, #fff 0%, #fcfdfe 100%) !important;
+}
+
+.public-project-map-2026 .public-map-toolbar h3 {
+  margin: 0 !important;
+  color: #1a2838 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.015em !important;
+}
+
+.public-project-map-2026 .public-map-toolbar p {
+  margin: 4px 0 0 !important;
+  color: #8a98a9 !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+}
+
+.public-project-map-2026 .public-map-controls {
+  padding: 10px 14px !important;
+  gap: 9px !important;
+  border-bottom: 1px solid #edf2f6 !important;
+  background: #fbfcfd !important;
+}
+
+.public-project-map-2026 .public-map-controls input,
+.public-project-map-2026 .public-map-controls select {
+  min-height: 44px !important;
+  border: 1px solid #d9e2ea !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: #243244 !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.025) !important;
+}
+
+.public-project-map-2026 .public-map-controls input:focus,
+.public-project-map-2026 .public-map-controls select:focus {
+  border-color: #e66a45 !important;
+  box-shadow: 0 0 0 3px rgba(230,106,69,.10) !important;
+  outline: none !important;
+}
+
+.public-project-map-2026 .public-map-stats {
+  min-height: 48px !important;
+  padding: 8px 14px 10px !important;
+  gap: 7px !important;
+  border-bottom: 1px solid #edf2f6 !important;
+  background: #fff !important;
+}
+
+.public-project-map-2026 .public-map-stats button {
+  min-height: 32px !important;
+  border-radius: 9px !important;
+  padding: 6px 10px !important;
+  font-size: 9px !important;
+  font-weight: 850 !important;
+}
+
+.public-project-map-2026 .public-map-workspace {
+  grid-template-columns: minmax(0, 1.56fr) minmax(380px, .84fr) !important;
+  min-height: 610px !important;
+  background: #f8fafc !important;
+}
+
+.public-project-map-2026 .public-map-canvas,
+.public-project-map-2026 .public-map-leaflet-size {
+  min-height: 610px !important;
+}
+
+.public-project-map-2026 .public-map-leaflet-size {
+  height: clamp(610px, 67vh, 735px) !important;
+}
+
+/* sidebar hierarchy */
+.public-project-map-2026 .public-project-sidepanel-2026 {
+  min-width: 0 !important;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%) !important;
+  box-shadow: -10px 0 28px rgba(15,23,42,.035) !important;
+}
+
+.public-project-map-2026 .public-project-sidepanel-2026:not(:has(.public-project-preview)) {
+  display: grid !important;
+  grid-template-rows: 58px minmax(220px, 38%) minmax(0, 1fr) !important;
+  min-height: 0 !important;
+}
+
+.public-project-map-2026 .public-project-sidepanel-head {
+  min-height: 58px !important;
+  padding: 0 16px !important;
+  border-bottom: 1px solid #e7edf2 !important;
+  background: rgba(255,255,255,.98) !important;
+}
+
+.public-project-map-2026 .public-project-sidepanel-head strong {
+  color: #1d2d3f !important;
+  font-size: 14.5px !important;
+  font-weight: 900 !important;
+}
+
+.public-project-map-2026 .public-project-sidepanel-head > span {
+  min-width: 30px !important;
+  height: 30px !important;
+  border-radius: 9px !important;
+  background: #eef3f7 !important;
+  color: #526173 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+
+.public-project-map-2026 .public-province-ranking {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 13px 12px 10px !important;
+  border-bottom: 1px solid #e7edf2 !important;
+  background: #fbfcfd !important;
+}
+
+.public-project-map-2026 .public-province-ranking-head span {
+  color: #26374a !important;
+  font-size: 10.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: .035em !important;
+}
+
+.public-project-map-2026 .public-province-ranking-head small {
+  color: #96a3b3 !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+}
+
+.public-project-map-2026 .public-province-ranking > button {
+  grid-template-columns: 28px minmax(0,1fr) auto !important;
+  gap: 9px !important;
+  margin: 6px 0 0 !important;
+  border: 1px solid #e7edf2 !important;
+  border-radius: 12px !important;
+  padding: 9px 10px !important;
+  background: #fff !important;
+  box-shadow: 0 3px 10px rgba(15,23,42,.025) !important;
+  transition: .18s ease !important;
+}
+
+.public-project-map-2026 .public-province-ranking > button:hover {
+  border-color: #f1c8b9 !important;
+  background: #fffaf7 !important;
+  box-shadow: 0 8px 18px rgba(201,73,36,.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+.public-project-map-2026 .public-province-ranking > button span b {
+  color: #203044 !important;
+  font-size: 10.5px !important;
+  font-weight: 850 !important;
+}
+
+.public-project-map-2026 .public-province-ranking > button span small {
+  margin-top: 3px !important;
+  color: #8d9aaa !important;
+  font-size: 8.5px !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list,
+.public-project-map-2026 .public-project-list-panel.public-project-ranked-list {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding: 9px 10px 14px !important;
+  background: #f8fafc !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #aeb8c4 transparent !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button {
+  grid-template-columns: 28px 5px minmax(0,1fr) auto 16px !important;
+  gap: 9px !important;
+  min-height: 72px !important;
+  margin: 0 0 7px !important;
+  border: 1px solid #e5ebf0 !important;
+  border-radius: 13px !important;
+  padding: 10px 11px !important;
+  background: #fff !important;
+  box-shadow: 0 4px 12px rgba(15,23,42,.025) !important;
+  transition: .18s ease !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button:hover {
+  border-color: #f0c7b7 !important;
+  box-shadow: 0 10px 22px rgba(201,73,36,.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > span b {
+  display: block !important;
+  overflow: hidden !important;
+  color: #203044 !important;
+  font-size: 10.7px !important;
+  font-weight: 850 !important;
+  line-height: 1.4 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > span small {
+  display: block !important;
+  margin-top: 3px !important;
+  overflow: hidden !important;
+  color: #8492a4 !important;
+  font-size: 8.7px !important;
+  line-height: 1.4 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > span label {
+  height: 4px !important;
+  margin-top: 7px !important;
+  border-radius: 999px !important;
+  background: #edf1f5 !important;
+}
+
+.public-project-map-2026 .public-project-ranked-list > button > strong {
+  min-width: 44px !important;
+  min-height: 28px !important;
+  border-radius: 999px !important;
+  font-size: 9.5px !important;
+  font-weight: 900 !important;
+}
+
+/* =========================================================
+   INVESTMENT OVERVIEW — larger, easier-to-read typography
+   ========================================================= */
+.public-investment-route > .public-page-hero-compact {
+  min-height: 128px !important;
+  padding: 24px 0 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  background: linear-gradient(180deg, #fbfcfd 0%, #f5f7fa 100%) !important;
+}
+
+.public-investment-route > .public-page-hero-compact span {
+  color: #c94a27 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.public-investment-route > .public-page-hero-compact h1 {
+  margin: 6px 0 0 !important;
+  color: #172033 !important;
+  font-size: clamp(34px, 3.8vw, 52px) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -.045em !important;
+  font-weight: 900 !important;
+}
+
+.public-investment-route .public-page-section {
+  padding-top: 22px !important;
+}
+
+.public-investment-route .public-overview-kpi-grid {
+  gap: 12px !important;
+}
+
+.public-investment-route .public-overview-kpi-grid > a {
+  min-height: 124px !important;
+  border: 1px solid #dce5ed !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.04) !important;
+  transition: .18s ease !important;
+}
+
+.public-investment-route .public-overview-kpi-grid > a:hover {
+  border-color: #efc3b3 !important;
+  box-shadow: 0 12px 28px rgba(201,73,36,.07) !important;
+  transform: translateY(-2px) !important;
+}
+
+.public-investment-route .public-overview-kpi-grid > a strong {
+  color: #172033 !important;
+  font-size: 29px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.public-investment-route .public-overview-kpi-grid > a span {
+  color: #536377 !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+}
+
+.public-investment-route .public-finance-overview {
+  gap: 12px !important;
+}
+
+.public-investment-route .public-finance-overview article {
+  border-radius: 16px !important;
+  padding: 17px !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.035) !important;
+}
+
+.public-investment-route .public-finance-overview article > span {
+  color: #6b7b8e !important;
+  font-size: 11.5px !important;
+  font-weight: 750 !important;
+}
+
+.public-investment-route .public-finance-overview article > strong {
+  margin-top: 6px !important;
+  color: #172033 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+}
+
+.public-investment-route .public-page-block-head span {
+  color: #c94a27 !important;
+  font-size: 10.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: .055em !important;
+  text-transform: uppercase !important;
+}
+
+.public-investment-route .public-page-block-head h2 {
+  margin-top: 5px !important;
+  color: #172033 !important;
+  font-size: 24px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.025em !important;
+}
+
+.public-investment-route .public-overview-status-panel,
+.public-investment-route .public-overview-top-projects {
+  border-radius: 18px !important;
+  border: 1px solid #dce5ed !important;
+  box-shadow: 0 10px 28px rgba(15,23,42,.04) !important;
+}
+
+.public-investment-route .public-overview-status-panel > a span,
+.public-investment-route .public-overview-status-panel > a strong {
+  font-size: 12px !important;
+}
+
+.public-investment-route .public-overview-project-table a span strong {
+  color: #233247 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.public-investment-route .public-overview-project-table a span small {
+  color: #8794a5 !important;
+  font-size: 10px !important;
+}
+
+.public-investment-route .public-overview-project-table a em {
+  color: #c94a27 !important;
+  font-size: 10.5px !important;
+  font-weight: 850 !important;
+}
+
+@media (max-width: 980px) {
+  .public-projects-route > .public-projects-hero-tight .public-container {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .public-projects-route > .public-projects-hero-tight p {
+    max-width: none !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  .public-project-map-2026 .public-map-workspace {
+    display: block !important;
+  }
+
+  .public-project-map-2026 .public-map-canvas,
+  .public-project-map-2026 .public-map-leaflet-size {
+    min-height: 520px !important;
+    height: 520px !important;
+  }
+
+  .public-project-map-2026 .public-project-sidepanel-2026:not(:has(.public-project-preview)) {
+    display: block !important;
+  }
+
+  .public-project-map-2026 .public-project-ranked-list {
+    max-height: 440px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .public-projects-route > .public-projects-hero-tight {
+    min-height: 96px !important;
+    padding: 14px 0 12px !important;
+  }
+
+  .public-projects-route > .public-projects-hero-tight h1 {
+    font-size: 29px !important;
+  }
+
+  .public-projects-route > .public-projects-hero-tight p {
+    display: none !important;
+  }
+
+  .public-investment-route > .public-page-hero-compact h1 {
+    font-size: 31px !important;
+  }
+
+  .public-investment-route .public-overview-kpi-grid > a strong {
+    font-size: 25px !important;
+  }
+}
