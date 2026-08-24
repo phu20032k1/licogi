@@ -34,7 +34,7 @@ export default function PublicOverviewPage() {
   ];
 
   return <PublicSiteFrame>
-    <main className="public-page-main">
+    <main className="public-page-main public-investment-route">
       <section className="public-page-hero public-page-hero-compact">
         <div className="public-container">
           <span>Tổng quan dữ liệu</span>
