@@ -15,7 +15,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [checked, setChecked] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname === "/index" ? "/" : rawPathname || "";
+  const pathnamePending = pathname.length === 0;
   const router = useRouter();
   const isPublicPage = pathname === "/" || pathname === "/portfolio" || pathname.startsWith("/portfolio/");
   const isAuthPage = pathname === "/login" || pathname === "/register";
@@ -23,6 +25,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const sync = (source: SyncSource = "initial") => {
+      // During static/PPR rendering Next can temporarily expose no pathname.
+      // Do not turn that transient state into an auth loading screen: middleware
+      // remains the request-level guard for private URLs.
+      if (pathnamePending) {
+        setChecked(true);
+        return;
+      }
+
       if (isPublicPage) {
         setChecked(true);
         setLoggedIn(false);
@@ -67,9 +77,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       window.removeEventListener("licogi-auth-updated", onLocalAuth);
       window.removeEventListener("storage", onStorage);
     };
-  }, [isPublicPage, isAuthPage, isChangePasswordPage, pathname, router]);
+  }, [isPublicPage, isAuthPage, isChangePasswordPage, pathname, pathnamePending, router]);
 
-  if (isPublicPage || isAuthPage || isChangePasswordPage) return <>{children}</>;
+  // Public/static content must be renderable before client hydration completes.
+  // This is especially important on iOS Safari and slower Android devices.
+  if (pathnamePending || isPublicPage || isAuthPage || isChangePasswordPage) return <>{children}</>;
 
   if (!checked || !loggedIn) {
     return (
