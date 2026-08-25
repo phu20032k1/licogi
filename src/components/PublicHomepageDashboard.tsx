@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -81,26 +80,7 @@ function classifyCountry(value?: string) {
 }
 
 function AnimatedNumber({ value, format }: { value: number; format?: (value: number) => string }) {
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplay(value);
-      return;
-    }
-    const started = performance.now();
-    const duration = 780;
-    let frame = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - started) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(value * eased);
-      if (t < 1) frame = window.requestAnimationFrame(tick);
-    };
-    frame = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frame);
-  }, [value]);
-  return <>{format ? format(display) : Math.round(display)}</>;
+  return <>{format ? format(value) : Math.round(value)}</>;
 }
 
 function MiniPostMergerMap({ activeProvinces, pointMode = false }: { activeProvinces: Set<string>; pointMode?: boolean }) {
