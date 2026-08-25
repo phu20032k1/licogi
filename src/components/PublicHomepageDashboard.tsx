@@ -46,7 +46,7 @@ const COPY = {
     line1: "가치를 건설하고", line2: "미래를 창조합니다", lead: "산업·민간·기술 인프라 프로젝트를 위한 전문 종합건설사입니다.", completed: "완료 프로젝트", ongoing: "시공 중 프로젝트", provinces: "진출 성·도시", countries: "고객 국가", value: "프로젝트 가치(십억 VND)", investors: "투자자와 함께", explore: "프로젝트 보기", map: "전국 지도 보기", national: "전국 프로젝트", clickTitle: "프로젝트 데이터 조회", click: "조회", metric: "요약 지표", city: "지역별", type: "분야별", customer: "투자자 국가별", point: "프로젝트 위치", updated: "통합 프로젝트 데이터", metricDesc: "해당 프로젝트 목록 보기", cityDesc: "지역별 프로젝트 보기", typeDesc: "프로젝트 분야별 필터", customerDesc: "투자자 국가별 보기", pointDesc: "프로젝트 위치 및 상세 보기", updatedDesc: "프로젝트 데이터를 통합 관리", experience: "20년+", experienceSub: "경험", commitment: "100% 약속", commitmentSub: "공정 · 품질 · 안전", engineers: "500명+", engineersSub: "전문 엔지니어", standards: "국제 표준", standardsSub: "ISO 9001, 14001, 45001", equipment: "현대 장비", equipmentSub: "첨단 시공 기술",
   },
   zh: {
-    line1: "构筑价值", line2: "共创未来", lead: "面向工业、民用及技术基础设施项目的专业建筑总承包商。", completed: "已完工项目", ongoing: "在建项目", provinces: "已覆盖省市", countries: "客户国家/地区", value: "项目价值（十亿越南盾）", investors: "与投资者同行", explore: "探索项目", map: "查看全国地图", national: "全国项目", clickTitle: "查询工程项目数据", click: "查询", metric: "总体数据", city: "按地区", type: "按工程类型", customer: "按投资方国家", point: "项目位置", updated: "集中管理的项目数据", metricDesc: "查看对应项目列表", cityDesc: "查看当地项目", typeDesc: "按项目类型筛选", customerDesc: "按投资方国家查看", pointDesc: "查看项目位置和详情", updatedDesc: "项目数据集中管理与更新", experience: "20+年", experienceSub: "经验", commitment: "100%承诺", commitmentSub: "进度 · 质量 · 安全", engineers: "500+工程师", engineersSub: "专业团队", standards: "国际标准", standardsSub: "ISO 9001, 14001, 45001", equipment: "现代设备", equipmentSub: "先进施工技术",
+    line1: "构筑价值", line2: "共创未来", lead: "面向工业、民用及技术基础设施项目的专业建筑总承包商。", completed: "已完工项目", ongoing: "在建项目", provinces: "已覆盖省市", countries: "客户国家/地区", value: "项目价值（十亿越南盾）", investors: "与投资者同行", explore: "探索项目", map: "查看全国地图", national: "全国项目", clickTitle: "查询工程项目数据", click: "查询", metric: "总体数据", city: "按地区", type: "按工程类型", customer: "按投资方国家", point: "项目位置", updated: "集中管理的项目数据", metricDesc: "查看对应项目列表", cityDesc: "查看当地项目", typeDesc: "按项目类型筛选", customerDesc: "按投资方国家查看", pointDesc: "查看项目位置和详情", updatedDesc: "项目数据集中管理与更新", experience: "20+年", experienceSub: "经验", commitment: "100%承诺", commitmentSub: "进度 · 品质 · 安全", engineers: "500+工程师", engineersSub: "专业团队", standards: "国际标准", standardsSub: "ISO 9001, 14001, 45001", equipment: "现代设备", equipmentSub: "先进施工技术",
   },
 } as const;
 
@@ -56,6 +56,14 @@ const COUNTRY_LABELS: Record<PublicLanguage, Record<string, string>> = {
   ja: { japan: "日本", korea: "韓国", china: "中国", taiwan: "台湾", vietnam: "ベトナム", other: "その他" },
   ko: { japan: "일본", korea: "한국", china: "중국", taiwan: "대만", vietnam: "베트남", other: "기타" },
   zh: { japan: "日本", korea: "韩国", china: "中国", taiwan: "台湾", vietnam: "越南", other: "其他" },
+};
+
+const SECTOR_METRIC_LABELS: Record<PublicLanguage, string> = {
+  vi: "Lĩnh vực thi công",
+  en: "Construction sectors",
+  ja: "施工分野",
+  ko: "시공 분야",
+  zh: "施工领域",
 };
 
 const countryDefs = [
@@ -103,14 +111,20 @@ export default function PublicHomepageDashboard() {
   const provinceNames = projects.flatMap((project) => normalizeProvinceNames(project.province));
   const provinces = new Set(provinceNames.filter((province) => province !== "Đang cập nhật"));
   const customerCountries = new Set(projects.map((project) => classifyCountry(project.investorCountry)).filter(Boolean));
+  const sectors = new Set(projects.map((project) => project.type).filter(Boolean));
+  const hasInvestorCountryData = customerCountries.size > 0;
   const totalBillions = sumProjectMoney(projects) / 1_000_000_000;
   const numberFormat = new Intl.NumberFormat(localeByLanguage[language], { maximumFractionDigits: totalBillions >= 100 ? 0 : 1 });
+
+  const reachMetric = hasInvestorCountryData
+    ? { icon: Globe2, value: customerCountries.size, label: t.countries, href: "/portfolio/projects", format: (value: number) => String(Math.round(value)) }
+    : { icon: Factory, value: sectors.size, label: SECTOR_METRIC_LABELS[language], href: "/portfolio/capabilities", format: (value: number) => String(Math.round(value)) };
 
   const metrics = [
     { icon: Building2, value: completed.length, label: t.completed, href: "/portfolio/projects?status=completed", format: (value: number) => String(Math.round(value)) },
     { icon: Construction, value: ongoing.length, label: t.ongoing, href: "/portfolio/projects?status=ongoing", format: (value: number) => String(Math.round(value)) },
     { icon: MapPin, value: provinces.size, label: t.provinces, href: "/portfolio/locations", format: (value: number) => String(Math.round(value)) },
-    { icon: Globe2, value: customerCountries.size, label: t.countries, href: "/portfolio/projects", format: (value: number) => String(Math.round(value)) },
+    reachMetric,
     { icon: Coins, value: totalBillions, label: t.value, href: "/portfolio/overview", format: (value: number) => numberFormat.format(value) },
   ];
 
@@ -124,7 +138,7 @@ export default function PublicHomepageDashboard() {
     { key: "metric", title: `${t.click} ${t.metric}`, desc: t.metricDesc, href: "/portfolio/projects", visual: <div className={styles.miniNumbers}><span>{completed.length}</span><span>{ongoing.length}</span><span>{provinces.size}</span></div> },
     { key: "city", title: `${t.click} ${t.city}`, desc: t.cityDesc, href: "/portfolio/locations", visual: <><MiniPostMergerMap activeProvinces={provinces}/><div className={styles.miniList}>{provinceItems.slice(0, 5).map((item) => <span key={item.province}>{item.province}<b>{item.count}</b></span>)}</div></> },
     { key: "type", title: `${t.click} ${t.type}`, desc: t.typeDesc, href: "/portfolio/capabilities", visual: <div className={styles.miniIcons}><span><Factory size={19}/>CN</span><span><Home size={19}/>DD</span><span><Route size={19}/>HT</span><span><Construction size={19}/>GT</span><span><Droplets size={19}/>TL</span><span><Zap size={19}/>NL</span></div> },
-    { key: "customer", title: `${t.click} ${t.customer}`, desc: t.customerDesc, href: "/portfolio/projects?q=Nhật%20Bản", visual: <div className={styles.miniList}>{countryCounts.slice(0, 5).map((country) => <span key={country.key}>{country.flag} {labels[country.key]}<b>{country.count}</b></span>)}</div> },
+    ...(hasInvestorCountryData ? [{ key: "customer", title: `${t.click} ${t.customer}`, desc: t.customerDesc, href: "/portfolio/projects?q=Nhật%20Bản", visual: <div className={styles.miniList}>{countryCounts.slice(0, 5).map((country) => <span key={country.key}>{country.flag} {labels[country.key]}<b>{country.count}</b></span>)}</div> }] : []),
     { key: "point", title: `${t.click} ${t.point}`, desc: t.pointDesc, href: "/portfolio/projects", visual: <><MiniPostMergerMap activeProvinces={provinces} pointMode/><MapPin size={38} color="#c2410c"/></> },
     { key: "updated", title: t.updated, desc: t.updatedDesc, href: "/portfolio/overview", visual: <RefreshCw size={52} className={styles.refreshIcon}/> },
   ];
@@ -143,13 +157,13 @@ export default function PublicHomepageDashboard() {
                 return <Link key={metric.label} href={metric.href} className={styles.kpi}><span className={styles.kpiIcon}><Icon size={24}/></span><strong>{loading && projects.length === 0 ? "—" : <AnimatedNumber value={metric.value} format={metric.format}/>}</strong><span>{metric.label}</span></Link>;
               })}
             </div>
-            <div className={styles.investors}>
+            {hasInvestorCountryData ? <div className={styles.investors}>
               <span className={styles.investorsTitle}>{t.investors}</span>
               <div className={styles.countryGrid}>
-                {countryCounts.map((country) => <Link key={country.key} href={`/portfolio/projects?q=${encodeURIComponent(country.query)}`} className={styles.country} title={`${labels[country.key]} · ${country.count}`}><b>{country.flag}</b><span>{labels[country.key]}</span></Link>)}
-                <Link href="/portfolio/projects" className={styles.country} title={`${labels.other} · ${otherCount}`}><b>•••</b><span>{labels.other}</span></Link>
+                {countryCounts.filter((country) => country.count > 0).map((country) => <Link key={country.key} href={`/portfolio/projects?q=${encodeURIComponent(country.query)}`} className={styles.country} title={`${labels[country.key]} · ${country.count}`}><b>{country.flag}</b><span>{labels[country.key]}</span></Link>)}
+                {otherCount > 0 ? <Link href="/portfolio/projects" className={styles.country} title={`${labels.other} · ${otherCount}`}><b>•••</b><span>{labels.other}</span></Link> : null}
               </div>
-            </div>
+            </div> : null}
           </div>
           <div className={styles.actions}><Link href="/portfolio/projects" className={styles.primaryButton}>{t.explore}<ArrowRight size={15}/></Link><Link href="/portfolio/locations" className={styles.secondaryButton}><Map size={15}/>{t.map}<ArrowRight size={14}/></Link></div>
           {error && projects.length === 0 ? <div className={styles.error}>{error}</div> : null}
