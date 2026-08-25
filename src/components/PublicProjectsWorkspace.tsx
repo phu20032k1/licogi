@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 import MobilePublicProjects from "./MobilePublicProjects";
 
@@ -8,6 +7,12 @@ type DesktopProps = {
   status: string;
   type: string;
   search: string;
+};
+
+type Props = {
+  initialStatus?: string;
+  initialType?: string;
+  initialSearch?: string;
 };
 
 function DesktopProjectDirectory({ status, type, search }: DesktopProps) {
@@ -52,18 +57,13 @@ function DesktopProjectDirectory({ status, type, search }: DesktopProps) {
   return <MapComponent />;
 }
 
-export default function PublicProjectsWorkspace() {
-  const searchParams = useSearchParams();
-  const status = searchParams.get("status") || "all";
-  const type = searchParams.get("type") || "all";
-  const search = searchParams.get("q") || "";
-
+export default function PublicProjectsWorkspace({ initialStatus = "all", initialType = "all", initialSearch = "" }: Props) {
   return <>
     <div className="phone-project-directory-only">
-      <MobilePublicProjects initialStatus={status} initialType={type} initialSearch={search} />
+      <MobilePublicProjects initialStatus={initialStatus} initialType={initialType} initialSearch={initialSearch} />
     </div>
     <div className="desktop-project-directory-only">
-      <DesktopProjectDirectory status={status} type={type} search={search} />
+      <DesktopProjectDirectory status={initialStatus} type={initialType} search={initialSearch} />
     </div>
   </>;
 }
