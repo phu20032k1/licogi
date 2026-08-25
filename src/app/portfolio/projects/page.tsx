@@ -1,11 +1,27 @@
-import { Suspense } from "react";
 import PublicProjectsWorkspace from "../../../components/PublicProjectsWorkspace";
 import { PublicProjectBootstrapProvider } from "../../../components/PublicProjectBootstrapContext";
 import PublicSiteFrame from "../../../components/PublicSiteFrame";
 import { getPublicMapProjects } from "../../../lib/publicProjectMapData";
 import type { PublicProjectRecord } from "../../../lib/publicProject";
 
-export default async function PublicProjectsPage() {
+type Props = {
+  searchParams: Promise<{
+    status?: string | string[];
+    type?: string | string[];
+    q?: string | string[];
+  }>;
+};
+
+function firstParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] || "" : value || "";
+}
+
+export default async function PublicProjectsPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const initialStatus = firstParam(params.status) || "all";
+  const initialType = firstParam(params.type) || "all";
+  const initialSearch = firstParam(params.q);
+
   let initialProjects: PublicProjectRecord[] = [];
   try {
     initialProjects = await getPublicMapProjects();
@@ -24,9 +40,7 @@ export default async function PublicProjectsPage() {
       <section className="public-page-section public-projects-page-section">
         <div className="public-container">
           <PublicProjectBootstrapProvider initialProjects={initialProjects}>
-            <Suspense fallback={<div className="public-page-loading">Đang khởi tạo danh mục dự án...</div>}>
-              <PublicProjectsWorkspace />
-            </Suspense>
+            <PublicProjectsWorkspace initialStatus={initialStatus} initialType={initialType} initialSearch={initialSearch} />
           </PublicProjectBootstrapProvider>
         </div>
       </section>
