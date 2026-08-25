@@ -19,10 +19,10 @@ const mapboxAttribution =
 
 export const siteConfig = {
   name: "LICOGI 18.3",
-  productName: "LICOGI 18.3 Industrial Construction OS",
+  productName: "LICOGI 18.3",
   description:
-    "Nền tảng năng lực và hệ điều hành quản trị số LICOGI 18.3: dự án, GIS, dữ liệu, hồ sơ, vận hành và báo cáo trên một hệ thống thống nhất.",
-  url: normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+    "Hồ sơ năng lực số LICOGI 18.3: danh mục công trình, địa bàn triển khai, năng lực thi công và dữ liệu dự án trên một nền tảng thống nhất.",
+  url: normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL || "https://licogi.vercel.app"),
   locale: "vi_VN",
   contact: {
     phone: "+842213942550",
