@@ -7,7 +7,6 @@ import {
   BarChart3,
   Building2,
   CheckCircle2,
-  Database,
   Factory,
   Flag,
   Globe2,
@@ -24,9 +23,9 @@ type MetricFocus = "all" | "province" | "country" | "type" | "scale" | "complete
 type GroupItem = { key: string; label: string; count: number; percent: number };
 
 const modeLabels: Record<ViewMode, string> = {
-  province: "Tỉnh / thành",
-  country: "Quốc gia dự án",
-  investorCountry: "Quốc gia chủ đầu tư",
+  province: "Địa bàn",
+  country: "Quốc gia triển khai",
+  investorCountry: "Thị trường chủ đầu tư",
   type: "Lĩnh vực",
   status: "Trạng thái",
 };
@@ -61,7 +60,7 @@ function groupRows(projects: PublicProjectRecord[], mode: ViewMode): GroupItem[]
 }
 
 function formatPortfolioValue(value: number) {
-  if (!value) return "Chưa ghi nhận";
+  if (!value) return "Đang cập nhật";
   if (value >= 1_000_000_000_000) return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(value / 1_000_000_000_000)} nghìn tỷ`;
   if (value >= 1_000_000_000) return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(value / 1_000_000_000)} tỷ`;
   return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(value);
@@ -87,9 +86,7 @@ export default function PublicCapabilityExplorer() {
     const knownScale = projects.filter((project) => project.scale && project.scale.trim()).length;
     const knownValue = projects.filter((project) => (project.contractValueVnd && project.contractValueVnd > 0) || (project.valueRange && project.valueRange !== "Chưa cập nhật")).length;
     const exactContractValue = projects.reduce((sum, project) => sum + (typeof project.contractValueVnd === "number" && project.contractValueVnd > 0 ? project.contractValueVnd : 0), 0);
-    const completeness = total ? Math.round(projects.reduce((sum, project) => sum + Number(project.dataCompleteness || 0), 0) / total) : 0;
-    const health = total ? Math.round(projects.reduce((sum, project) => sum + Number(project.healthScore || 0), 0) / total) : 0;
-    return { total, completed, ongoing, warranty, provinces, countries, investorCountries, sectors, averageProgress, knownScale, knownValue, exactContractValue, completeness, health };
+    return { total, completed, ongoing, warranty, provinces, countries, investorCountries, sectors, averageProgress, knownScale, knownValue, exactContractValue };
   }, [projects]);
 
   const groups = useMemo(() => groupRows(projects, mode), [mode, projects]);
@@ -151,68 +148,69 @@ export default function PublicCapabilityExplorer() {
   }
 
   const coveragePercent = Math.min(100, Math.round((metrics.provinces / currentVietnamProvinces.length) * 100));
+  const visibleModes = (Object.keys(modeLabels) as ViewMode[]).filter((item) => item !== "investorCountry" || metrics.investorCountries > 0);
 
   return <section id="quy-mo" className="public-section public-scale-section">
     <div className="public-container">
       <div className="public-section-heading public-scale-heading">
         <div>
-          <span className="public-kicker"><Target size={14}/> Quy mô hoạt động</span>
-          <h2>Năng lực theo dữ liệu dự án</h2>
+          <span className="public-kicker"><Target size={14}/> Năng lực thi công</span>
+          <h2>Năng lực được chứng minh qua công trình thực tế</h2>
         </div>
         <div className="public-scale-heading-summary">
-          <span><Database size={15}/><b>{metrics.completeness}%</b> dữ liệu đầy đủ</span>
-          <span><BarChart3 size={15}/><b>{metrics.averageProgress}%</b> tiến độ bình quân</span>
-          <span><Banknote size={15}/><b>{formatPortfolioValue(metrics.exactContractValue)}</b> hợp đồng ghi nhận</span>
+          <span><Building2 size={15}/><b>{metrics.total}</b> công trình tiêu biểu</span>
+          <span><BarChart3 size={15}/><b>{metrics.averageProgress}%</b> tiến độ danh mục</span>
+          <span><Banknote size={15}/><b>{formatPortfolioValue(metrics.exactContractValue)}</b> tổng giá trị hợp đồng</span>
         </div>
       </div>
 
       <div className="public-scale-kpis public-scale-kpis-interactive" aria-live="polite">
         <button type="button" onClick={() => focusKpi("all")} className={metricFocus === "all" ? "is-active" : ""}>
-          <span><Building2/></span><strong>{metrics.total}</strong><b>Dự án trong dữ liệu</b>
-          <small>{metrics.completed} hoàn thành · {metrics.ongoing} thi công · {metrics.warranty} bảo hành</small>
+          <span><Building2/></span><strong>{metrics.total}</strong><b>Danh mục công trình</b>
+          <small>{metrics.completed} hoàn thành · {metrics.ongoing} đang thi công{metrics.warranty ? ` · ${metrics.warranty} bảo hành` : ""}</small>
           <em><i style={{ width: `${metrics.total ? Math.round((metrics.completed / metrics.total) * 100) : 0}%` }}/></em>
-          <label>Xem danh mục <ArrowRight size={13}/></label>
+          <label>Khám phá công trình <ArrowRight size={13}/></label>
         </button>
         <button type="button" onClick={() => focusKpi("province")} className={metricFocus === "province" ? "is-active" : ""}>
-          <span><MapPin/></span><strong>{metrics.provinces}<small>/{currentVietnamProvinces.length}</small></strong><b>Tỉnh / thành có dự án</b>
-          <small>{coveragePercent}% phạm vi hành chính cấp tỉnh hiện hành</small>
+          <span><MapPin/></span><strong>{metrics.provinces}<small>/{currentVietnamProvinces.length}</small></strong><b>Địa bàn triển khai</b>
+          <small>{metrics.provinces} tỉnh / thành đã ghi dấu công trình</small>
           <em><i style={{ width: `${coveragePercent}%` }}/></em>
           <label>Xem theo địa phương <ArrowRight size={13}/></label>
         </button>
         <button type="button" onClick={() => focusKpi("country")} className={metricFocus === "country" ? "is-active" : ""}>
-          <span><Globe2/></span><strong>{metrics.countries}</strong><b>Quốc gia dự án</b>
-          <small>{metrics.investorCountries} quốc gia chủ đầu tư đã ghi nhận</small>
+          <span><Globe2/></span><strong>{metrics.countries}</strong><b>Phạm vi triển khai</b>
+          <small>Hồ sơ công trình theo quốc gia và thị trường</small>
           <em><i style={{ width: `${Math.min(100, metrics.countries * 16)}%` }}/></em>
-          <label>Xem phạm vi quốc gia <ArrowRight size={13}/></label>
+          <label>Xem phạm vi hoạt động <ArrowRight size={13}/></label>
         </button>
         <button type="button" onClick={() => focusKpi("type")} className={metricFocus === "type" ? "is-active" : ""}>
-          <span><Factory/></span><strong>{metrics.sectors}</strong><b>Nhóm lĩnh vực thi công</b>
-          <small>{metrics.averageProgress}% tiến độ bình quân danh mục</small>
+          <span><Factory/></span><strong>{metrics.sectors}</strong><b>Lĩnh vực thi công</b>
+          <small>{metrics.sectors} nhóm năng lực chính trong danh mục</small>
           <em><i style={{ width: `${metrics.averageProgress}%` }}/></em>
           <label>Xem cơ cấu lĩnh vực <ArrowRight size={13}/></label>
         </button>
         <button type="button" onClick={() => focusKpi("scale")} className={metricFocus === "scale" ? "is-active" : ""}>
-          <span><Layers3/></span><strong>{metrics.knownScale}</strong><b>Dự án có dữ liệu quy mô</b>
-          <small>{metrics.knownValue} dự án có giá trị hợp đồng / dải giá trị</small>
+          <span><Layers3/></span><strong>{metrics.knownScale}</strong><b>Quy mô công trình</b>
+          <small>{metrics.knownValue} công trình có thông tin giá trị hợp đồng</small>
           <em><i style={{ width: `${metrics.total ? Math.round((metrics.knownScale / metrics.total) * 100) : 0}%` }}/></em>
           <label>Xem hồ sơ quy mô <ArrowRight size={13}/></label>
         </button>
         <button type="button" onClick={() => focusKpi("completed")} className={metricFocus === "completed" ? "is-active" : ""}>
-          <span><CheckCircle2/></span><strong>{metrics.completed}</strong><b>Dự án đã hoàn thành</b>
-          <small>{metrics.total ? `${Math.round((metrics.completed / metrics.total) * 100)}% tổng danh mục` : "Chưa có dữ liệu"} · sức khỏe {metrics.health}/100</small>
+          <span><CheckCircle2/></span><strong>{metrics.completed}</strong><b>Công trình đã hoàn thành</b>
+          <small>{metrics.total ? `${Math.round((metrics.completed / metrics.total) * 100)}% tổng danh mục đã hoàn thành` : "Danh mục đang được cập nhật"}</small>
           <em><i style={{ width: `${metrics.total ? Math.round((metrics.completed / metrics.total) * 100) : 0}%` }}/></em>
-          <label>Xem dự án hoàn thành <ArrowRight size={13}/></label>
+          <label>Xem công trình hoàn thành <ArrowRight size={13}/></label>
         </button>
       </div>
 
       <div ref={explorerRef} className="public-scale-explorer public-scale-explorer-pro">
         <div className="public-scale-groups">
           <div className="public-scale-tabs">
-            {(Object.keys(modeLabels) as ViewMode[]).map((item) => <button key={item} type="button" onClick={() => switchMode(item)} className={mode === item && metricFocus !== "scale" ? "is-active" : ""}>{modeLabels[item]}</button>)}
+            {visibleModes.map((item) => <button key={item} type="button" onClick={() => switchMode(item)} className={mode === item && metricFocus !== "scale" ? "is-active" : ""}>{modeLabels[item]}</button>)}
           </div>
           <div className="public-scale-list">
             {groups.length ? groups.map((item) => <button key={item.key} type="button" onClick={() => { setMetricFocus("all"); setActiveKey(item.key); }} className={activeKey === item.key ? "is-active" : ""}>
-              <span><b>{item.label}</b><small>{item.count} dự án</small></span>
+              <span><b>{item.label}</b><small>{item.count} công trình</small></span>
               <em><i style={{ width: `${item.percent}%` }}/></em>
               <strong>{item.percent}%</strong>
             </button>) : <p className="public-scale-empty">Danh mục đang được cập nhật.</p>}
@@ -222,17 +220,17 @@ export default function PublicCapabilityExplorer() {
         <div className="public-scale-projects">
           <div className="public-scale-projects-head">
             <div>
-              <span>{metricFocus === "scale" ? "Hồ sơ quy mô" : activeKey ? modeLabels[mode] : "Danh mục dự án"}</span>
-              <h3>{metricFocus === "scale" ? "Dự án có thông tin quy mô / giá trị" : activeKey ? (mode === "status" ? statusLabel(activeKey) : activeKey) : "Dự án trong dữ liệu"}</h3>
-              <p>{selectedProjects.length}{selectedProjects.length === 30 ? "+" : ""} dự án · chọn một dòng để xem trên bản đồ.</p>
+              <span>{metricFocus === "scale" ? "Hồ sơ quy mô" : activeKey ? modeLabels[mode] : "Công trình tiêu biểu"}</span>
+              <h3>{metricFocus === "scale" ? "Công trình có thông tin quy mô và giá trị" : activeKey ? (mode === "status" ? statusLabel(activeKey) : activeKey) : "Dấu ấn thi công LICOGI 18.3"}</h3>
+              <p>{selectedProjects.length}{selectedProjects.length === 30 ? "+" : ""} công trình trong nhóm đang xem.</p>
             </div>
-            {(activeKey || metricFocus === "scale") ? <button type="button" onClick={showGroupOnMap}>Mở bản đồ <ArrowRight size={15}/></button> : null}
+            {(activeKey || metricFocus === "scale") ? <button type="button" onClick={showGroupOnMap}>Xem trên bản đồ <ArrowRight size={15}/></button> : null}
           </div>
 
           <div className="public-scale-project-list">
             {selectedProjects.map((project) => <button key={project.id} type="button" onClick={() => mapFilter({ search: project.code, projectId: project.id })}>
               <span className="public-scale-project-code">{project.code}</span>
-              <span className="public-scale-project-main"><b>{project.name}</b><small>{project.province}{project.legacyProvince ? ` · địa bàn trước sắp xếp: ${project.legacyProvince}` : ""} · {project.type}</small></span>
+              <span className="public-scale-project-main"><b>{project.name}</b><small>{project.province}{project.legacyProvince ? ` · khu vực trước điều chỉnh: ${project.legacyProvince}` : ""} · {project.type}</small></span>
               <span className="public-scale-project-meta"><b>{project.progress}%</b><small>{statusLabel(project.status)}</small></span>
               <ArrowRight size={15}/>
             </button>)}
@@ -241,7 +239,7 @@ export default function PublicCapabilityExplorer() {
         </div>
       </div>
 
-      <div className="public-scale-footnote"><Flag size={15}/> Dữ liệu địa bàn được chuẩn hóa theo hệ thống hành chính hiện hành và giữ thông tin lịch sử khi cần đối chiếu.</div>
+      <div className="public-scale-footnote"><Flag size={15}/> Thông tin địa bàn được trình bày theo hệ thống hành chính hiện hành và giữ tên gọi trước điều chỉnh khi cần đối chiếu.</div>
     </div>
   </section>;
 }
