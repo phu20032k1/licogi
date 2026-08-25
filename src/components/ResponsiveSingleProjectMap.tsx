@@ -57,5 +57,74 @@ export default function ResponsiveSingleProjectMap({ project }: MapProps) {
   return <>
     <div className="phone-single-project-map-only"><MobileLocationMap project={project}/></div>
     <div className="desktop-single-project-map-only"><DesktopLocationMap project={project}/></div>
+    <style jsx>{`
+      .phone-single-project-map-only { display: none; }
+      .desktop-single-project-map-only { display: block; }
+
+      @media (max-width: 767px) {
+        .phone-single-project-map-only { display: block; }
+        .desktop-single-project-map-only { display: none; }
+        :global(.phone-single-project-map) {
+          overflow: hidden;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          background: #fff;
+        }
+        :global(.phone-single-project-map-canvas) {
+          position: relative;
+          display: grid;
+          min-height: 305px;
+          place-items: center;
+          overflow: hidden;
+          background: radial-gradient(circle at 50% 45%, rgba(249,115,22,.10), transparent 35%), linear-gradient(180deg,#f8fafc,#edf2f6);
+        }
+        :global(.phone-single-project-map-canvas)::before {
+          position: absolute;
+          inset: 0;
+          content: "";
+          opacity: .22;
+          background-image: linear-gradient(#dce4ec 1px, transparent 1px), linear-gradient(90deg,#dce4ec 1px, transparent 1px);
+          background-size: 30px 30px;
+        }
+        :global(.phone-single-project-map-canvas svg) {
+          position: relative;
+          z-index: 1;
+          width: min(62vw, 220px);
+          height: 270px;
+          overflow: visible;
+          filter: drop-shadow(0 13px 23px rgba(15,23,42,.12));
+        }
+        :global(.phone-single-vietnam-shape) {
+          fill: rgba(255,255,255,.96);
+          stroke: #8495a7;
+          stroke-width: 2.1;
+        }
+        :global(.phone-single-map-pulse) { fill: #ea580c; opacity: .18; }
+        :global(.phone-single-map-point) { fill: #ea580c; stroke: #fff; stroke-width: 2.4; }
+        :global(.phone-single-map-caption) {
+          display: flex;
+          min-height: 58px;
+          align-items: center;
+          gap: 9px;
+          padding: 10px 13px;
+          border-top: 1px solid #e8edf2;
+          color: #c2410c;
+        }
+        :global(.phone-single-map-caption div) { min-width: 0; }
+        :global(.phone-single-map-caption strong),
+        :global(.phone-single-map-caption span) { display: block; }
+        :global(.phone-single-map-caption strong) { color: #0f172a; font-size: 13px; }
+        :global(.phone-single-map-caption span) { margin-top: 2px; color: #64748b; font-size: 10px; }
+        :global(.phone-single-map-empty) {
+          position: absolute;
+          z-index: 2;
+          display: grid;
+          place-items: center;
+          gap: 6px;
+          color: #64748b;
+          font-size: 12px;
+        }
+      }
+    `}</style>
   </>;
 }
