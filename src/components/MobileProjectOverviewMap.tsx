@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ComponentType } from "react";
-import { ArrowRight, LocateFixed, MapPin, RefreshCcw } from "lucide-react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { ArrowRight, LocateFixed, Map as MapIcon, MapPin, RefreshCcw } from "lucide-react";
+import { normalizeProvinceNames } from "../data/projects";
+import { vietnamPostMergerProvinces } from "../data/vietnamPostMergerMap";
 import type { PublicProjectRecord } from "../lib/publicProject";
 
 type Props = {
@@ -15,6 +17,13 @@ type Props = {
 
 type LiveMapProps = { projects: PublicProjectRecord[] };
 
+type ProvinceStats = {
+  count: number;
+  ongoing: number;
+  completed: number;
+  warranty: number;
+};
+
 function isMappable(project: PublicProjectRecord) {
   return Number.isFinite(project.lat)
     && Number.isFinite(project.lng)
@@ -24,41 +33,61 @@ function isMappable(project: PublicProjectRecord) {
     && project.lng <= 110.8;
 }
 
-function projectPoint(lat: number, lng: number) {
-  const x = 20 + ((lng - 102) / 8.8) * 220;
-  const y = 20 + ((24.5 - lat) / 16.5) * 500;
-  return {
-    x: Math.max(18, Math.min(242, x)),
-    y: Math.max(18, Math.min(522, y)),
-  };
-}
-
-function statusClass(project: PublicProjectRecord) {
-  if (project.status === "completed") return "is-completed";
-  if (project.status === "warranty") return "is-warranty";
-  return "is-ongoing";
+function provinceTone(stats: ProvinceStats) {
+  if (stats.ongoing > 0) return "is-ongoing";
+  if (stats.warranty > 0) return "is-warranty";
+  return "is-completed";
 }
 
 export default function MobileProjectOverviewMap({ projects, loading = false, error = "", onReload, compact = false }: Props) {
   const [LiveMap, setLiveMap] = useState<ComponentType<LiveMapProps> | null>(null);
+  const [showLiveMap, setShowLiveMap] = useState(false);
+  const [liveMapLoading, setLiveMapLoading] = useState(false);
+  const [liveMapError, setLiveMapError] = useState(false);
   const mappableProjects = projects.filter(isMappable).slice(0, 80);
   const provinces = new Set(projects.map((project) => project.province).filter((province) => Boolean(province) && province !== "Đang cập nhật"));
   const ongoing = projects.filter((project) => project.status === "ongoing").length;
   const completed = projects.filter((project) => project.status === "completed").length;
   const warranty = projects.filter((project) => project.status === "warranty").length;
 
+  const provinceStats = useMemo(() => {
+    const stats = new globalThis.Map<string, ProvinceStats>();
+
+    projects.forEach((project) => {
+      const names = Array.from(new Set(normalizeProvinceNames(project.province).filter((name) => name && name !== "Đang cập nhật")));
+      names.forEach((name) => {
+        const current = stats.get(name) || { count: 0, ongoing: 0, completed: 0, warranty: 0 };
+        current.count += 1;
+        current[project.status] += 1;
+        stats.set(name, current);
+      });
+    });
+
+    return stats;
+  }, [projects]);
+
   useEffect(() => {
+    if (!showLiveMap || LiveMap || liveMapLoading || !mappableProjects.length) return;
+
     let active = true;
-    if (!mappableProjects.length) return;
+    setLiveMapLoading(true);
+    setLiveMapError(false);
+
     void import("./MobileLeafletProjectMap")
       .then((module) => {
-        if (active) setLiveMap(() => module.default);
+        if (!active) return;
+        setLiveMap(() => module.default);
+        setLiveMapLoading(false);
       })
       .catch(() => {
-        // The server-rendered SVG map remains visible as a resilient fallback.
+        if (!active) return;
+        setLiveMapLoading(false);
+        setLiveMapError(true);
+        setShowLiveMap(false);
       });
+
     return () => { active = false; };
-  }, [mappableProjects.length]);
+  }, [LiveMap, liveMapLoading, mappableProjects.length, showLiveMap]);
 
   return <section className={`phone-data-map ${compact ? "is-compact" : ""}`} aria-label="Bản đồ công trình LICOGI 18.3">
     <div className="phone-data-map-head">
@@ -71,20 +100,40 @@ export default function MobileProjectOverviewMap({ projects, loading = false, er
     </div>
 
     <div className="phone-data-map-canvas">
-      <div className="phone-data-map-fallback" aria-hidden={Boolean(LiveMap)}>
-        <svg viewBox="0 0 260 540" role="img" aria-label={`${mappableProjects.length} vị trí công trình đã ghi nhận`}>
-          <path className="phone-data-vietnam-shape" d="M109 14c22 16 49 17 65 41 17 25 4 55 15 78 8 19 35 28 39 50 5 29-25 47-41 67-17 22-16 48-9 74 8 30 11 57-5 85-17 29-47 50-60 82-8 20-8 33-7 36-18-7-35-20-47-36-18-25-7-54 7-77 15-24 35-42 33-72-1-23-17-44-17-68 0-28 22-47 35-68 14-23 7-52-3-73-12-25-4-48 4-67 8-18 13-37 7-55-7-21-28-31-31-47-4-21 23-31 42-26Z"/>
-          {mappableProjects.map((project) => {
-            const point = projectPoint(project.lat, project.lng);
-            return <a key={project.id} href={`/portfolio/projects/${encodeURIComponent(project.code || project.id)}`} aria-label={`${project.name}, ${project.province}`}>
-              <circle cx={point.x} cy={point.y} r="9" className={`phone-data-map-pulse ${statusClass(project)}`}/>
-              <circle cx={point.x} cy={point.y} r="5" className={`phone-data-map-point ${statusClass(project)}`}/>
-            </a>;
+      <div className="phone-data-map-fallback" aria-hidden={showLiveMap && Boolean(LiveMap)}>
+        <svg className="phone-data-province-map" viewBox="35 0 375 735" role="img" aria-label={`Bản đồ Việt Nam với ${provinceStats.size} địa bàn có công trình`}>
+          {vietnamPostMergerProvinces.map((province) => {
+            const stats = provinceStats.get(province.name);
+            const tone = stats ? provinceTone(stats) : "";
+            return <g key={province.name}>
+              <path
+                d={province.d}
+                className={`phone-data-province ${stats ? `has-projects ${tone}` : ""}`}
+              />
+              {stats ? <a href={`/portfolio/projects?q=${encodeURIComponent(province.name)}`} aria-label={`${province.name}: ${stats.count} công trình`}>
+                <circle cx={province.cx} cy={province.cy} r="13" className={`phone-data-province-halo ${tone}`}/>
+                <circle cx={province.cx} cy={province.cy} r="8.5" className={`phone-data-province-marker ${tone}`}/>
+                <text x={province.cx} y={province.cy + 3.1} textAnchor="middle" className="phone-data-province-count">{stats.count}</text>
+              </a> : null}
+            </g>;
           })}
         </svg>
       </div>
 
-      {LiveMap && mappableProjects.length > 0 ? <LiveMap projects={mappableProjects}/> : null}
+      {showLiveMap && LiveMap && mappableProjects.length > 0 ? <LiveMap projects={mappableProjects}/> : null}
+
+      {mappableProjects.length > 0 ? <div className="phone-data-map-mode">
+        <button
+          type="button"
+          aria-pressed={showLiveMap}
+          onClick={() => setShowLiveMap((value) => !value)}
+          disabled={liveMapLoading}
+        >
+          <MapIcon size={14}/>
+          {liveMapLoading ? "Đang mở bản đồ nền" : showLiveMap ? "Bản đồ tỉnh/thành" : "Mở bản đồ nền"}
+        </button>
+        {liveMapError ? <span>Không tải được bản đồ nền · bản đồ công trình vẫn khả dụng</span> : null}
+      </div> : null}
 
       {projects.length === 0 && !loading ? <div className="phone-data-map-state">
         <MapPin size={22}/>
@@ -101,8 +150,8 @@ export default function MobileProjectOverviewMap({ projects, loading = false, er
     </div>
 
     <div className="phone-data-map-foot">
-      <span><MapPin size={14}/> Chạm vào điểm đánh dấu để xem công trình</span>
-      <Link href="/portfolio/projects">Khám phá danh mục <ArrowRight size={15}/></Link>
+      <span><MapPin size={14}/> Chạm vào điểm số để lọc công trình theo địa bàn</span>
+      <Link href="/portfolio/projects">Danh mục <ArrowRight size={15}/></Link>
     </div>
   </section>;
 }
