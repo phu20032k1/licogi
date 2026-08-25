@@ -1,0 +1,762 @@
+/*
+ * LICOGI 18.3 — premium mobile public layer.
+ * Loaded after mobile-enterprise.css and intentionally owns the final phone UI.
+ */
+
+@media (max-width: 767px) {
+  :root {
+    --premium-navy: #0b172a;
+    --premium-navy-2: #14253d;
+    --premium-orange: #d95b1a;
+    --premium-orange-soft: #fff1e8;
+    --premium-page: #f2f4f7;
+    --premium-card: #ffffff;
+    --premium-line: #dde3ea;
+    --premium-text: #101828;
+    --premium-muted: #667085;
+    --premium-shadow: 0 14px 40px rgba(16, 24, 40, .08);
+  }
+
+  body {
+    background: var(--premium-page) !important;
+    color: var(--premium-text) !important;
+  }
+
+  .public-header,
+  .public-header-pages {
+    min-height: calc(68px + env(safe-area-inset-top)) !important;
+    border-bottom: 1px solid rgba(221, 227, 234, .82) !important;
+    background: rgba(255, 255, 255, .965) !important;
+    box-shadow: 0 8px 30px rgba(16, 24, 40, .055) !important;
+  }
+
+  .public-header-inner {
+    min-height: 68px !important;
+  }
+
+  .public-brand-link {
+    max-width: 205px !important;
+  }
+
+  .public-menu-button {
+    width: 46px !important;
+    height: 46px !important;
+    border-color: #e1e6ec !important;
+    border-radius: 15px !important;
+    background: #f8fafc !important;
+    color: var(--premium-navy) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.7) !important;
+  }
+
+  .public-page-nav,
+  .public-nav {
+    top: calc(70px + env(safe-area-inset-top)) !important;
+    right: 10px !important;
+    left: 10px !important;
+    padding: 9px !important;
+    border-color: #e2e7ed !important;
+    border-radius: 20px !important;
+    box-shadow: 0 28px 80px rgba(16,24,40,.22) !important;
+  }
+
+  .public-page-nav > a,
+  .public-nav > a {
+    min-height: 48px !important;
+    border-radius: 13px !important;
+  }
+
+  .public-page-nav > a.is-active,
+  .public-nav > a.is-active {
+    background: var(--premium-orange-soft) !important;
+    color: #b54708 !important;
+  }
+
+  /* Homepage: premium spacing and hierarchy */
+  .public-site #trang-chu {
+    padding-top: 46px !important;
+    padding-bottom: 34px !important;
+  }
+
+  .public-site #trang-chu [class*="heroTitle"] {
+    max-width: 11ch !important;
+    font-size: clamp(37px, 10.8vw, 50px) !important;
+    line-height: .97 !important;
+    letter-spacing: -.052em !important;
+  }
+
+  .public-site #trang-chu [class*="heroLead"] {
+    margin-top: 20px !important;
+    color: rgba(255,255,255,.82) !important;
+    font-size: 14px !important;
+    line-height: 1.72 !important;
+  }
+
+  .public-site #trang-chu [class*="dataPanel"] {
+    border-radius: 24px !important;
+    box-shadow: 0 26px 70px rgba(2,6,23,.24) !important;
+  }
+
+  .public-site .public-section,
+  .public-site .public-page-section,
+  .public-site .public-map-section,
+  .public-site .public-project-section {
+    padding-top: 42px !important;
+    padding-bottom: 42px !important;
+  }
+
+  .public-site .public-section-heading {
+    margin-bottom: 22px !important;
+  }
+
+  .public-site .public-section-heading h2,
+  .public-site .public-scale-heading h2 {
+    max-width: 15ch !important;
+    font-size: clamp(27px, 8.2vw, 35px) !important;
+    line-height: 1.06 !important;
+    letter-spacing: -.042em !important;
+  }
+
+  .public-site .public-kicker {
+    color: #b54708 !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    letter-spacing: .13em !important;
+  }
+
+  /* Real mobile map with resilient fallback */
+  .phone-data-map {
+    overflow: hidden !important;
+    border-color: #d9e0e7 !important;
+    border-radius: 24px !important;
+    background: #fff !important;
+    box-shadow: 0 18px 48px rgba(16,24,40,.11) !important;
+  }
+
+  .phone-data-map-head {
+    min-height: 82px !important;
+    align-items: flex-start !important;
+    padding: 16px 16px 14px !important;
+    border-bottom-color: #e7ebef !important;
+    background: #fff !important;
+  }
+
+  .phone-data-map-head span {
+    color: #b54708 !important;
+    font-size: 9px !important;
+    letter-spacing: .14em !important;
+  }
+
+  .phone-data-map-head strong {
+    margin-top: 5px !important;
+    color: var(--premium-navy) !important;
+    font-size: 16px !important;
+    font-weight: 850 !important;
+    letter-spacing: -.015em !important;
+  }
+
+  .phone-data-map-head small {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
+    color: #667085 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+  }
+
+  .phone-data-map-head > a {
+    min-height: 38px !important;
+    margin-top: 2px !important;
+    padding: 0 10px !important;
+    border: 1px solid #fed7aa !important;
+    border-radius: 12px !important;
+    background: #fff7ed !important;
+    color: #b54708 !important;
+    font-size: 10px !important;
+  }
+
+  .phone-data-map-canvas,
+  .phone-data-map.is-compact .phone-data-map-canvas {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: 410px !important;
+    min-height: 410px !important;
+    overflow: hidden !important;
+    background: #e9eef3 !important;
+  }
+
+  .phone-data-map-canvas::before {
+    display: none !important;
+  }
+
+  .phone-data-map-fallback {
+    position: absolute !important;
+    z-index: 0 !important;
+    inset: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(circle at 50% 44%, rgba(217,91,26,.12), transparent 35%),
+      linear-gradient(180deg,#f3f6f9,#dfe7ee) !important;
+  }
+
+  .phone-data-map-fallback::before {
+    position: absolute !important;
+    inset: 0 !important;
+    content: "" !important;
+    opacity: .32 !important;
+    background-image:
+      linear-gradient(rgba(148,163,184,.24) 1px, transparent 1px),
+      linear-gradient(90deg,rgba(148,163,184,.24) 1px, transparent 1px) !important;
+    background-size: 32px 32px !important;
+  }
+
+  .phone-data-map-fallback > svg,
+  .phone-data-map.is-compact .phone-data-map-fallback > svg {
+    position: relative !important;
+    z-index: 1 !important;
+    display: block !important;
+    width: min(67vw, 250px) !important;
+    height: 330px !important;
+    overflow: visible !important;
+    filter: drop-shadow(0 16px 30px rgba(16,24,40,.16)) !important;
+  }
+
+  .phone-data-vietnam-shape {
+    fill: rgba(255,255,255,.97) !important;
+    stroke: #8191a2 !important;
+    stroke-width: 2.3 !important;
+  }
+
+  .phone-live-map {
+    position: absolute !important;
+    z-index: 2 !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .phone-live-map-container,
+  .phone-live-map .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 410px !important;
+    background: transparent !important;
+    font-family: var(--font-licogi), system-ui, sans-serif !important;
+  }
+
+  .phone-live-map .leaflet-pane,
+  .phone-live-map .leaflet-control {
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .phone-live-map .leaflet-tile-pane {
+    filter: saturate(.78) contrast(.98) brightness(1.035) !important;
+  }
+
+  .phone-live-map .leaflet-control-zoom {
+    margin-right: 12px !important;
+    margin-bottom: 58px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(16,24,40,.16) !important;
+  }
+
+  .phone-live-map .leaflet-control-zoom a {
+    width: 38px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    color: var(--premium-navy) !important;
+    font-size: 20px !important;
+  }
+
+  .phone-live-map .leaflet-control-attribution {
+    padding: 2px 5px !important;
+    background: rgba(255,255,255,.82) !important;
+    color: #667085 !important;
+    font-size: 7px !important;
+  }
+
+  .phone-live-map .leaflet-popup-content-wrapper {
+    border-radius: 16px !important;
+    box-shadow: 0 16px 42px rgba(16,24,40,.18) !important;
+  }
+
+  .phone-live-map .leaflet-popup-content {
+    margin: 13px 14px !important;
+  }
+
+  .phone-live-map-popup span,
+  .phone-live-map-popup strong,
+  .phone-live-map-popup small,
+  .phone-live-map-popup a {
+    display: block !important;
+  }
+
+  .phone-live-map-popup span {
+    color: #b54708 !important;
+    font-size: 9px !important;
+    font-weight: 850 !important;
+    letter-spacing: .08em !important;
+  }
+
+  .phone-live-map-popup strong {
+    margin-top: 5px !important;
+    color: var(--premium-navy) !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+
+  .phone-live-map-popup small {
+    margin-top: 5px !important;
+    color: #667085 !important;
+    font-size: 9px !important;
+    line-height: 1.4 !important;
+  }
+
+  .phone-live-map-popup a {
+    margin-top: 9px !important;
+    color: #b54708 !important;
+    font-size: 10px !important;
+    font-weight: 850 !important;
+  }
+
+  .phone-data-map-legend {
+    z-index: 5 !important;
+    right: 11px !important;
+    bottom: 11px !important;
+    left: 11px !important;
+    gap: 7px 11px !important;
+    padding: 9px 10px !important;
+    border-color: rgba(218,224,230,.94) !important;
+    border-radius: 13px !important;
+    background: rgba(255,255,255,.94) !important;
+    box-shadow: 0 6px 20px rgba(16,24,40,.09) !important;
+  }
+
+  .phone-data-map-legend span {
+    color: #475467 !important;
+    font-size: 9px !important;
+    font-weight: 750 !important;
+  }
+
+  .phone-data-map-foot {
+    display: flex !important;
+    min-height: 58px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    border-top: 1px solid #e8ecf0 !important;
+    background: #fff !important;
+  }
+
+  .phone-data-map-foot > span {
+    display: inline-flex !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    gap: 5px !important;
+    color: #667085 !important;
+    font-size: 9px !important;
+    line-height: 1.35 !important;
+  }
+
+  .phone-data-map-foot > a {
+    display: inline-flex !important;
+    min-width: max-content !important;
+    min-height: 38px !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 0 10px !important;
+    border-radius: 11px !important;
+    background: var(--premium-navy) !important;
+    color: #fff !important;
+    font-size: 9px !important;
+    font-weight: 850 !important;
+  }
+
+  .phone-data-map.is-compact {
+    width: calc(100% - 28px) !important;
+    margin: 14px 14px 18px !important;
+  }
+
+  /* Project directory hero */
+  .phone-projects-page {
+    background: var(--premium-page) !important;
+  }
+
+  .phone-projects-hero {
+    position: relative !important;
+    overflow: hidden !important;
+    padding: 34px 16px 23px !important;
+    background:
+      radial-gradient(circle at 105% -10%, rgba(217,91,26,.33), transparent 36%),
+      linear-gradient(145deg,#081425 0%,#14253d 72%,#1d304a 100%) !important;
+  }
+
+  .phone-projects-hero::after {
+    position: absolute !important;
+    right: -58px !important;
+    bottom: -68px !important;
+    width: 170px !important;
+    height: 170px !important;
+    content: "" !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 0 28px rgba(255,255,255,.025), 0 0 0 56px rgba(255,255,255,.018) !important;
+  }
+
+  .phone-projects-hero-copy,
+  .phone-projects-summary,
+  .phone-projects-map-note {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  .phone-projects-hero-copy > span {
+    color: #ffb27a !important;
+    font-size: 9px !important;
+    letter-spacing: .15em !important;
+  }
+
+  .phone-projects-hero-copy h1 {
+    max-width: 12ch !important;
+    margin-top: 9px !important;
+    font-size: clamp(33px, 9.7vw, 43px) !important;
+    line-height: 1 !important;
+    letter-spacing: -.047em !important;
+  }
+
+  .phone-projects-hero-copy p {
+    max-width: 39ch !important;
+    margin-top: 14px !important;
+    color: rgba(255,255,255,.73) !important;
+    font-size: 12px !important;
+    line-height: 1.68 !important;
+  }
+
+  .phone-projects-summary {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px !important;
+    margin-top: 21px !important;
+  }
+
+  .phone-projects-summary > div {
+    min-height: 72px !important;
+    padding: 12px 11px !important;
+    border-color: rgba(255,255,255,.12) !important;
+    border-radius: 15px !important;
+    background: rgba(255,255,255,.065) !important;
+    text-align: left !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  .phone-projects-summary strong {
+    font-size: 24px !important;
+    letter-spacing: -.025em !important;
+  }
+
+  .phone-projects-summary span {
+    margin-top: 6px !important;
+    color: rgba(255,255,255,.62) !important;
+    font-size: 9px !important;
+    font-weight: 650 !important;
+  }
+
+  .phone-projects-map-note {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 13px !important;
+    color: rgba(255,255,255,.68) !important;
+    font-size: 9px !important;
+    font-weight: 650 !important;
+  }
+
+  /* Search / filters */
+  .phone-project-filters {
+    margin: 0 14px 13px !important;
+    padding: 14px !important;
+    border-color: #dce2e8 !important;
+    border-radius: 20px !important;
+    box-shadow: 0 12px 34px rgba(16,24,40,.065) !important;
+  }
+
+  .phone-project-filter-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .phone-project-filter-heading > div span {
+    color: #b54708 !important;
+  }
+
+  .phone-project-filter-heading > div strong {
+    color: var(--premium-navy) !important;
+    font-size: 14px !important;
+  }
+
+  .phone-project-filter-count {
+    display: inline-grid !important;
+    min-width: 46px !important;
+    min-height: 34px !important;
+    place-items: center !important;
+    padding: 0 9px !important;
+    border: 1px solid #e2e7ec !important;
+    border-radius: 11px !important;
+    background: #f8fafc !important;
+    color: #475467 !important;
+    font-size: 10px !important;
+    font-weight: 850 !important;
+  }
+
+  .phone-project-search {
+    min-height: 50px !important;
+    border-color: #dce2e8 !important;
+    border-radius: 14px !important;
+    background: #f7f9fb !important;
+  }
+
+  .phone-project-status-tabs button {
+    min-height: 42px !important;
+    border-radius: 12px !important;
+    color: #475467 !important;
+  }
+
+  .phone-project-status-tabs button.is-active {
+    border-color: #f6c69c !important;
+    background: var(--premium-orange-soft) !important;
+    color: #b54708 !important;
+  }
+
+  .phone-project-filter-row > label {
+    min-height: 48px !important;
+    border-radius: 13px !important;
+  }
+
+  .phone-project-result-head {
+    min-height: 44px !important;
+    padding: 0 16px !important;
+  }
+
+  .phone-project-list {
+    gap: 13px !important;
+    padding: 0 14px !important;
+  }
+
+  /* Project cards */
+  .phone-project-card {
+    padding: 16px !important;
+    border-color: #dce2e8 !important;
+    border-radius: 21px !important;
+    box-shadow: 0 12px 34px rgba(16,24,40,.065) !important;
+  }
+
+  .phone-project-status {
+    display: inline-flex !important;
+    min-height: 27px !important;
+    align-items: center !important;
+    padding: 0 9px !important;
+    border-radius: 99px !important;
+  }
+
+  .phone-project-status.is-ongoing {
+    background: #fff3e8 !important;
+    color: #b54708 !important;
+  }
+
+  .phone-project-status.is-completed {
+    background: #ecfdf3 !important;
+    color: #067647 !important;
+  }
+
+  .phone-project-status.is-warranty {
+    background: #eff6ff !important;
+    color: #175cd3 !important;
+  }
+
+  .phone-project-code {
+    color: #98a2b3 !important;
+    font-size: 8px !important;
+    letter-spacing: .045em !important;
+  }
+
+  .phone-project-card h3 {
+    margin: 13px 0 10px !important;
+    color: var(--premium-navy) !important;
+    font-size: 17px !important;
+    line-height: 1.38 !important;
+    letter-spacing: -.022em !important;
+  }
+
+  .phone-project-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .phone-project-tags > span {
+    display: inline-flex !important;
+    max-width: 100% !important;
+    min-height: 28px !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 0 8px !important;
+    overflow: hidden !important;
+    border: 1px solid #e4e9ee !important;
+    border-radius: 9px !important;
+    background: #f8fafc !important;
+    color: #475467 !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .phone-project-investor {
+    margin-top: 6px !important;
+    color: #667085 !important;
+    font-size: 10px !important;
+    line-height: 1.5 !important;
+  }
+
+  .phone-project-metrics {
+    grid-template-columns: minmax(0,1.25fr) minmax(0,.75fr) !important;
+    gap: 8px !important;
+    margin-top: 14px !important;
+  }
+
+  .phone-project-metrics > div {
+    min-height: 64px !important;
+    padding: 11px !important;
+    border: 1px solid #edf0f3 !important;
+    border-radius: 13px !important;
+    background: #f8fafc !important;
+  }
+
+  .phone-project-metrics span {
+    color: #98a2b3 !important;
+    font-size: 8px !important;
+    letter-spacing: .02em !important;
+  }
+
+  .phone-project-metrics strong {
+    margin-top: 6px !important;
+    color: var(--premium-navy) !important;
+    font-size: 12px !important;
+  }
+
+  .phone-project-progress {
+    height: 4px !important;
+    margin-top: 11px !important;
+    background: #e9edf2 !important;
+  }
+
+  .phone-project-progress > span {
+    background: linear-gradient(90deg,#b54708,#f79009) !important;
+  }
+
+  .phone-project-actions {
+    gap: 7px !important;
+    margin-top: 14px !important;
+  }
+
+  .phone-project-actions > a,
+  .phone-project-map-unavailable {
+    min-height: 46px !important;
+    border-radius: 12px !important;
+    font-size: 9px !important;
+    font-weight: 850 !important;
+  }
+
+  .phone-project-actions > a:first-child {
+    border-color: var(--premium-navy) !important;
+    background: var(--premium-navy) !important;
+    color: #fff !important;
+  }
+
+  .phone-project-actions > a:nth-child(2) {
+    border: 1px solid #dce2e8 !important;
+    background: #fff !important;
+    color: #344054 !important;
+  }
+
+  .phone-project-error,
+  .phone-project-empty {
+    margin-right: 14px !important;
+    margin-left: 14px !important;
+    border-radius: 20px !important;
+  }
+
+  /* Capability area: calmer, more corporate */
+  .public-scale-heading-summary > span {
+    min-height: 44px !important;
+    border-color: #e0e5ea !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+  }
+
+  .public-scale-kpis {
+    gap: 10px !important;
+  }
+
+  .public-scale-kpis > button {
+    min-height: 158px !important;
+    padding: 14px !important;
+    border-color: #dfe4ea !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 26px rgba(16,24,40,.045) !important;
+  }
+
+  .public-scale-groups,
+  .public-scale-projects {
+    border-color: #dfe4ea !important;
+    border-radius: 19px !important;
+    box-shadow: 0 8px 28px rgba(16,24,40,.045) !important;
+  }
+
+  /* About / news / CTA / footer */
+  .public-about-visual,
+  .public-news-card,
+  .public-contact-card {
+    border-radius: 22px !important;
+  }
+
+  .public-about-copy h2,
+  .public-cta h2 {
+    letter-spacing: -.04em !important;
+  }
+
+  .public-cta-inner {
+    border-radius: 24px !important;
+  }
+
+  .public-footer {
+    background: #081425 !important;
+  }
+
+  .public-footer-grid {
+    gap: 28px !important;
+  }
+
+  .public-footer-bottom {
+    gap: 8px !important;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+    color: rgba(255,255,255,.54) !important;
+  }
+
+  .public-ai-launcher {
+    right: 14px !important;
+    bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+    min-height: 48px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 14px 34px rgba(16,24,40,.2) !important;
+  }
+}
