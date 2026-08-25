@@ -1,0 +1,207 @@
+/*
+ * Public UI reliability fixes.
+ * This file is intentionally loaded last and only owns cross-browser interaction
+ * states plus the server-rendered mobile province map.
+ */
+
+@media (max-width: 767px) {
+  .phone-data-map-canvas {
+    isolation: isolate !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .phone-data-map-fallback {
+    z-index: 1 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .phone-data-map-fallback > svg,
+  .phone-data-map.is-compact .phone-data-map-fallback > svg {
+    width: min(76vw, 288px) !important;
+    height: 358px !important;
+    max-width: none !important;
+    overflow: visible !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    filter: drop-shadow(0 14px 26px rgba(16,24,40,.13)) !important;
+  }
+
+  .phone-data-province-map {
+    position: relative !important;
+    z-index: 2 !important;
+    display: block !important;
+  }
+
+  .phone-data-province {
+    fill: rgba(255,255,255,.94) !important;
+    stroke: #8da0b1 !important;
+    stroke-width: 1.25 !important;
+    vector-effect: non-scaling-stroke;
+    transition: fill .18s ease, stroke .18s ease !important;
+  }
+
+  .phone-data-province.has-projects {
+    stroke: #66788b !important;
+    stroke-width: 1.45 !important;
+  }
+
+  .phone-data-province.has-projects.is-ongoing {
+    fill: #ffeddc !important;
+  }
+
+  .phone-data-province.has-projects.is-completed {
+    fill: #dcfce7 !important;
+  }
+
+  .phone-data-province.has-projects.is-warranty {
+    fill: #dbeafe !important;
+  }
+
+  .phone-data-province-halo {
+    opacity: .18 !important;
+    stroke: none !important;
+  }
+
+  .phone-data-province-marker {
+    stroke: #fff !important;
+    stroke-width: 2.4 !important;
+  }
+
+  .phone-data-province-halo.is-ongoing,
+  .phone-data-province-marker.is-ongoing { fill: #d95b1a !important; }
+  .phone-data-province-halo.is-completed,
+  .phone-data-province-marker.is-completed { fill: #16a34a !important; }
+  .phone-data-province-halo.is-warranty,
+  .phone-data-province-marker.is-warranty { fill: #2563eb !important; }
+
+  .phone-data-province-count {
+    fill: #fff !important;
+    font-family: var(--font-licogi), system-ui, sans-serif !important;
+    font-size: 8px !important;
+    font-weight: 900 !important;
+    pointer-events: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+
+  .phone-data-map-mode {
+    position: absolute !important;
+    z-index: 6 !important;
+    top: 10px !important;
+    left: 10px !important;
+    display: flex !important;
+    max-width: calc(100% - 20px) !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .phone-data-map-mode > button {
+    display: inline-flex !important;
+    min-height: 40px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 0 11px !important;
+    border: 1px solid rgba(214,221,228,.96) !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.96) !important;
+    color: #172033 !important;
+    -webkit-text-fill-color: #172033 !important;
+    font-size: 9px !important;
+    font-weight: 850 !important;
+    box-shadow: 0 7px 20px rgba(16,24,40,.11) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .phone-data-map-mode > button[aria-pressed="true"] {
+    border-color: #f0c5a9 !important;
+    background: #fff4ec !important;
+    color: #a83f0e !important;
+    -webkit-text-fill-color: #a83f0e !important;
+  }
+
+  .phone-data-map-mode > button:disabled {
+    opacity: .7 !important;
+  }
+
+  .phone-data-map-mode > span {
+    max-width: 185px !important;
+    padding: 7px 9px !important;
+    border-radius: 10px !important;
+    background: rgba(255,255,255,.94) !important;
+    color: #667085 !important;
+    font-size: 8px !important;
+    line-height: 1.35 !important;
+    box-shadow: 0 5px 16px rgba(16,24,40,.08) !important;
+  }
+
+  .phone-live-map {
+    z-index: 3 !important;
+  }
+
+  /* Safari/iOS can keep a visited or pressed text-fill color even when color
+     itself is overridden. Lock both properties for every public mobile CTA. */
+  .phone-project-actions > a:first-child,
+  .phone-project-actions > a:first-child:link,
+  .phone-project-actions > a:first-child:visited,
+  .phone-project-actions > a:first-child:hover,
+  .phone-project-actions > a:first-child:active,
+  .phone-data-map-foot > a,
+  .phone-data-map-foot > a:link,
+  .phone-data-map-foot > a:visited,
+  .phone-data-map-foot > a:hover,
+  .phone-data-map-foot > a:active {
+    background: #0b172a !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+
+  .phone-project-actions > a:nth-child(2),
+  .phone-project-actions > a:nth-child(2):link,
+  .phone-project-actions > a:nth-child(2):visited,
+  .phone-project-actions > a:nth-child(2):hover,
+  .phone-project-actions > a:nth-child(2):active {
+    background: #fff !important;
+    color: #344054 !important;
+    -webkit-text-fill-color: #344054 !important;
+  }
+
+  .phone-data-map-head > a,
+  .phone-data-map-head > a:link,
+  .phone-data-map-head > a:visited,
+  .phone-data-map-head > a:hover,
+  .phone-data-map-head > a:active,
+  .phone-live-map-popup a,
+  .phone-live-map-popup a:link,
+  .phone-live-map-popup a:visited,
+  .phone-live-map-popup a:hover,
+  .phone-live-map-popup a:active {
+    color: #b54708 !important;
+    -webkit-text-fill-color: #b54708 !important;
+  }
+
+  .phone-project-actions > a:active,
+  .phone-data-map-head > a:active,
+  .phone-data-map-foot > a:active,
+  .phone-data-map-mode > button:active {
+    transform: scale(.985) !important;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .phone-data-map,
+    .phone-data-map-canvas,
+    .phone-data-map-fallback,
+    .phone-data-province-map {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    .phone-data-map-fallback {
+      display: grid !important;
+      min-height: 410px !important;
+    }
+  }
+}
