@@ -25,8 +25,8 @@ export default function HomePageClient() {
       <section id="du-an" className="public-section public-map-section public-project-section">
         <div className="public-container">
           <div className="public-section-heading public-section-heading-light">
-            <div><span className="public-kicker public-kicker-light"><MapPinned size={14}/> Dự án & GIS</span><h2>Danh mục dự án tại Việt Nam</h2></div>
-            <Link href="/portfolio/projects" className="public-outline-button">Mở danh mục chi tiết <ArrowRight size={15}/></Link>
+            <div><span className="public-kicker public-kicker-light"><MapPinned size={14}/> Mạng lưới công trình</span><h2>Dấu ấn LICOGI 18.3 trên bản đồ Việt Nam</h2></div>
+            <Link href="/portfolio/projects" className="public-outline-button">Xem tất cả công trình <ArrowRight size={15}/></Link>
           </div>
           <ResponsiveHomeProjectMap />
         </div>
@@ -53,7 +53,7 @@ export default function HomePageClient() {
             <p className="public-about-lead">Công ty Cổ phần Đầu tư và Xây dựng số 18.3 kế thừa kinh nghiệm tổ chức thi công và năng lực ngành xây dựng của LICOGI 18.</p>
             <div className="public-about-values">
               <div><ShieldCheck/><strong>Minh bạch</strong><span>Dữ liệu gắn với dự án</span></div>
-              <div><CircuitBoard/><strong>Dữ liệu hóa</strong><span>Đồng bộ Data Center</span></div>
+              <div><CircuitBoard/><strong>Dữ liệu hóa</strong><span>Đồng bộ thông tin dự án</span></div>
               <div><Users/><strong>Kết nối</strong><span>Khách hàng và đối tác</span></div>
             </div>
             <div className="public-contact-card">
