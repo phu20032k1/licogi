@@ -55,10 +55,7 @@ async function fetchProjectPayload(endpoint: string, timeout = REQUEST_TIMEOUT) 
       cache: "no-store",
       credentials: "same-origin",
       signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-        "X-Licogi-Client": "public-projects-v2",
-      },
+      headers: { Accept: "application/json" },
     });
 
     const contentType = response.headers.get("content-type") || "";
