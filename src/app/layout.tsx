@@ -37,6 +37,7 @@ import "./public-map-layout-final.css";
 import "./homepage-map-hard-reset.css";
 import "./map-ui-polish-final.css";
 import "./catalog-investment-polish-final.css";
+import "./mobile-final.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
