@@ -6,6 +6,7 @@ import { ArrowRight, Building2, MapPin, RefreshCcw, Search, SlidersHorizontal } 
 import usePublicProjects from "../hooks/usePublicProjects";
 import { formatVnd, projectMoney } from "../lib/publicProject";
 import type { PublicProjectRecord, PublicProjectStatus } from "../lib/publicProject";
+import MobileProjectOverviewMap from "./MobileProjectOverviewMap";
 
 type Props = {
   initialStatus?: string;
@@ -30,7 +31,7 @@ function statusTone(status: PublicProjectStatus) {
 }
 
 function MobileProjectCard({ project }: { project: PublicProjectRecord }) {
-  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${project.lat},${project.lng}`;
+  const mapsHref = project.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${project.lat},${project.lng}`;
   return <article className="phone-project-card">
     <div className="phone-project-card-top">
       <span className={`phone-project-status ${statusTone(project.status)}`}>{statusLabels[project.status]}</span>
@@ -109,15 +110,23 @@ export default function MobilePublicProjects({ initialStatus = "all", initialTyp
 
       <div className="phone-project-filter-row">
         <label><SlidersHorizontal size={16}/><select value={type} onChange={(event) => setType(event.target.value)}><option value="all">Tất cả lĩnh vực</option>{types.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-        <button type="button" onClick={reload} className="phone-project-reload"><RefreshCcw size={16} className={pending ? "animate-spin" : ""}/> Tải lại</button>
+        <button type="button" onClick={() => { void reload(); }} className="phone-project-reload"><RefreshCcw size={16} className={pending ? "animate-spin" : ""}/> Tải lại</button>
       </div>
     </section>
 
     <div className="phone-project-result-head"><strong>{filtered.length}</strong><span>công trình phù hợp</span>{error && projects.length > 0 ? <em>Đang dùng dữ liệu gần nhất</em> : null}</div>
 
+    <MobileProjectOverviewMap
+      projects={projects}
+      loading={pending}
+      error={error}
+      onReload={() => { void reload(); }}
+      compact
+    />
+
     {pending ? <div className="phone-project-skeleton-list" aria-live="polite">{[0, 1, 2].map((item) => <div key={item} className="phone-project-skeleton"><i/><span/><span/><b/></div>)}</div> : null}
 
-    {!pending && error && projects.length === 0 ? <div className="phone-project-error"><strong>Chưa lấy được dữ liệu</strong><p>{error}</p><button type="button" onClick={reload}><RefreshCcw size={16}/> Thử lại</button></div> : null}
+    {!pending && error && projects.length === 0 ? <div className="phone-project-error"><strong>Chưa lấy được dữ liệu</strong><p>{error}</p><button type="button" onClick={() => { void reload(); }}><RefreshCcw size={16}/> Thử lại</button></div> : null}
 
     {!pending && filtered.length > 0 ? <div className="phone-project-list">{filtered.map((project) => <MobileProjectCard key={project.id} project={project} />)}</div> : null}
 
