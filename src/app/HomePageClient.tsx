@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import {
   ArrowRight, Building2, CircuitBoard, Mail, MapPin, MapPinned, Newspaper,
   Quote, ShieldCheck, Users,
@@ -19,32 +18,11 @@ const news = [
 ];
 
 export default function HomePageClient() {
-  useEffect(() => {
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
-    if (!nodes.length) return;
-    if (!("IntersectionObserver" in window)) {
-      nodes.forEach((node) => node.classList.add("is-revealed"));
-      return;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        (entry.target as HTMLElement).classList.add("is-revealed");
-        observer.unobserve(entry.target);
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -7% 0px" });
-    nodes.forEach((node, index) => {
-      node.style.setProperty("--reveal-delay", `${Math.min(index % 5, 4) * 45}ms`);
-      observer.observe(node);
-    });
-    return () => observer.disconnect();
-  }, []);
-
   return <PublicSiteFrame>
     <main>
       <PublicHomepageDashboard />
 
-      <section id="du-an" className="public-section public-map-section public-project-section" data-reveal="up">
+      <section id="du-an" className="public-section public-map-section public-project-section">
         <div className="public-container">
           <div className="public-section-heading public-section-heading-light">
             <div><span className="public-kicker public-kicker-light"><MapPinned size={14}/> Dự án & GIS</span><h2>Danh mục dự án tại Việt Nam</h2></div>
