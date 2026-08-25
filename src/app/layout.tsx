@@ -28,9 +28,6 @@ import "./homepage-reference.css";
 import "./homepage-compact-fix.css";
 import "./homepage-kpi-selector-fix.css";
 import "./homepage-hero-cache-final.css";
-import "./homepage-click-cards-reference.css";
-import "./homepage-click-cards-reference-v2.css";
-import "./homepage-click-cards-simplemaps-url.css";
 import "./public-map-2026.css";
 import "./public-map-marker-layout-hotfix.css";
 import "./public-map-layout-final.css";
@@ -39,6 +36,7 @@ import "./map-ui-polish-final.css";
 import "./catalog-investment-polish-final.css";
 import "./mobile-enterprise.css";
 import "./mobile-premium.css";
+import "./public-ui-reliability.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
