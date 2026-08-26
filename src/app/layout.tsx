@@ -37,6 +37,7 @@ import "./catalog-investment-polish-final.css";
 import "./mobile-enterprise.css";
 import "./mobile-premium.css";
 import "./public-ui-reliability.css";
+import "./public-compact-density.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],

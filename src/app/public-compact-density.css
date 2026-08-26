@@ -1,0 +1,59 @@
+/* Compact desktop public headers + less intrusive project-map markers. Loaded last. */
+
+@media (min-width: 901px) {
+  /* Shared inner-page title band (About and other public directory pages). */
+  .public-multipage-site .public-page-hero-compact {
+    min-height: 0 !important;
+    padding: 28px 0 22px !important;
+  }
+
+  .public-multipage-site .public-page-hero-compact h1 {
+    max-width: 760px !important;
+    margin-top: 4px !important;
+    font-size: clamp(28px, 2.55vw, 38px) !important;
+    line-height: 1.06 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  .public-multipage-site .public-page-hero-compact > .public-container > span {
+    font-size: 10px !important;
+  }
+
+  /* Project catalog: keep the map/filter workspace above the fold. */
+  .public-projects-route > .public-projects-hero-tight {
+    min-height: 92px !important;
+    padding: 14px 0 12px !important;
+  }
+
+  .public-projects-route > .public-projects-hero-tight h1 {
+    font-size: clamp(26px, 2.35vw, 34px) !important;
+    line-height: 1.04 !important;
+  }
+
+  .public-projects-route > .public-projects-hero-tight p {
+    max-width: 440px !important;
+    font-size: 11.5px !important;
+    line-height: 1.45 !important;
+  }
+
+  /* Investment overview had a larger late override; compact it to match. */
+  .public-investment-route > .public-page-hero-compact {
+    min-height: 96px !important;
+    padding: 15px 0 13px !important;
+  }
+
+  .public-investment-route > .public-page-hero-compact h1 {
+    max-width: 700px !important;
+    font-size: clamp(28px, 2.7vw, 38px) !important;
+    line-height: 1.04 !important;
+  }
+}
+
+/* Preserve Leaflet's existing anchor/click box while making the visible drops smaller. */
+.public-project-map-2026 .licogi-waterdrop-marker {
+  transform: scale(.84) !important;
+}
+
+.public-project-map-2026 .licogi-waterdrop-marker.is-selected {
+  transform: scale(.96) !important;
+}
