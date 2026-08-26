@@ -15,21 +15,15 @@ type Props = {
   singlePointZoom?: number;
 };
 
-const VIETNAM_BOUNDS = L.latLngBounds([
-  [8.15, 102.0],
-  [23.7, 109.85],
-]);
-
-/*
- * Keep the public Vietnam map from drifting all the way to India / Indonesia.
- * The bounds are intentionally a little wider than Vietnam because a wide
- * desktop map needs horizontal breathing room while keeping the whole country
- * visible at a useful zoom level.
- */
+/* Keep panning constrained around Vietnam and nearby coast only. */
 const VIETNAM_NAV_BOUNDS = L.latLngBounds([
   [5.2, 94.2],
   [27.2, 120.4],
 ]);
+
+/* Default public project-directory framing requested by the site owner:
+   concentrate on Northern + Central Vietnam instead of the whole country. */
+const NORTH_CENTRAL_CENTER: [number, number] = [19.0, 106.15];
 
 function validPoint(point: MapPoint) {
   return Number.isFinite(point.lat) && Number.isFinite(point.lng)
@@ -38,12 +32,12 @@ function validPoint(point: MapPoint) {
     && !(Math.abs(point.lat) < .001 && Math.abs(point.lng) < .001);
 }
 
-function defaultVietnamZoom(width: number) {
-  if (width >= 1280) return 6.35;
-  if (width >= 1120) return 6.2;
-  if (width >= 900) return 6.05;
-  if (width >= 700) return 5.75;
-  return 5.45;
+function defaultNorthCentralZoom(width: number) {
+  if (width >= 1280) return 6.5;
+  if (width >= 1120) return 6.35;
+  if (width >= 900) return 6.2;
+  if (width >= 700) return 5.9;
+  return 5.55;
 }
 
 export default function MapViewportController({
@@ -87,24 +81,21 @@ export default function MapViewportController({
       return;
     }
 
-    const valid = points.filter(validPoint);
-
-    /*
-     * Prefer the actual LICOGI project cluster whenever coordinates exist.
-     * Previously focusVietnam always forced a country-wide view, which made
-     * northern project markers look tiny and crowded even on a large desktop.
-     */
-    if (focusVietnam && !valid.length) {
+    /* Unfiltered project directory: deliberately frame only North + Central.
+       Once the user searches/filters a province or project, focusVietnam is false
+       and the map below fits the matching project coordinates normally. */
+    if (focusVietnam) {
       const size = map.getSize();
-      const zoom = Math.min(maxZoom, defaultVietnamZoom(size.x));
-      map.setView([16.25, 107.25], zoom, { animate: false });
+      map.setView(NORTH_CENTRAL_CENTER, Math.min(maxZoom, defaultNorthCentralZoom(size.x)), { animate: false });
       map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
       return;
     }
 
+    const valid = points.filter(validPoint);
+
     if (!valid.length) {
       const size = map.getSize();
-      map.setView([16.25, 107.25], Math.min(maxZoom, defaultVietnamZoom(size.x)), { animate: false });
+      map.setView(NORTH_CENTRAL_CENTER, Math.min(maxZoom, defaultNorthCentralZoom(size.x)), { animate: false });
       return;
     }
 
@@ -129,7 +120,6 @@ export default function MapViewportController({
       duration: .42,
     });
 
-    /* Never let a wide desktop canvas fall back to a continent-scale view. */
     if (map.getZoom() < 5.45) map.setZoom(5.45, { animate: false });
     map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
   }, [focusVietnam, map, maxZoom, points, selected, selectedZoom, singlePointZoom]);

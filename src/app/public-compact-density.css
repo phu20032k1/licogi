@@ -1,100 +1,109 @@
-/* Strong compact desktop public headers + much smaller project-map markers. Loaded last. */
+/* Ultra-compact desktop public headers + smaller project-map markers. Loaded last. */
 
 @media (min-width: 901px) {
-  /* Shared inner-page title band: keep page titles short and close to content. */
+  /* The public header is already in normal document flow. Remove the old extra
+     main offset that was leaving a second blank header-height gap underneath it. */
+  .public-multipage-site .public-page-main {
+    padding-top: 0 !important;
+  }
+
+  /* Shared inner-page title band. */
   .public-multipage-site .public-page-hero-compact {
     min-height: 0 !important;
-    padding: 12px 0 10px !important;
+    padding: 5px 0 4px !important;
   }
 
   .public-multipage-site .public-page-hero-compact h1 {
-    max-width: 620px !important;
-    margin-top: 2px !important;
-    font-size: clamp(21px, 1.9vw, 28px) !important;
-    line-height: 1.02 !important;
+    max-width: 560px !important;
+    margin-top: 1px !important;
+    font-size: clamp(18px, 1.55vw, 23px) !important;
+    line-height: 1.01 !important;
     letter-spacing: -.035em !important;
   }
 
   .public-multipage-site .public-page-hero-compact > .public-container > span,
   .public-multipage-site .public-page-hero-compact .public-container > div > span {
-    margin-bottom: 2px !important;
-    font-size: 8.5px !important;
-    line-height: 1.15 !important;
-    letter-spacing: .045em !important;
+    margin: 0 0 1px !important;
+    font-size: 7.5px !important;
+    line-height: 1.1 !important;
+    letter-spacing: .04em !important;
   }
 
-  /* Project catalog: prioritize the GIS workspace over the heading band. */
+  /* Project catalog: make this a thin strip so the GIS workspace starts almost immediately. */
   .public-projects-route > .public-projects-hero-tight {
-    min-height: 66px !important;
-    padding: 8px 0 7px !important;
+    min-height: 48px !important;
+    height: auto !important;
+    padding: 4px 0 3px !important;
   }
 
   .public-projects-route > .public-projects-hero-tight .public-container {
-    grid-template-columns: minmax(0, 1fr) minmax(250px, 360px) !important;
-    gap: 16px !important;
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 340px) !important;
+    align-items: center !important;
+    gap: 14px !important;
   }
 
   .public-projects-route > .public-projects-hero-tight h1 {
-    font-size: clamp(20px, 1.8vw, 26px) !important;
-    line-height: 1.01 !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.5vw, 22px) !important;
+    line-height: 1 !important;
   }
 
   .public-projects-route > .public-projects-hero-tight p {
-    max-width: 360px !important;
-    margin: 0 0 1px auto !important;
-    font-size: 9.8px !important;
-    line-height: 1.32 !important;
+    max-width: 340px !important;
+    margin: 0 0 0 auto !important;
+    font-size: 8.5px !important;
+    line-height: 1.22 !important;
   }
 
-  /* Investment overview had a larger late override; force the same compact density. */
+  /* Investment overview and About use the same compact visual density. */
   .public-investment-route > .public-page-hero-compact {
-    min-height: 68px !important;
-    padding: 8px 0 7px !important;
+    min-height: 50px !important;
+    padding: 4px 0 3px !important;
   }
 
   .public-investment-route > .public-page-hero-compact h1 {
-    max-width: 560px !important;
-    font-size: clamp(21px, 1.9vw, 28px) !important;
-    line-height: 1.01 !important;
+    max-width: 520px !important;
+    font-size: clamp(18px, 1.55vw, 23px) !important;
+    line-height: 1 !important;
   }
 
-  /* Bring the actual page content/map closer to the compact title. */
+  /* Bring the actual cards/map directly underneath the thin title strip. */
   .public-multipage-site .public-page-section,
   .public-projects-route .public-projects-page-section,
   .public-investment-route .public-page-section {
-    padding-top: 10px !important;
+    padding-top: 6px !important;
   }
 }
 
-/* Keep Leaflet's click/anchor box intact while shrinking the visible water-drop hard. */
+/* Keep Leaflet's click/anchor box intact while making the visible drop genuinely small. */
 .public-project-map-2026 .licogi-waterdrop-marker {
-  transform: scale(.58) !important;
+  transform: scale(.48) !important;
   transform-origin: 50% 100% !important;
 }
 
 .public-project-map-2026 .licogi-waterdrop-marker.is-selected {
-  transform: scale(.70) !important;
+  transform: scale(.60) !important;
 }
 
 .public-project-map-2026 .licogi-waterdrop-svg {
-  filter: drop-shadow(0 3px 5px rgba(15,23,42,.16)) !important;
+  filter: drop-shadow(0 2px 4px rgba(15,23,42,.14)) !important;
 }
 
 .public-project-map-2026 .licogi-marker-status {
-  width: 12px !important;
-  height: 12px !important;
-  border-width: 1.5px !important;
-  font-size: 6.5px !important;
+  width: 11px !important;
+  height: 11px !important;
+  border-width: 1px !important;
+  font-size: 6px !important;
 }
 
 .public-project-map-2026 .licogi-waterdrop-marker.status-ongoing .licogi-marker-status {
-  width: 9px !important;
-  height: 9px !important;
+  width: 8px !important;
+  height: 8px !important;
 }
 
 .public-project-map-2026 .licogi-marker-country {
-  min-width: 13px !important;
-  height: 13px !important;
+  min-width: 12px !important;
+  height: 12px !important;
   border-width: 1px !important;
-  font-size: 6.5px !important;
+  font-size: 6px !important;
 }
