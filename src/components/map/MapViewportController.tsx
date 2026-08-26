@@ -39,10 +39,11 @@ function validPoint(point: MapPoint) {
 }
 
 function defaultVietnamZoom(width: number) {
-  if (width >= 1120) return 5.72;
-  if (width >= 900) return 5.6;
-  if (width >= 700) return 5.45;
-  return 5.2;
+  if (width >= 1280) return 6.35;
+  if (width >= 1120) return 6.2;
+  if (width >= 900) return 6.05;
+  if (width >= 700) return 5.75;
+  return 5.45;
 }
 
 export default function MapViewportController({
@@ -76,17 +77,24 @@ export default function MapViewportController({
   useEffect(() => {
     map.stop();
     map.setMaxBounds(VIETNAM_NAV_BOUNDS);
-    map.setMinZoom(5.15);
+    map.setMinZoom(5.45);
 
     if (selected && validPoint(selected)) {
-      map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, Math.max(7.4, selectedZoom)), {
+      map.flyTo([selected.lat, selected.lng], Math.min(maxZoom, Math.max(8.1, selectedZoom)), {
         duration: .5,
         easeLinearity: .22,
       });
       return;
     }
 
-    if (focusVietnam) {
+    const valid = points.filter(validPoint);
+
+    /*
+     * Prefer the actual LICOGI project cluster whenever coordinates exist.
+     * Previously focusVietnam always forced a country-wide view, which made
+     * northern project markers look tiny and crowded even on a large desktop.
+     */
+    if (focusVietnam && !valid.length) {
       const size = map.getSize();
       const zoom = Math.min(maxZoom, defaultVietnamZoom(size.x));
       map.setView([16.25, 107.25], zoom, { animate: false });
@@ -94,7 +102,6 @@ export default function MapViewportController({
       return;
     }
 
-    const valid = points.filter(validPoint);
     if (!valid.length) {
       const size = map.getSize();
       map.setView([16.25, 107.25], Math.min(maxZoom, defaultVietnamZoom(size.x)), { animate: false });
@@ -102,29 +109,28 @@ export default function MapViewportController({
     }
 
     if (valid.length === 1) {
-      map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, Math.max(6.8, singlePointZoom)), {
+      map.flyTo([valid[0].lat, valid[0].lng], Math.min(maxZoom, Math.max(7.6, singlePointZoom)), {
         duration: .42,
         easeLinearity: .22,
       });
       return;
     }
 
-    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(.1);
+    const bounds = L.latLngBounds(valid.map((point) => [point.lat, point.lng] as [number, number])).pad(.04);
     const size = map.getSize();
-    const horizontalPadding = Math.max(22, Math.min(54, Math.round(size.x * .045)));
-    const verticalPadding = Math.max(18, Math.min(42, Math.round(size.y * .055)));
+    const horizontalPadding = Math.max(16, Math.min(38, Math.round(size.x * .032)));
+    const verticalPadding = Math.max(14, Math.min(30, Math.round(size.y * .04)));
 
     map.fitBounds(bounds, {
       paddingTopLeft: [horizontalPadding, verticalPadding],
       paddingBottomRight: [horizontalPadding, verticalPadding],
       maxZoom,
       animate: true,
-      duration: .46,
+      duration: .42,
     });
 
-    /* fitBounds may choose a very distant zoom on a wide canvas; never let the
-       public Vietnam view fall back to a continent-scale map. */
-    if (map.getZoom() < 5.15) map.setZoom(5.15, { animate: false });
+    /* Never let a wide desktop canvas fall back to a continent-scale view. */
+    if (map.getZoom() < 5.45) map.setZoom(5.45, { animate: false });
     map.panInsideBounds(VIETNAM_NAV_BOUNDS, { animate: false });
   }, [focusVietnam, map, maxZoom, points, selected, selectedZoom, singlePointZoom]);
 
