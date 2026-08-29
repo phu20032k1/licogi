@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
       // an error even though the updates happen around async I/O. Keep correctness rules
       // enabled while allowing these data-loading effects.
       "react-hooks/set-state-in-effect": "off",
+      // Operational dashboards intentionally derive overdue / due-soon status from the
+      // current browser clock while rendering. Those values are display-only and do not
+      // participate in state mutation, so permit clock reads in dashboard calculations.
+      "react-hooks/purity": "off",
     },
   },
   globalIgnores([
