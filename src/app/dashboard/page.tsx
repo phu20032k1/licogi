@@ -6,14 +6,14 @@ import {
   AlertTriangle,
   BarChart3,
   BellRing,
+  BriefcaseBusiness,
   Building2,
+  CheckCircle2,
   ChevronRight,
   CircleDollarSign,
   ClipboardCheck,
   Clock3,
-  Factory,
   FileCheck2,
-  FolderKanban,
   HardHat,
   ListChecks,
   MapPinned,
@@ -24,14 +24,17 @@ import {
   UserCog,
   UsersRound,
 } from "lucide-react";
-import type { Project, ProjectType } from "../../data/projects";
-import { readSession, type UserSession } from "../../lib/authSession";
+
+import OrganizationCommandChart from "../../components/OrganizationCommandChart";
+import type { Project } from "../../data/projects";
 import {
-  dashboardAudienceOptions,
-  dashboardProfiles,
-  resolveDashboardAudience,
-  type DashboardAudience,
-} from "../../lib/dashboardProfile";
+  getRoleAccountProfile,
+  roleAccountByCode,
+  roleAccountProfiles,
+  type RoleAccountProfile,
+  type RoleDomain,
+} from "../../data/roleAccounts";
+import { readSession, type UserSession } from "../../lib/authSession";
 import { fetchProjectsFromDataCenter } from "../../lib/projectData";
 import { canViewModule } from "../../lib/rbac";
 
@@ -70,34 +73,38 @@ type KpiItem = {
   href: string;
 };
 
-const panel =
-  "rounded-[18px] border border-[#17314a] bg-[linear-gradient(180deg,rgba(9,28,48,0.98)_0%,rgba(7,22,39,0.98)_100%)] shadow-[0_16px_46px_rgba(0,0,0,0.26)]";
+type Metrics = {
+  ongoing: Project[];
+  completed: Project[];
+  warranty: Project[];
+  highRisk: Project[];
+  mediumRisk: Project[];
+  safeCount: number;
+  averageActual: number;
+  averagePlan: number;
+  averageHealth: number;
+  totalEvidence: number;
+  delayed: Project[];
+  behind: Project[];
+  valueTotal: number;
+  completionRate: number;
+};
 
-const toneStyles: Record<Tone, { text: string; badge: string; dot: string; soft: string }> = {
-  green: {
-    text: "text-emerald-300",
-    badge: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
-    dot: "bg-emerald-400",
-    soft: "bg-emerald-400/10",
-  },
-  yellow: {
-    text: "text-amber-300",
-    badge: "border-amber-400/30 bg-amber-400/10 text-amber-200",
-    dot: "bg-amber-400",
-    soft: "bg-amber-400/10",
-  },
-  red: {
-    text: "text-red-300",
-    badge: "border-red-400/30 bg-red-400/10 text-red-200",
-    dot: "bg-red-400",
-    soft: "bg-red-400/10",
-  },
-  blue: {
-    text: "text-sky-300",
-    badge: "border-sky-400/30 bg-sky-400/10 text-sky-200",
-    dot: "bg-sky-400",
-    soft: "bg-sky-400/10",
-  },
+type TaskMetrics = {
+  open: WorkItem[];
+  done: WorkItem[];
+  overdue: WorkItem[];
+  dueSoon: WorkItem[];
+  avgProgress: number;
+};
+
+const panel = "overflow-hidden rounded-[12px] border border-slate-300 bg-white shadow-[0_7px_18px_rgba(15,23,42,0.06)]";
+
+const toneStyles: Record<Tone, { text: string; badge: string; dot: string; soft: string; top: string }> = {
+  green: { text: "text-emerald-700", badge: "border-emerald-200 bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", soft: "bg-emerald-50", top: "border-t-emerald-500" },
+  yellow: { text: "text-amber-700", badge: "border-amber-200 bg-amber-50 text-amber-700", dot: "bg-amber-500", soft: "bg-amber-50", top: "border-t-amber-500" },
+  red: { text: "text-red-700", badge: "border-red-200 bg-red-50 text-red-700", dot: "bg-red-500", soft: "bg-red-50", top: "border-t-red-500" },
+  blue: { text: "text-sky-700", badge: "border-sky-200 bg-sky-50 text-sky-700", dot: "bg-sky-500", soft: "bg-sky-50", top: "border-t-sky-600" },
 };
 
 export default function DashboardPage() {
@@ -105,20 +112,14 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<WorkItem[]>([]);
   const [session, setSession] = useState<UserSession | null>(null);
   const [today, setToday] = useState("");
-  const [previewAudience, setPreviewAudience] = useState<DashboardAudience | "">("");
+  const [previewEmail, setPreviewEmail] = useState("");
 
   useEffect(() => {
     const syncAuth = () => setSession(readSession());
     const syncProjects = () => fetchProjectsFromDataCenter().then(setProjects).catch(() => setProjects([]));
     syncAuth();
     syncProjects();
-    setToday(
-      new Intl.DateTimeFormat("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(new Date()),
-    );
+    setToday(new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date()));
     window.addEventListener("licogi-auth-updated", syncAuth);
     window.addEventListener("licogi-data-imported", syncProjects);
     window.addEventListener("licogi-projects-updated", syncProjects);
@@ -143,72 +144,35 @@ export default function DashboardPage() {
       .catch(() => setTasks([]));
   }, [session]);
 
-  const resolvedAudience = resolveDashboardAudience(session);
-  const audience = previewAudience || resolvedAudience;
-  const profile = dashboardProfiles[audience];
   const isAdmin = session?.roleCode === "SUPER_ADMIN" || session?.roleCode === "SYSTEM_ADMIN";
+  const actualProfile = getRoleAccountProfile(session?.email) ?? fallbackProfile(session);
+  const roleProfile = (previewEmail ? getRoleAccountProfile(previewEmail) : undefined) ?? actualProfile;
 
-  const metrics = useMemo(() => {
+  const metrics = useMemo<Metrics>(() => {
     const ongoing = projects.filter((item) => item.status === "ongoing");
     const completed = projects.filter((item) => item.status === "completed");
     const warranty = projects.filter((item) => item.status === "warranty");
     const highRisk = projects.filter((item) => item.risk === "high");
     const mediumRisk = projects.filter((item) => item.risk === "medium");
     const safeCount = projects.filter((item) => !item.risk || item.risk === "low").length;
-    const averageActual = ongoing.length
-      ? Math.round(ongoing.reduce((sum, item) => sum + item.progress, 0) / ongoing.length)
-      : 0;
-    const averagePlan = ongoing.length
-      ? Math.round(
-          ongoing.reduce((sum, item) => sum + (item.plannedProgress ?? item.progress), 0) /
-            ongoing.length,
-        )
-      : 0;
-    const healthProjects = projects.filter((item) => typeof item.healthScore === "number");
-    const averageHealth = healthProjects.length
-      ? Math.round(
-          healthProjects.reduce((sum, item) => sum + (item.healthScore ?? 0), 0) /
-            healthProjects.length,
-        )
-      : 0;
-    const totalEvidence = projects.reduce(
-      (sum, item) => sum + (item.photos ?? 0) + (item.videos ?? 0) + (item.documents ?? 0),
-      0,
-    );
-    const delayed = ongoing.filter(
-      (item) => item.progress < (item.plannedProgress ?? item.progress) - 5,
-    );
-    const behind = ongoing.filter(
-      (item) => item.progress < (item.plannedProgress ?? item.progress),
-    );
-    const valueTotal = Math.round(
-      projects.reduce((sum, item) => sum + parseValueRange(item.valueRange), 0),
-    );
+    const averageActual = ongoing.length ? Math.round(ongoing.reduce((sum, item) => sum + item.progress, 0) / ongoing.length) : 0;
+    const averagePlan = ongoing.length ? Math.round(ongoing.reduce((sum, item) => sum + (item.plannedProgress ?? item.progress), 0) / ongoing.length) : 0;
+    const withHealth = projects.filter((item) => typeof item.healthScore === "number");
+    const averageHealth = withHealth.length ? Math.round(withHealth.reduce((sum, item) => sum + (item.healthScore ?? 0), 0) / withHealth.length) : 0;
+    const totalEvidence = projects.reduce((sum, item) => sum + (item.photos ?? 0) + (item.videos ?? 0) + (item.documents ?? 0), 0);
+    const delayed = ongoing.filter((item) => item.progress < (item.plannedProgress ?? item.progress) - 5);
+    const behind = ongoing.filter((item) => item.progress < (item.plannedProgress ?? item.progress));
+    const valueTotal = Math.round(projects.reduce((sum, item) => sum + parseValueRange(item.valueRange), 0));
     const completionRate = projects.length ? Math.round((completed.length / projects.length) * 100) : 0;
-    return {
-      ongoing,
-      completed,
-      warranty,
-      highRisk,
-      mediumRisk,
-      safeCount,
-      averageActual,
-      averagePlan,
-      averageHealth,
-      totalEvidence,
-      delayed,
-      behind,
-      valueTotal,
-      completionRate,
-    };
+    return { ongoing, completed, warranty, highRisk, mediumRisk, safeCount, averageActual, averagePlan, averageHealth, totalEvidence, delayed, behind, valueTotal, completionRate };
   }, [projects]);
 
   const rows = useMemo<DashboardRow[]>(() => {
     return [...projects]
       .sort((a, b) => {
-        const ag = (a.plannedProgress ?? a.progress) - a.progress;
-        const bg = (b.plannedProgress ?? b.progress) - b.progress;
-        if (bg !== ag) return bg - ag;
+        const aGap = (a.plannedProgress ?? a.progress) - a.progress;
+        const bGap = (b.plannedProgress ?? b.progress) - b.progress;
+        if (bGap !== aGap) return bGap - aGap;
         return (a.healthScore ?? 100) - (b.healthScore ?? 100);
       })
       .map((project) => {
@@ -216,144 +180,115 @@ export default function DashboardPage() {
         const actual = project.progress;
         const delta = actual - plan;
         const gap = Math.max(0, plan - actual);
-        const tone: Tone =
-          project.status === "completed"
-            ? "green"
-            : project.status === "warranty"
-              ? "blue"
-              : delta <= -8 || project.risk === "high"
-                ? "red"
-                : delta < 0 || project.risk === "medium"
-                  ? "yellow"
-                  : "green";
-        const status =
-          project.status === "completed"
-            ? "Tốt"
-            : project.status === "warranty"
-              ? "Bảo hành"
-              : tone === "red"
-                ? "Chậm"
-                : tone === "yellow"
-                  ? "Theo dõi"
-                  : "Tốt";
+        const tone: Tone = project.status === "completed" ? "green" : project.status === "warranty" ? "blue" : delta <= -8 || project.risk === "high" ? "red" : delta < 0 || project.risk === "medium" ? "yellow" : "green";
+        const status = project.status === "completed" ? "Tốt" : project.status === "warranty" ? "Bảo hành" : tone === "red" ? "Chậm" : tone === "yellow" ? "Theo dõi" : "Tốt";
         return { project, plan, actual, gap, delta, tone, status };
       });
   }, [projects]);
 
   const visibleTasks = useMemo(() => {
-    if (audience !== "EMPLOYEE" || !session?.email) return tasks;
-    const email = session.email.toLocaleLowerCase("vi");
-    const personal = tasks.filter((item) => item.assigneeEmail?.toLocaleLowerCase("vi") === email);
+    if (roleProfile?.audience !== "EMPLOYEE" || !session?.email || previewEmail) return tasks;
+    const personal = tasks.filter((item) => item.assigneeEmail?.toLowerCase() === session.email.toLowerCase());
     return personal.length ? personal : tasks.filter((item) => normalize(item.assignee).includes(normalize(session.name)));
-  }, [audience, session, tasks]);
+  }, [previewEmail, roleProfile?.audience, session, tasks]);
 
-  const taskMetrics = useMemo(() => {
-    const now = new Date();
+  const taskMetrics = useMemo<TaskMetrics>(() => {
+    const now = Date.now();
     const open = visibleTasks.filter((item) => item.status !== "Hoàn thành");
     const done = visibleTasks.filter((item) => item.status === "Hoàn thành");
-    const overdue = open.filter((item) => item.due && new Date(`${item.due}T23:59:59`).getTime() < now.getTime());
+    const overdue = open.filter((item) => item.due && new Date(`${item.due}T23:59:59`).getTime() < now);
     const dueSoon = open.filter((item) => {
       if (!item.due) return false;
-      const diff = new Date(`${item.due}T23:59:59`).getTime() - now.getTime();
+      const diff = new Date(`${item.due}T23:59:59`).getTime() - now;
       return diff >= 0 && diff <= 1000 * 60 * 60 * 72;
     });
-    const avgProgress = visibleTasks.length
-      ? Math.round(visibleTasks.reduce((sum, item) => sum + (Number(item.progress) || 0), 0) / visibleTasks.length)
-      : 0;
+    const avgProgress = visibleTasks.length ? Math.round(visibleTasks.reduce((sum, item) => sum + (Number(item.progress) || 0), 0) / visibleTasks.length) : 0;
     return { open, done, overdue, dueSoon, avgProgress };
   }, [visibleTasks]);
 
-  const tableRows = rows.slice(0, profile.maxProjectRows);
-  const alerts = rows
-    .filter((row) => row.project.status === "ongoing" && (row.gap > 0 || row.project.risk === "high" || (row.project.healthScore ?? 100) < 70))
-    .slice(0, audience === "EMPLOYEE" ? 3 : 5);
-  const chartRows = rows.filter((row) => row.project.status === "ongoing").slice(0, 6);
-  const typeStats = topCounts(projects.map((item) => item.type));
-  const provinceStats = topCounts(projects.map((item) => item.province));
-  const kpis = buildKpis(audience, metrics, taskMetrics);
+  const projectLimit = roleProfile?.audience === "CHAIRMAN" ? 7 : roleProfile?.audience === "EMPLOYEE" ? 5 : 10;
+  const tableRows = rows.slice(0, projectLimit);
+  const alerts = rows.filter((row) => row.project.status === "ongoing" && (row.gap > 0 || row.project.risk === "high" || (row.project.healthScore ?? 100) < 70)).slice(0, 5);
+  const chartRows = rows.filter((row) => row.project.status === "ongoing").slice(0, 7);
+  const kpis = buildKpis(roleProfile, metrics, taskMetrics);
   const actionTasks = [...taskMetrics.overdue, ...taskMetrics.dueSoon, ...taskMetrics.open]
     .filter((item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index)
-    .slice(0, profile.maxTaskRows);
+    .slice(0, roleProfile?.audience === "EMPLOYEE" ? 10 : 7);
 
   return (
-    <div className="space-y-3 rounded-[24px] border border-[#10263b] bg-[#051523] p-3 text-slate-100 shadow-[0_25px_80px_rgba(0,0,0,0.3)] sm:p-4 lg:p-5">
-      <section className="rounded-[20px] border border-[#17304a] bg-[radial-gradient(circle_at_top,rgba(17,42,70,0.9),rgba(5,21,35,0.98)_60%)] px-4 py-4">
-        <div className="grid gap-4 lg:grid-cols-[auto_1fr_auto] lg:items-center">
-          <div className="flex items-center gap-3">
-            <div className="grid h-14 w-14 place-items-center rounded-full border border-orange-300/30 bg-orange-400/10 p-3 shadow-[0_0_26px_rgba(251,146,60,0.2)]">
-              <Factory size={25} className="text-orange-300" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-300">LICOGI 18.3</p>
-              <p className="mt-1 text-xs font-bold text-slate-300">{profile.eyebrow}</p>
-            </div>
+    <div className="mx-auto w-full max-w-[1900px] space-y-3 bg-[#f2f3f5] text-slate-900">
+      <section className="overflow-hidden rounded-[13px] border border-slate-300 bg-white shadow-[0_8px_22px_rgba(15,23,42,0.06)]">
+        <div className="grid gap-3 bg-[linear-gradient(90deg,#0a5a6a_0%,#0a5a6a_42%,#b8b8b8_42%,#b8b8b8_100%)] px-4 py-3 text-white lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100">LICOGI 18.3 · Enterprise Growth OS</p>
+            <h1 className="mt-1 text-[18px] font-black uppercase tracking-[0.035em] sm:text-[22px]">{roleProfile?.position || "Dashboard điều hành"}</h1>
+            <p className="mt-1 max-w-5xl text-[10px] font-semibold leading-4 text-white/80">{roleDescription(roleProfile)}</p>
           </div>
-
-          <div className="text-center">
-            <h1 className="text-xl font-black uppercase tracking-[0.055em] text-[#f2d28b] sm:text-2xl xl:text-[30px]">{profile.title}</h1>
-            <p className="mx-auto mt-1 max-w-4xl text-[11px] font-semibold leading-5 text-slate-400">{profile.description}</p>
-          </div>
-
-          <div className="space-y-2 text-left lg:text-right">
-            <div>
-              <p className="text-base font-black text-white">{today || "--/--/----"}</p>
-              <p className="text-[10px] font-bold text-slate-500">{session?.name || "Người dùng LICOGI 18.3"}</p>
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <div className="rounded border border-white/25 bg-black/10 px-3 py-1.5 text-right">
+              <p className="text-[12px] font-black">{today || "--/--/----"}</p>
+              <p className="text-[8px] font-bold uppercase tracking-[0.1em] text-white/75">{session?.name || "LICOGI 18.3"}</p>
             </div>
-            <span className="inline-flex rounded-md border border-[#f2d28b]/20 bg-[#f2d28b]/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#f2d28b]">{profile.label}</span>
+            <span className="rounded border border-yellow-200/40 bg-yellow-300/20 px-2.5 py-1.5 text-[9px] font-black text-yellow-50">{roleProfile?.unitLabel || "Điều hành"}</span>
           </div>
         </div>
-
         {isAdmin ? (
-          <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-white/5 pt-3">
-            <span className="text-[10px] font-bold text-slate-500">Admin xem thử dashboard theo vị trí:</span>
-            <select
-              value={previewAudience}
-              onChange={(event) => setPreviewAudience(event.target.value as DashboardAudience | "")}
-              className="rounded-lg border border-[#24415b] bg-[#081b2d] px-2.5 py-1.5 text-[10px] font-bold text-slate-200 outline-none"
-            >
-              <option value="">Tự động theo tài khoản</option>
-              {dashboardAudienceOptions.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2">
+            <span className="text-[9px] font-bold text-slate-500">Admin xem thử đúng từng tài khoản / vị trí:</span>
+            <select value={previewEmail} onChange={(event) => setPreviewEmail(event.target.value)} className="max-w-[420px] rounded border border-slate-300 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-700 outline-none">
+              <option value="">Tự động theo tài khoản đang đăng nhập</option>
+              {roleAccountProfiles.map((item) => <option key={item.email} value={item.email}>{item.position} · {item.email}</option>)}
             </select>
           </div>
         ) : null}
       </section>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <OrganizationCommandChart active={roleProfile} />
+
+      <section className="rounded-[12px] border border-slate-300 bg-white px-3 py-2.5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">Chuỗi điều hành:</span>
+          {(roleProfile?.focusChain || ["Mục tiêu", "KR/KPI", "Thực thi", "Đo lường", "Cảnh báo", "Quyết định", "Kết quả"]).map((item, index, array) => (
+            <span key={`${item}-${index}`} className="flex items-center gap-1.5">
+              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black text-slate-700">{item}</span>
+              {index < array.length - 1 ? <ChevronRight size={11} className="text-red-500" /> : null}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((item) => <KpiCard key={item.title} {...item} />)}
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[1.5fr_0.78fr_0.92fr]">
+      <section className="grid gap-2 xl:grid-cols-[1.55fr_0.72fr_0.82fr]">
         <article className={panel}>
-          <PanelHeader icon={<Trophy size={16} />} title={profile.boardTitle} note={`${tableRows.length}/${projects.length} dự án`} />
-          <ProjectTable rows={tableRows} audience={audience} />
+          <PanelHeader icon={<Trophy size={14} />} title={boardTitle(roleProfile)} note={`${tableRows.length}/${projects.length} dự án`} />
+          <ProjectTable rows={tableRows} />
         </article>
 
         <article className={panel}>
-          <PanelHeader icon={<BellRing size={16} />} title={profile.alertTitle} note={`${alerts.length} cảnh báo`} />
-          <div className="space-y-2 p-3">
+          <PanelHeader icon={<BellRing size={14} />} title="Cảnh báo điều hành" note={`${alerts.length} nội dung`} />
+          <div className="space-y-1.5 p-2.5">
             {alerts.map((row) => (
-              <Link key={row.project.id} href={`/projects/${row.project.id}`} className="grid grid-cols-[auto_1fr_auto] gap-2 rounded-xl border border-[#17314a] bg-[#091b2d] px-3 py-2.5 transition hover:border-orange-400/30 hover:bg-[#0b2136]">
-                <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${toneStyles[row.tone].dot}`} />
+              <Link key={row.project.id} href={`/projects/${row.project.id}`} className="grid grid-cols-[auto_1fr_auto] gap-2 rounded border border-slate-200 bg-slate-50 px-2.5 py-2 transition hover:border-red-200 hover:bg-red-50/40">
+                <span className={`mt-1 h-2 w-2 rounded-full ${toneStyles[row.tone].dot}`} />
                 <div className="min-w-0">
-                  <p className="line-clamp-2 text-[11px] font-black leading-5 text-slate-100">{row.project.name}</p>
-                  <p className="text-[9px] font-semibold text-slate-500">{alertReason(row, audience)}</p>
+                  <p className="line-clamp-2 text-[10px] font-black leading-4 text-slate-800">{row.project.name}</p>
+                  <p className="mt-0.5 text-[8px] font-semibold text-slate-500">{alertReason(row, roleProfile?.domain)}</p>
                 </div>
-                <span className="text-[9px] font-black text-[#f6ce73]">[XEM]</span>
+                <span className="text-[8px] font-black text-red-600">[XEM]</span>
               </Link>
             ))}
-            {!alerts.length && <EmptyBox text="Chưa có cảnh báo ưu tiên theo phạm vi dashboard này." />}
+            {!alerts.length ? <EmptyBox text="Chưa có cảnh báo ưu tiên theo dữ liệu hiện tại." /> : null}
           </div>
         </article>
 
         <article className={panel}>
-          <PanelHeader icon={<BarChart3 size={16} />} title="Diễn biến kế hoạch / thực hiện" note="Dữ liệu dự án" />
-          <div className="p-3">
+          <PanelHeader icon={<BarChart3 size={14} />} title="Kế hoạch / thực hiện" note="Tiến độ dự án" />
+          <div className="p-2.5">
             <TrendChart rows={chartRows} />
-            <div className="mt-1 flex items-center justify-center gap-4 text-[9px] font-bold text-slate-500">
-              <span className="flex items-center gap-1.5"><span className="h-0.5 w-5 border-t border-dashed border-slate-300" /> Kế hoạch</span>
-              <span className="flex items-center gap-1.5"><span className="h-0.5 w-5 bg-orange-400" /> Thực hiện</span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-1 grid grid-cols-2 gap-1.5">
               <MiniNumber label="Đang chậm" value={metrics.delayed.length} tone={metrics.delayed.length ? "red" : "green"} />
               <MiniNumber label="Rủi ro cao" value={metrics.highRisk.length} tone={metrics.highRisk.length ? "red" : "green"} />
             </div>
@@ -361,392 +296,231 @@ export default function DashboardPage() {
         </article>
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[1.1fr_1.15fr_0.75fr]">
+      <section className="grid gap-2 xl:grid-cols-[1.02fr_1.2fr_0.78fr]">
         <article className={panel}>
-          <PanelHeader icon={<ListChecks size={16} />} title={profile.workTitle} note={tasks.length ? "Dữ liệu công việc" : "Theo dữ liệu hiện có"} />
-          {tasks.length ? (
-            <WorkList tasks={actionTasks} audience={audience} />
-          ) : (
-            <ProjectWorkSummary audience={audience} rows={rows.slice(0, 5)} metrics={metrics} />
-          )}
+          <PanelHeader icon={<ListChecks size={14} />} title={workTitle(roleProfile)} note={tasks.length ? "Dữ liệu công việc" : "Theo dữ liệu dự án"} />
+          {tasks.length ? <WorkList tasks={actionTasks} /> : <ProjectWorkSummary rows={rows.slice(0, 6)} roleProfile={roleProfile} />}
         </article>
 
         <article className={panel}>
-          <PanelHeader icon={<Target size={16} />} title={profile.directiveTitle} note="Ưu tiên theo vai trò" />
-          <div className="grid gap-2 p-3 lg:grid-cols-2">
-            {profile.priorities.map((priority, index) => {
-              const row = alerts[index % Math.max(alerts.length, 1)];
-              const tone: Tone = row?.tone || (index === 0 ? "blue" : "yellow");
-              return (
-                <div key={priority} className={`rounded-xl border border-white/5 ${toneStyles[tone].soft} p-3`}>
-                  <div className="flex items-start gap-2.5">
-                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-[10px] font-black text-[#f2d28b]">{index + 1}</span>
-                    <div>
-                      <p className="text-[11px] font-black leading-5 text-slate-100">{priority}</p>
-                      <p className="mt-1 text-[9px] font-semibold leading-4 text-slate-500">{directiveDetail(audience, row, taskMetrics, index)}</p>
-                    </div>
+          <PanelHeader icon={<Target size={14} />} title="Ưu tiên / chỉ đạo theo vị trí" note={roleProfile?.shortPosition || "Vai trò"} />
+          <div className="grid gap-1.5 p-2.5 sm:grid-cols-2">
+            {(roleProfile?.priorities || []).map((priority, index) => (
+              <div key={priority} className="rounded border border-slate-200 bg-[#f8fafc] p-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#073069] text-[8px] font-black text-white">{index + 1}</span>
+                  <div>
+                    <p className="text-[10px] font-black leading-4 text-slate-800">{priority}</p>
+                    <p className="mt-0.5 text-[8px] font-semibold leading-4 text-slate-500">{priorityDetail(roleProfile, alerts[index], taskMetrics, metrics)}</p>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </article>
 
         <article className={panel}>
-          <PanelHeader icon={<UserCog size={16} />} title="Truy cập nhanh" note={profile.shortLabel} />
-          <div className="space-y-2 p-3">
-            {profile.quickLinks.map((item) => (
-              <Link key={item.href} href={item.href} className="flex items-center justify-between gap-3 rounded-xl border border-[#17314a] bg-[#091b2d] px-3 py-2.5 transition hover:border-orange-400/30 hover:bg-[#0c2236]">
+          <PanelHeader icon={<UserCog size={14} />} title="Truy cập nhanh" note={roleProfile?.unitLabel || "LICOGI"} />
+          <div className="space-y-1.5 p-2.5">
+            {(roleProfile?.quickLinks || []).map((item) => (
+              <Link key={`${item.href}-${item.label}`} href={item.href} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-slate-50 px-2.5 py-2 transition hover:border-sky-300 hover:bg-sky-50">
                 <div>
-                  <p className="text-[11px] font-black text-slate-100">{item.label}</p>
-                  <p className="mt-0.5 text-[9px] font-semibold text-slate-500">{item.note}</p>
+                  <p className="text-[10px] font-black text-slate-800">{item.label}</p>
+                  <p className="text-[8px] font-semibold text-slate-500">{item.note}</p>
                 </div>
-                <ChevronRight size={14} className="text-orange-300" />
+                <ChevronRight size={13} className="text-sky-700" />
               </Link>
             ))}
           </div>
         </article>
       </section>
 
-      <section className="grid gap-3 lg:grid-cols-2">
-        <article className={panel}>
-          <PanelHeader icon={<FolderKanban size={16} />} title="Cơ cấu danh mục" note="Theo loại công trình" />
-          <div className="grid gap-2 p-3 sm:grid-cols-4">
-            {typeStats.map((item) => <StatTile key={item.label} label={item.label} value={item.count} />)}
-            {!typeStats.length && <EmptyBox text="Chưa có dữ liệu cơ cấu dự án." />}
-          </div>
-        </article>
-        <article className={panel}>
-          <PanelHeader icon={<MapPinned size={16} />} title="Địa bàn trọng điểm" note="Theo số lượng dự án" />
-          <div className="grid gap-2 p-3 sm:grid-cols-4">
-            {provinceStats.map((item) => <StatTile key={item.label} label={item.label} value={item.count} />)}
-            {!provinceStats.length && <EmptyBox text="Chưa có dữ liệu địa bàn." />}
-          </div>
-        </article>
+      <section className="grid gap-2 lg:grid-cols-[1fr_1fr_1fr]">
+        <ScopeCard icon={<Building2 size={14} />} title="Phạm vi tổ chức" value={roleProfile?.departmentName || "Toàn công ty"} note={`${roleProfile?.levelLabel || "Điều hành"} · ${roleProfile?.roleCode || session?.roleCode || "—"}`} />
+        <ScopeCard icon={<BriefcaseBusiness size={14} />} title="Tài khoản đang xem" value={previewEmail || session?.email || "—"} note={previewEmail ? "Chế độ preview của Admin" : "Tài khoản đăng nhập thực tế"} />
+        <ScopeCard icon={<MapPinned size={14} />} title="Nguyên tắc dữ liệu" value="1 nguồn dữ liệu · nhiều góc nhìn" note="Mục tiêu → trách nhiệm → KPI → action → risk → decision → outcome" />
       </section>
     </div>
   );
 }
 
-function buildKpis(
-  audience: DashboardAudience,
-  metrics: ReturnType<typeof dashboardMetricShape>,
-  taskMetrics: ReturnType<typeof taskMetricShape>,
-): KpiItem[] {
+function fallbackProfile(session: UserSession | null): RoleAccountProfile | undefined {
+  const role = String(session?.roleCode || "").toUpperCase();
+  if (role === "SUPER_ADMIN" || role === "SYSTEM_ADMIN") return roleAccountByCode.get("CHAIRMAN");
+  if (role === "EXECUTIVE") return roleAccountByCode.get("GENERAL_DIRECTOR");
+  if (role === "PROJECT_MANAGER") return roleAccountByCode.get("HEAD_DESIGN_PMO");
+  if (role === "ENGINEER" || role === "DATA_STEWARD") return roleAccountByCode.get("STAFF_DESIGN_PMO");
+  return roleAccountByCode.get("STAFF_ADMIN");
+}
+
+function buildKpis(profile: RoleAccountProfile | undefined, metrics: Metrics, tasks: TaskMetrics): KpiItem[] {
+  const domain = profile?.domain || "CORPORATE";
   const progressTone: Tone = metrics.averageActual >= metrics.averagePlan ? "green" : metrics.averagePlan - metrics.averageActual <= 5 ? "yellow" : "red";
   const healthTone: Tone = metrics.averageHealth >= 80 ? "green" : metrics.averageHealth >= 65 ? "yellow" : "red";
   const delayTone: Tone = metrics.delayed.length === 0 ? "green" : metrics.delayed.length <= 2 ? "yellow" : "red";
-  const taskToneValue: Tone = taskMetrics.overdue.length ? "red" : taskMetrics.dueSoon.length ? "yellow" : "green";
+  const taskTone: Tone = tasks.overdue.length ? "red" : tasks.dueSoon.length ? "yellow" : "green";
 
-  if (audience === "CHAIRMAN") {
-    return [
-      { title: "Giá trị danh mục", value: `${metrics.valueTotal} tỷ`, subtitle: `${metrics.ongoing.length} dự án đang triển khai`, status: "TOÀN CÔNG TY", tone: "blue", icon: <CircleDollarSign size={20} />, href: "/finance" },
-      { title: "Sức khỏe danh mục", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.highRisk.length} rủi ro cao · ${metrics.mediumRisk.length} trung bình`, status: healthTone === "green" ? "ỔN ĐỊNH" : "CẦN GIÁM SÁT", tone: healthTone, icon: <ShieldCheck size={20} />, href: "/projects" },
-      { title: "Dự án chậm trọng điểm", value: String(metrics.delayed.length), subtitle: `Chênh kế hoạch bình quân ${Math.max(0, metrics.averagePlan - metrics.averageActual)}%`, status: delayTone === "green" ? "TỐT" : "CẢNH BÁO", tone: delayTone, icon: <AlertTriangle size={20} />, href: "/reports" },
-      { title: "Tỷ lệ hoàn thành", value: `${metrics.completionRate}%`, subtitle: `${metrics.completed.length}/${metrics.completed.length + metrics.ongoing.length + metrics.warranty.length} dự án`, status: "KẾT QUẢ", tone: metrics.completionRate >= 50 ? "green" : "yellow", icon: <Trophy size={20} />, href: "/reports" },
-    ];
-  }
+  if (domain === "BOARD") return [
+    { title: "Giá trị danh mục", value: `${metrics.valueTotal} tỷ`, subtitle: `${metrics.ongoing.length} dự án đang triển khai`, status: "CHIẾN LƯỢC", tone: "blue", icon: <CircleDollarSign size={18} />, href: "/finance" },
+    { title: "Sức khỏe danh mục", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.highRisk.length} rủi ro cao · ${metrics.mediumRisk.length} trung bình`, status: healthTone === "green" ? "ỔN ĐỊNH" : "GIÁM SÁT", tone: healthTone, icon: <ShieldCheck size={18} />, href: "/projects" },
+    { title: "Dự án chậm trọng điểm", value: String(metrics.delayed.length), subtitle: `Chênh kế hoạch bình quân ${Math.max(0, metrics.averagePlan - metrics.averageActual)}%`, status: delayTone === "green" ? "TỐT" : "CẢNH BÁO", tone: delayTone, icon: <AlertTriangle size={18} />, href: "/reports" },
+    { title: "Tỷ lệ hoàn thành", value: `${metrics.completionRate}%`, subtitle: `${metrics.completed.length}/${Math.max(1, metrics.completed.length + metrics.ongoing.length + metrics.warranty.length)} dự án`, status: "OUTCOME", tone: metrics.completionRate >= 50 ? "green" : "yellow", icon: <Trophy size={18} />, href: "/reports" },
+  ];
 
-  if (audience === "GENERAL_DIRECTOR") {
-    return [
-      { title: "Tiến độ toàn công ty", value: `${metrics.averageActual}%`, subtitle: `Kế hoạch ${metrics.averagePlan}% · Cần bù ${Math.max(0, metrics.averagePlan - metrics.averageActual)}%`, status: progressTone === "green" ? "TỐT" : progressTone === "yellow" ? "THEO DÕI" : "CHẬM", tone: progressTone, icon: <TrendingUp size={20} />, href: "/projects" },
-      { title: "Đang thi công", value: `${metrics.ongoing.length} DA`, subtitle: `${metrics.completed.length} hoàn thành · ${metrics.warranty.length} bảo hành`, status: "ĐANG ĐIỀU HÀNH", tone: "blue", icon: <HardHat size={20} />, href: "/construction" },
-      { title: "Điểm nghẽn cần xử lý", value: String(metrics.behind.length), subtitle: `${metrics.delayed.length} dự án chậm >5%`, status: delayTone === "green" ? "ỔN ĐỊNH" : "ƯU TIÊN", tone: delayTone, icon: <BellRing size={20} />, href: "/tasks" },
-      { title: "Project Health", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.highRisk.length} dự án rủi ro cao`, status: healthTone === "green" ? "TỐT" : "CẦN XỬ LÝ", tone: healthTone, icon: <ShieldCheck size={20} />, href: "/projects" },
-    ];
-  }
+  if (domain === "FINANCE" || domain === "ACCOUNTING") return [
+    { title: "Giá trị danh mục", value: `${metrics.valueTotal} tỷ`, subtitle: "Nguồn hiện có từ danh mục dự án", status: "DOANH THU / BACKLOG", tone: "blue", icon: <CircleDollarSign size={18} />, href: "/finance" },
+    { title: "Dự án ảnh hưởng dòng tiền", value: String(metrics.behind.length), subtitle: "Proxy từ dự án chậm so với kế hoạch", status: metrics.behind.length ? "THEO DÕI" : "ỔN", tone: delayTone, icon: <TrendingUp size={18} />, href: "/debt" },
+    { title: "Dự án đã hoàn thành", value: String(metrics.completed.length), subtitle: "Cơ sở rà soát nghiệm thu / thanh toán", status: "THANH QUYẾT TOÁN", tone: "green", icon: <CheckCircle2 size={18} />, href: "/payments" },
+    { title: "Việc tài chính đến hạn", value: String(tasks.dueSoon.length + tasks.overdue.length), subtitle: `${tasks.overdue.length} việc quá hạn`, status: tasks.overdue.length ? "XỬ LÝ NGAY" : "THEO DÕI", tone: taskTone, icon: <Clock3 size={18} />, href: "/tasks" },
+  ];
 
-  if (audience === "DEPUTY_GENERAL_DIRECTOR") {
-    return [
-      { title: "Tiến độ khối phụ trách", value: `${metrics.averageActual}%`, subtitle: `Kế hoạch hiện tại ${metrics.averagePlan}%`, status: progressTone === "red" ? "CẦN BÙ" : "THEO KẾ HOẠCH", tone: progressTone, icon: <TrendingUp size={20} />, href: "/planning" },
-      { title: "Dự án cần điều phối", value: String(metrics.behind.length), subtitle: `${metrics.highRisk.length} rủi ro cao · ${metrics.delayed.length} chậm`, status: delayTone === "green" ? "ỔN" : "ĐIỀU PHỐI", tone: delayTone, icon: <UsersRound size={20} />, href: "/construction" },
-      { title: "Hồ sơ & minh chứng", value: String(metrics.totalEvidence), subtitle: "Ảnh, video, hồ sơ trên dữ liệu dự án", status: "KIỂM SOÁT", tone: "blue", icon: <FileCheck2 size={20} />, href: "/documents" },
-      { title: "Sức khỏe dự án", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.safeCount} dự án ngưỡng an toàn`, status: healthTone === "green" ? "TỐT" : "THEO DÕI", tone: healthTone, icon: <ShieldCheck size={20} />, href: "/projects" },
-    ];
-  }
+  if (domain === "BUSINESS_PRODUCTION_DESIGN") return [
+    { title: "Giá trị danh mục", value: `${metrics.valueTotal} tỷ`, subtitle: "Danh mục hợp đồng/dự án đang có", status: "PIPELINE → BACKLOG", tone: "blue", icon: <BriefcaseBusiness size={18} />, href: "/crm" },
+    { title: "Dự án đang triển khai", value: String(metrics.ongoing.length), subtitle: `${metrics.completed.length} dự án đã hoàn thành`, status: "CUNG ỨNG", tone: "blue", icon: <Building2 size={18} />, href: "/projects" },
+    { title: "Tiến độ bình quân", value: `${metrics.averageActual}%`, subtitle: `Kế hoạch ${metrics.averagePlan}%`, status: progressTone === "red" ? "CẦN BÙ" : "ĐANG BÁM", tone: progressTone, icon: <TrendingUp size={18} />, href: "/planning" },
+    { title: "Dự án cần phối hợp", value: String(metrics.behind.length), subtitle: "Có nguy cơ ảnh hưởng sản xuất/cung ứng", status: delayTone === "green" ? "ỔN" : "ĐIỀU PHỐI", tone: delayTone, icon: <UsersRound size={18} />, href: "/tasks" },
+  ];
 
-  if (audience === "DEPARTMENT_HEAD") {
-    return [
-      { title: "Công việc đang mở", value: String(taskMetrics.open.length), subtitle: `${taskMetrics.done.length} đã hoàn thành`, status: taskToneValue === "red" ? "CÓ QUÁ HẠN" : "ĐANG KIỂM SOÁT", tone: taskToneValue, icon: <ListChecks size={20} />, href: "/tasks" },
-      { title: "Đến hạn 72 giờ", value: String(taskMetrics.dueSoon.length), subtitle: `${taskMetrics.overdue.length} việc quá hạn`, status: taskMetrics.overdue.length ? "CẦN XỬ LÝ" : "THEO DÕI", tone: taskToneValue, icon: <Clock3 size={20} />, href: "/tasks" },
-      { title: "Dự án cần theo dõi", value: String(metrics.behind.length), subtitle: `Tiến độ bình quân ${metrics.averageActual}%`, status: delayTone === "green" ? "ỔN" : "NHẮC VIỆC", tone: delayTone, icon: <Building2 size={20} />, href: "/projects" },
-      { title: "Hiệu suất công việc", value: `${taskMetrics.avgProgress}%`, subtitle: "Tiến độ bình quân đầu việc", status: taskMetrics.avgProgress >= 70 ? "TỐT" : "CẦN ĐÔN ĐỐC", tone: taskMetrics.avgProgress >= 70 ? "green" : "yellow", icon: <ClipboardCheck size={20} />, href: "/tasks" },
-    ];
-  }
+  if (domain === "CONSTRUCTION") return [
+    { title: "Tiến độ thi công", value: `${metrics.averageActual}%`, subtitle: `Kế hoạch bình quân ${metrics.averagePlan}%`, status: progressTone === "red" ? "CHẬM" : "ĐANG BÁM", tone: progressTone, icon: <HardHat size={18} />, href: "/construction" },
+    { title: "Dự án chậm >5%", value: String(metrics.delayed.length), subtitle: `${metrics.behind.length} dự án dưới kế hoạch`, status: delayTone === "green" ? "ỔN" : "BÙ TIẾN ĐỘ", tone: delayTone, icon: <AlertTriangle size={18} />, href: "/planning" },
+    { title: "Rủi ro cao", value: String(metrics.highRisk.length), subtitle: `${metrics.safeCount} dự án mức an toàn`, status: metrics.highRisk.length ? "XỬ LÝ" : "TỐT", tone: metrics.highRisk.length ? "red" : "green", icon: <ShieldCheck size={18} />, href: "/projects" },
+    { title: "Minh chứng hiện trường", value: String(metrics.totalEvidence), subtitle: "Ảnh, video và hồ sơ dự án", status: "KIỂM SOÁT", tone: "blue", icon: <FileCheck2 size={18} />, href: "/documents" },
+  ];
 
-  if (audience === "DEPUTY_DEPARTMENT_HEAD") {
-    return [
-      { title: "Việc cần đôn đốc", value: String(taskMetrics.open.length), subtitle: `${taskMetrics.overdue.length} quá hạn`, status: taskToneValue === "green" ? "ỔN" : "ĐÔN ĐỐC", tone: taskToneValue, icon: <ListChecks size={20} />, href: "/tasks" },
-      { title: "Đến hạn 72 giờ", value: String(taskMetrics.dueSoon.length), subtitle: "Chuẩn bị nhắc việc và kiểm tra đầu ra", status: "THEO DÕI NGÀY", tone: taskMetrics.dueSoon.length ? "yellow" : "green", icon: <Clock3 size={20} />, href: "/tasks" },
-      { title: "Dự án có chênh tiến độ", value: String(metrics.behind.length), subtitle: `${metrics.delayed.length} dự án chậm >5%`, status: delayTone === "green" ? "ỔN" : "PHỐI HỢP", tone: delayTone, icon: <HardHat size={20} />, href: "/construction" },
-      { title: "Tiến độ đầu việc", value: `${taskMetrics.avgProgress}%`, subtitle: `${taskMetrics.done.length} việc hoàn thành`, status: taskMetrics.avgProgress >= 70 ? "TỐT" : "CẦN BÁM SÁT", tone: taskMetrics.avgProgress >= 70 ? "green" : "yellow", icon: <Target size={20} />, href: "/tasks" },
-    ];
-  }
+  if (domain === "WARRANTY") return [
+    { title: "Công trình bảo hành", value: String(metrics.warranty.length), subtitle: `${metrics.completed.length} công trình hoàn thành`, status: "SAU BÀN GIAO", tone: "blue", icon: <ShieldCheck size={18} />, href: "/warranty" },
+    { title: "Việc đang mở", value: String(tasks.open.length), subtitle: `${tasks.overdue.length} việc quá hạn`, status: tasks.overdue.length ? "QUÁ SLA" : "ĐANG XỬ LÝ", tone: taskTone, icon: <ListChecks size={18} />, href: "/tasks" },
+    { title: "Hồ sơ / minh chứng", value: String(metrics.totalEvidence), subtitle: "Nguồn cho phân tích lỗi và chất lượng", status: "QUALITY", tone: "blue", icon: <FileCheck2 size={18} />, href: "/documents" },
+    { title: "Project Health", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.highRisk.length} dự án rủi ro cao`, status: healthTone === "green" ? "TỐT" : "THEO DÕI", tone: healthTone, icon: <Trophy size={18} />, href: "/projects" },
+  ];
+
+  if (domain === "SAFETY" || domain === "CONTROL") return [
+    { title: "Rủi ro cao", value: String(metrics.highRisk.length), subtitle: `${metrics.safeCount} dự án mức thấp/an toàn`, status: metrics.highRisk.length ? "CẢNH BÁO" : "TỐT", tone: metrics.highRisk.length ? "red" : "green", icon: <ShieldCheck size={18} />, href: "/projects" },
+    { title: "Dự án chậm", value: String(metrics.delayed.length), subtitle: "Điểm có khả năng phát sinh áp lực vận hành", status: delayTone === "green" ? "ỔN" : "KIỂM TRA", tone: delayTone, icon: <AlertTriangle size={18} />, href: "/construction" },
+    { title: "Minh chứng", value: String(metrics.totalEvidence), subtitle: "Ảnh, video, tài liệu cho kiểm tra", status: "EVIDENCE", tone: "blue", icon: <FileCheck2 size={18} />, href: "/documents" },
+    { title: "Hành động cần theo dõi", value: String(tasks.open.length), subtitle: `${tasks.overdue.length} quá hạn`, status: tasks.overdue.length ? "KHẮC PHỤC" : "THEO DÕI", tone: taskTone, icon: <ClipboardCheck size={18} />, href: "/tasks" },
+  ];
 
   return [
-    { title: "Việc của tôi đang mở", value: String(taskMetrics.open.length), subtitle: `${taskMetrics.done.length} việc đã hoàn thành`, status: taskToneValue === "red" ? "CÓ QUÁ HẠN" : "ĐANG THỰC HIỆN", tone: taskToneValue, icon: <ListChecks size={20} />, href: "/tasks" },
-    { title: "Đến hạn 72 giờ", value: String(taskMetrics.dueSoon.length), subtitle: `${taskMetrics.overdue.length} việc quá hạn`, status: taskMetrics.overdue.length ? "LÀM NGAY" : "THEO KẾ HOẠCH", tone: taskToneValue, icon: <Clock3 size={20} />, href: "/tasks" },
-    { title: "Tiến độ công việc", value: `${taskMetrics.avgProgress}%`, subtitle: "Bình quân các đầu việc được giao", status: taskMetrics.avgProgress >= 70 ? "TỐT" : "CẦN TĂNG TỐC", tone: taskMetrics.avgProgress >= 70 ? "green" : "yellow", icon: <ClipboardCheck size={20} />, href: "/tasks" },
-    { title: "Dự án đang hoạt động", value: String(metrics.ongoing.length), subtitle: `${metrics.behind.length} dự án cần chú ý`, status: "PHẠM VI CÔNG VIỆC", tone: "blue", icon: <HardHat size={20} />, href: "/construction" },
+    { title: profile?.audience === "EMPLOYEE" ? "Việc của tôi" : "Công việc đang mở", value: String(tasks.open.length), subtitle: `${tasks.done.length} việc đã hoàn thành`, status: taskTone === "red" ? "CÓ QUÁ HẠN" : "ĐANG KIỂM SOÁT", tone: taskTone, icon: <ListChecks size={18} />, href: "/tasks" },
+    { title: "Đến hạn 72 giờ", value: String(tasks.dueSoon.length), subtitle: `${tasks.overdue.length} việc quá hạn`, status: tasks.overdue.length ? "LÀM NGAY" : "THEO DÕI", tone: taskTone, icon: <Clock3 size={18} />, href: "/tasks" },
+    { title: "Dự án cần chú ý", value: String(metrics.behind.length), subtitle: `Tiến độ bình quân ${metrics.averageActual}%`, status: delayTone === "green" ? "ỔN" : "PHỐI HỢP", tone: delayTone, icon: <Building2 size={18} />, href: "/projects" },
+    { title: "Tiến độ đầu việc", value: `${tasks.avgProgress}%`, subtitle: "Bình quân đầu việc trong phạm vi hiện tại", status: tasks.avgProgress >= 70 ? "TỐT" : "BÁM SÁT", tone: tasks.avgProgress >= 70 ? "green" : "yellow", icon: <Target size={18} />, href: "/tasks" },
   ];
 }
 
-function dashboardMetricShape() {
-  return {
-    ongoing: [] as Project[], completed: [] as Project[], warranty: [] as Project[], highRisk: [] as Project[], mediumRisk: [] as Project[], safeCount: 0,
-    averageActual: 0, averagePlan: 0, averageHealth: 0, totalEvidence: 0, delayed: [] as Project[], behind: [] as Project[], valueTotal: 0, completionRate: 0,
-  };
+function roleDescription(profile?: RoleAccountProfile) {
+  if (!profile) return "Dashboard được sinh theo phạm vi trách nhiệm và dữ liệu thực tế của tài khoản.";
+  if (profile.domain === "BOARD") return "Góc nhìn chiến lược: tăng trưởng, kết quả cuối cùng, rủi ro lớn và vấn đề cần HĐQT quyết nghị; không sa vào hàng trăm KPI tác nghiệp.";
+  if (profile.domain === "CORPORATE") return "Góc nhìn điều hành toàn công ty, cho phép đi từ chỉ số tổng hợp xuống khối, phòng, dự án, nguyên nhân, người chịu trách nhiệm và phương án xử lý.";
+  if (profile.audience === "DEPUTY_GENERAL_DIRECTOR") return `Góc nhìn riêng cho ${profile.position}: tập trung đúng chuỗi nghiệp vụ của ${profile.departmentName}, cảnh báo và điều phối trong phạm vi phụ trách.`;
+  if (profile.audience === "DEPARTMENT_HEAD") return `Department Cockpit của ${profile.departmentName}: KR/KPI, kế hoạch, tiến độ, vấn đề, người phụ trách và việc cần xử lý.`;
+  if (profile.audience === "DEPUTY_DEPARTMENT_HEAD") return `Cockpit điều phối hằng ngày của ${profile.departmentName}: nhắc hạn, kiểm tra đầu ra, tổng hợp vướng mắc và hỗ trợ Trưởng đơn vị.`;
+  return `Không gian tác nghiệp cá nhân của ${profile.departmentName}: việc được giao, hạn hoàn thành, minh chứng và vấn đề cần báo cấp trên.`;
 }
 
-function taskMetricShape() {
-  return { open: [] as WorkItem[], done: [] as WorkItem[], overdue: [] as WorkItem[], dueSoon: [] as WorkItem[], avgProgress: 0 };
+function boardTitle(profile?: RoleAccountProfile) {
+  if (!profile) return "Bảng điều hành";
+  if (profile.domain === "BOARD") return "Danh mục chiến lược toàn công ty";
+  if (profile.domain === "CORPORATE") return "Bảng điều hành toàn công ty";
+  if (profile.audience === "DEPUTY_GENERAL_DIRECTOR") return `Danh mục thuộc ${profile.shortPosition}`;
+  if (profile.audience === "EMPLOYEE") return "Dự án / hạng mục liên quan";
+  return `Dự án & đầu việc · ${profile.unitLabel}`;
 }
 
-function ProjectTable({ rows, audience }: { rows: DashboardRow[]; audience: DashboardAudience }) {
+function workTitle(profile?: RoleAccountProfile) {
+  if (profile?.audience === "EMPLOYEE") return "Công việc của tôi";
+  if (profile?.audience === "DEPARTMENT_HEAD") return "Công việc / giao việc của đơn vị";
+  if (profile?.audience === "DEPUTY_DEPARTMENT_HEAD") return "Việc cần đôn đốc hằng ngày";
+  return "Tình hình thực thi";
+}
+
+function ProjectTable({ rows }: { rows: DashboardRow[] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] text-left text-[11px]">
-        <thead className="border-y border-[#17314a] bg-[#081b2d] text-[9px] font-black uppercase tracking-[0.07em] text-slate-400">
-          <tr>
-            <th className="px-3 py-2.5">STT</th>
-            <th className="px-3 py-2.5">{audience === "EMPLOYEE" ? "Dự án / hạng mục" : "Đơn vị / Dự án"}</th>
-            <th className="px-3 py-2.5 text-center">KH lũy kế</th>
-            <th className="px-3 py-2.5 text-center">Thực tế</th>
-            <th className="px-3 py-2.5 text-center">Trạng thái</th>
-            <th className="px-3 py-2.5 text-right">Chênh lệch</th>
-          </tr>
+    <div className="max-h-[405px] overflow-auto">
+      <table className="w-full min-w-[760px] text-left text-[9px]">
+        <thead className="sticky top-0 z-10 border-b border-slate-300 bg-slate-100 text-[8px] font-black uppercase tracking-[0.05em] text-slate-500">
+          <tr><th className="px-2.5 py-2">STT</th><th className="px-2.5 py-2">Đơn vị / Dự án</th><th className="px-2.5 py-2 text-center">KH</th><th className="px-2.5 py-2 text-center">Thực tế</th><th className="px-2.5 py-2 text-center">Trạng thái</th><th className="px-2.5 py-2 text-right">Chênh</th></tr>
         </thead>
-        <tbody className="divide-y divide-[#143048]">
+        <tbody className="divide-y divide-slate-200">
           {rows.map((row, index) => (
-            <tr key={row.project.id} className="transition hover:bg-white/[0.03]">
-              <td className="px-3 py-3 font-black text-slate-500">{index + 1}</td>
-              <td className="px-3 py-3">
-                <div className="flex items-start gap-2.5">
-                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${toneStyles[row.tone].dot}`} />
-                  <div className="min-w-0">
-                    <Link href={`/projects/${row.project.id}`} className="block max-w-[350px] truncate font-black text-slate-100 hover:text-orange-300">{row.project.name}</Link>
-                    <p className="mt-1 max-w-[350px] truncate text-[9px] font-semibold text-slate-500">{row.project.code || "Chưa có mã"} · {row.project.type} · {row.project.province}</p>
-                  </div>
-                </div>
+            <tr key={row.project.id} className="hover:bg-slate-50">
+              <td className="px-2.5 py-2 font-black text-slate-400">{index + 1}</td>
+              <td className="px-2.5 py-2">
+                <div className="flex items-start gap-2"><span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${toneStyles[row.tone].dot}`} /><div className="min-w-0"><Link href={`/projects/${row.project.id}`} className="block max-w-[360px] truncate text-[10px] font-black text-slate-800 hover:text-sky-700">{row.project.name}</Link><p className="mt-0.5 max-w-[360px] truncate text-[8px] font-semibold text-slate-400">{row.project.code || "Chưa có mã"} · {row.project.type} · {row.project.province}</p></div></div>
               </td>
-              <td className="px-3 py-3 text-center font-black text-slate-300">{row.plan}%</td>
-              <td className="px-3 py-3 text-center font-black text-white">{row.actual}%</td>
-              <td className="px-3 py-3 text-center"><StatusPill tone={row.tone}>{row.status}</StatusPill></td>
-              <td className="px-3 py-3 text-right font-black"><span className={row.delta < 0 ? "text-red-300" : row.delta > 0 ? "text-emerald-300" : "text-slate-500"}>{row.delta > 0 ? "+" : ""}{row.delta}%</span></td>
+              <td className="px-2.5 py-2 text-center font-black text-slate-600">{row.plan}%</td>
+              <td className="px-2.5 py-2 text-center font-black text-slate-900">{row.actual}%</td>
+              <td className="px-2.5 py-2 text-center"><StatusPill tone={row.tone}>{row.status}</StatusPill></td>
+              <td className={`px-2.5 py-2 text-right font-black ${row.delta < 0 ? "text-red-600" : row.delta > 0 ? "text-emerald-600" : "text-slate-400"}`}>{row.delta > 0 ? "+" : ""}{row.delta}%</td>
             </tr>
           ))}
-          {!rows.length ? <tr><td colSpan={6} className="px-4 py-10 text-center text-xs font-semibold text-slate-500">Chưa có dữ liệu dự án phù hợp.</td></tr> : null}
+          {!rows.length ? <tr><td colSpan={6} className="px-4 py-10 text-center text-[10px] font-semibold text-slate-400">Chưa có dữ liệu dự án phù hợp.</td></tr> : null}
         </tbody>
       </table>
     </div>
   );
 }
 
-function WorkList({ tasks, audience }: { tasks: WorkItem[]; audience: DashboardAudience }) {
-  return (
-    <div className="space-y-2 p-3">
-      {tasks.map((item) => {
-        const tone = taskTone(item);
-        return (
-          <Link key={item.id} href="/tasks" className="grid gap-2 rounded-xl border border-[#17314a] bg-[#091b2d] px-3 py-2.5 transition hover:border-orange-400/25 sm:grid-cols-[1fr_auto] sm:items-center">
-            <div className="min-w-0">
-              <div className="flex items-start gap-2">
-                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${toneStyles[tone].dot}`} />
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-black text-slate-100">{item.title}</p>
-                  <p className="mt-1 truncate text-[9px] font-semibold text-slate-500">{item.project} · {audience === "EMPLOYEE" ? item.status : item.assignee}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:justify-end">
-              <span className="text-[9px] font-bold text-slate-500">{item.due ? `Hạn ${formatDate(item.due)}` : "Chưa có hạn"}</span>
-              <StatusPill tone={tone}>{item.progress}%</StatusPill>
-            </div>
-          </Link>
-        );
-      })}
-      {!tasks.length ? <EmptyBox text="Chưa có công việc cần ưu tiên trong phạm vi hiện tại." /> : null}
-    </div>
-  );
+function WorkList({ tasks }: { tasks: WorkItem[] }) {
+  return <div className="max-h-[360px] space-y-1.5 overflow-auto p-2.5">{tasks.map((item) => { const tone = taskTone(item); return <Link key={item.id} href="/tasks" className="grid gap-2 rounded border border-slate-200 bg-slate-50 px-2.5 py-2 hover:border-sky-300 sm:grid-cols-[1fr_auto] sm:items-center"><div className="min-w-0"><p className="truncate text-[10px] font-black text-slate-800">{item.title}</p><p className="mt-0.5 truncate text-[8px] font-semibold text-slate-500">{item.project} · {item.assignee}</p></div><div className="flex items-center gap-2"><span className="text-[8px] font-bold text-slate-400">{item.due ? `Hạn ${formatDate(item.due)}` : "Chưa có hạn"}</span><StatusPill tone={tone}>{item.progress}%</StatusPill></div></Link>; })}{!tasks.length ? <EmptyBox text="Chưa có công việc ưu tiên trong phạm vi hiện tại." /> : null}</div>;
 }
 
-function ProjectWorkSummary({ audience, rows, metrics }: { audience: DashboardAudience; rows: DashboardRow[]; metrics: ReturnType<typeof dashboardMetricShape> }) {
-  return (
-    <div className="space-y-2 p-3">
-      {rows.map((row) => (
-        <div key={row.project.id} className="rounded-xl border border-[#17314a] bg-[#091b2d] p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-black text-slate-100">{row.project.name}</p>
-              <p className="mt-1 text-[9px] font-semibold text-slate-500">{audience === "CHAIRMAN" ? `Health ${row.project.healthScore ?? 0}/100 · ${row.project.valueRange}` : `Tiến độ ${row.actual}% / KH ${row.plan}%`}</p>
-            </div>
-            <StatusPill tone={row.tone}>{row.status}</StatusPill>
-          </div>
-        </div>
-      ))}
-      {!rows.length ? <EmptyBox text={`Chưa có dữ liệu. Hiện có ${metrics.ongoing.length} dự án đang hoạt động.`} /> : null}
-    </div>
-  );
+function ProjectWorkSummary({ rows, roleProfile }: { rows: DashboardRow[]; roleProfile?: RoleAccountProfile }) {
+  return <div className="space-y-1.5 p-2.5">{rows.map((row) => <div key={row.project.id} className="rounded border border-slate-200 bg-slate-50 p-2.5"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-[10px] font-black text-slate-800">{row.project.name}</p><p className="mt-0.5 text-[8px] font-semibold text-slate-500">{roleProfile?.domain === "BOARD" ? `Health ${row.project.healthScore ?? 0}/100 · ${row.project.valueRange}` : `Thực tế ${row.actual}% / kế hoạch ${row.plan}%`}</p></div><StatusPill tone={row.tone}>{row.status}</StatusPill></div></div>)}{!rows.length ? <EmptyBox text="Chưa có dữ liệu thực thi." /> : null}</div>;
 }
 
 function KpiCard(item: KpiItem) {
   const style = toneStyles[item.tone];
-  return (
-    <Link href={item.href} className="group rounded-[18px] border border-[#17314a] bg-[linear-gradient(180deg,rgba(10,31,52,0.98)_0%,rgba(7,22,39,0.96)_100%)] p-3.5 shadow-[0_12px_34px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:border-orange-400/30">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.065em] text-slate-300">{item.title}</p>
-          <p className={`mt-1 text-3xl font-black leading-none ${style.text}`}>{item.value}</p>
-        </div>
-        <span className={`grid h-9 w-9 place-items-center rounded-xl border ${style.badge}`}>{item.icon}</span>
-      </div>
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <p className="text-[9px] font-semibold leading-4 text-slate-500">{item.subtitle}</p>
-        <span className={`shrink-0 rounded-md border px-2 py-1 text-[8px] font-black ${style.badge}`}>{item.status}</span>
-      </div>
-    </Link>
-  );
+  return <Link href={item.href} className={`group rounded-[10px] border border-slate-300 border-t-[4px] ${style.top} bg-white p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}><div className="flex items-start justify-between gap-2"><div><p className="text-[8px] font-black uppercase tracking-[0.055em] text-slate-500">{item.title}</p><p className={`mt-1 text-[25px] font-black leading-none ${style.text}`}>{item.value}</p></div><span className={`grid h-8 w-8 place-items-center rounded border ${style.badge}`}>{item.icon}</span></div><div className="mt-2 flex items-end justify-between gap-2"><p className="text-[8px] font-semibold leading-3.5 text-slate-400">{item.subtitle}</p><span className={`shrink-0 rounded border px-1.5 py-0.5 text-[7px] font-black ${style.badge}`}>{item.status}</span></div></Link>;
 }
 
 function PanelHeader({ icon, title, note }: { icon: ReactNode; title: string; note: string }) {
-  return (
-    <div className="flex min-h-10 items-center justify-between gap-3 border-b border-[#163049] px-3 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="text-[#f2d28b]">{icon}</span>
-        <h2 className="text-[11px] font-black uppercase tracking-[0.07em] text-slate-100">{title}</h2>
-      </div>
-      <span className="text-[9px] font-bold text-slate-500">{note}</span>
-    </div>
-  );
+  return <div className="flex min-h-9 items-center justify-between gap-3 border-b border-slate-300 bg-[#f3f4f6] px-2.5 py-2"><div className="flex items-center gap-1.5"><span className="text-[#ba1821]">{icon}</span><h2 className="text-[9px] font-black uppercase tracking-[0.055em] text-slate-700">{title}</h2></div><span className="text-[8px] font-bold text-slate-400">{note}</span></div>;
 }
 
-function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) {
-  return <span className={`inline-flex rounded-md border px-2 py-1 text-[8px] font-black ${toneStyles[tone].badge}`}>{children}</span>;
-}
+function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) { return <span className={`inline-flex rounded border px-1.5 py-0.5 text-[7px] font-black ${toneStyles[tone].badge}`}>{children}</span>; }
+function MiniNumber({ label, value, tone }: { label: string; value: number; tone: Tone }) { return <div className={`rounded border border-slate-200 ${toneStyles[tone].soft} p-2 text-center`}><p className={`text-[18px] font-black ${toneStyles[tone].text}`}>{String(value).padStart(2, "0")}</p><p className="text-[7px] font-black uppercase text-slate-400">{label}</p></div>; }
+function EmptyBox({ text }: { text: string }) { return <div className="rounded border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-[9px] font-semibold text-slate-400">{text}</div>; }
 
-function MiniNumber({ label, value, tone }: { label: string; value: number; tone: Tone }) {
-  return (
-    <div className={`rounded-lg border border-white/5 ${toneStyles[tone].soft} p-2.5 text-center`}>
-      <p className={`text-xl font-black ${toneStyles[tone].text}`}>{String(value).padStart(2, "0")}</p>
-      <p className="mt-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
-    </div>
-  );
-}
-
-function StatTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-[#17314a] bg-[#091b2d] p-3">
-      <p className="text-xl font-black text-white">{String(value).padStart(2, "0")}</p>
-      <p className="mt-1 truncate text-[9px] font-black uppercase tracking-[0.05em] text-orange-300">{label}</p>
-    </div>
-  );
-}
-
-function EmptyBox({ text }: { text: string }) {
-  return <div className="rounded-xl border border-[#17314a] bg-[#091b2d] px-3 py-4 text-center text-[10px] font-semibold text-slate-500">{text}</div>;
+function ScopeCard({ icon, title, value, note }: { icon: ReactNode; title: string; value: string; note: string }) {
+  return <div className="rounded-[10px] border border-slate-300 bg-white p-2.5 shadow-sm"><div className="flex items-start gap-2"><span className="mt-0.5 text-[#0a5a6a]">{icon}</span><div className="min-w-0"><p className="text-[8px] font-black uppercase tracking-[0.06em] text-slate-400">{title}</p><p className="mt-1 truncate text-[10px] font-black text-slate-800">{value}</p><p className="mt-0.5 text-[8px] font-semibold leading-3.5 text-slate-500">{note}</p></div></div></div>;
 }
 
 function TrendChart({ rows }: { rows: DashboardRow[] }) {
-  const width = 400;
-  const height = 190;
-  const left = 34;
-  const right = 14;
-  const top = 12;
-  const bottom = 32;
-  const items = rows.length
-    ? rows
-    : [{ project: { id: -1, name: "Chưa có dữ liệu", type: "Công nghiệp" as ProjectType, status: "ongoing", investor: "", province: "", valueRange: "", progress: 0, lat: 0, lng: 0 } as Project, plan: 0, actual: 0, gap: 0, delta: 0, tone: "yellow" as Tone, status: "Theo dõi" }];
-  const plotWidth = width - left - right;
-  const plotHeight = height - top - bottom;
-  const x = (index: number) => left + (items.length === 1 ? plotWidth / 2 : (index * plotWidth) / (items.length - 1));
+  if (!rows.length) return <EmptyBox text="Chưa có dữ liệu để vẽ diễn biến." />;
+  const width = 360; const height = 150; const left = 30; const right = 10; const top = 10; const bottom = 28; const plotWidth = width - left - right; const plotHeight = height - top - bottom;
+  const x = (index: number) => left + (rows.length === 1 ? plotWidth / 2 : (index * plotWidth) / (rows.length - 1));
   const y = (value: number) => top + ((100 - Math.max(0, Math.min(100, value))) / 100) * plotHeight;
-  const actualPoints = items.map((item, index) => `${x(index)},${y(item.actual)}`).join(" ");
-  const planPoints = items.map((item, index) => `${x(index)},${y(item.plan)}`).join(" ");
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-[190px] w-full" role="img" aria-label="Biểu đồ kế hoạch và thực hiện">
-      {[0, 25, 50, 75, 100].map((tick) => {
-        const yy = y(tick);
-        return (
-          <g key={tick}>
-            <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="#17314a" strokeWidth="1" />
-            <text x={left - 6} y={yy + 3} textAnchor="end" fontSize="8" fill="#64748b">{tick}%</text>
-          </g>
-        );
-      })}
-      <polyline points={planPoints} fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6 5" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points={actualPoints} fill="none" stroke="#fb923c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      {items.map((item, index) => (
-        <g key={item.project.id}>
-          <circle cx={x(index)} cy={y(item.actual)} r="3.5" fill="#fb923c" />
-          <text x={x(index)} y={height - 10} textAnchor="middle" fontSize="7" fill="#64748b">{(item.project.code || `DA${index + 1}`).slice(0, 7)}</text>
-        </g>
-      ))}
-    </svg>
-  );
+  const actual = rows.map((item, index) => `${x(index)},${y(item.actual)}`).join(" ");
+  const plan = rows.map((item, index) => `${x(index)},${y(item.plan)}`).join(" ");
+  return <svg viewBox={`0 0 ${width} ${height}`} className="h-[150px] w-full" role="img" aria-label="Biểu đồ kế hoạch và thực hiện">{[0,25,50,75,100].map((tick) => <g key={tick}><line x1={left} x2={width-right} y1={y(tick)} y2={y(tick)} stroke="#e2e8f0" strokeWidth="1" /><text x={left-5} y={y(tick)+3} textAnchor="end" fontSize="7" fill="#94a3b8">{tick}%</text></g>)}<polyline points={plan} fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="5 4" /><polyline points={actual} fill="none" stroke="#dc2626" strokeWidth="2.5" />{rows.map((item,index) => <g key={item.project.id}><circle cx={x(index)} cy={y(item.actual)} r="2.7" fill="#dc2626" /><text x={x(index)} y={height-8} textAnchor="middle" fontSize="6.5" fill="#64748b">{(item.project.code || `DA${index+1}`).slice(0,6)}</text></g>)}</svg>;
 }
 
 function taskTone(item: WorkItem): Tone {
   if (item.status === "Hoàn thành") return "green";
   if (item.due && new Date(`${item.due}T23:59:59`).getTime() < Date.now()) return "red";
   if (normalize(item.priority).includes("cao")) return "red";
-  if (item.due) {
-    const diff = new Date(`${item.due}T23:59:59`).getTime() - Date.now();
-    if (diff >= 0 && diff <= 1000 * 60 * 60 * 72) return "yellow";
-  }
+  if (item.due) { const diff = new Date(`${item.due}T23:59:59`).getTime() - Date.now(); if (diff >= 0 && diff <= 1000*60*60*72) return "yellow"; }
   return "blue";
 }
 
-function alertReason(row: DashboardRow, audience: DashboardAudience) {
-  if (audience === "CHAIRMAN") return row.project.risk === "high" ? "Rủi ro cao cần giám sát cấp công ty" : `Chênh kế hoạch ${row.gap}% · Health ${row.project.healthScore ?? 0}/100`;
-  if (audience === "EMPLOYEE") return row.gap ? `Hạng mục/dự án đang chậm ${row.gap}% so với kế hoạch` : "Dự án có cảnh báo cần cập nhật";
-  return row.gap ? `Chậm ${row.gap}% · Cần phương án bù tiến độ` : `Health ${row.project.healthScore ?? 0}/100 · Cần theo dõi`;
+function alertReason(row: DashboardRow, domain?: RoleDomain) {
+  if (domain === "FINANCE" || domain === "ACCOUNTING") return row.gap ? `Chậm ${row.gap}% - cần đánh giá tác động nghiệm thu/dòng tiền` : `Health ${row.project.healthScore ?? 0}/100`;
+  if (domain === "SAFETY" || domain === "CONTROL") return row.project.risk === "high" ? "Rủi ro cao cần kiểm tra và đóng hành động" : `Chênh tiến độ ${row.gap}% - theo dõi áp lực vận hành`;
+  if (domain === "BUSINESS_PRODUCTION_DESIGN") return row.gap ? `Chậm ${row.gap}% - có thể ảnh hưởng thiết kế/cung ứng` : "Cần theo dõi năng lực cung ứng";
+  if (domain === "WARRANTY") return `Health ${row.project.healthScore ?? 0}/100 - rà soát chất lượng và hồ sơ sau bàn giao`;
+  return row.gap ? `Chậm ${row.gap}% - cần phương án bù tiến độ` : `Health ${row.project.healthScore ?? 0}/100 - cần theo dõi`;
 }
 
-function directiveDetail(
-  audience: DashboardAudience,
-  row: DashboardRow | undefined,
-  taskMetrics: ReturnType<typeof taskMetricShape>,
-  index: number,
-) {
-  if (audience === "EMPLOYEE") {
-    return index === 0
-      ? `${taskMetrics.open.length} việc đang mở; ưu tiên ${taskMetrics.overdue.length} việc quá hạn.`
-      : row
-        ? `${row.project.name}: thực tế ${row.actual}% / kế hoạch ${row.plan}%.`
-        : "Cập nhật tình trạng công việc và báo sớm nếu có vướng mắc.";
-  }
-  if (audience === "DEPARTMENT_HEAD" || audience === "DEPUTY_DEPARTMENT_HEAD") {
-    return index === 0
-      ? `${taskMetrics.open.length} việc đang mở · ${taskMetrics.dueSoon.length} việc đến hạn trong 72 giờ.`
-      : row
-        ? `${row.project.name}: cần theo dõi chênh ${row.gap}% và người chịu trách nhiệm.`
-        : "Rà soát phân công, hạn hoàn thành và chất lượng đầu ra.";
-  }
-  return row
-    ? `${row.project.name}: ${row.gap > 0 ? `cần bù ${row.gap}% tiến độ` : `Health ${row.project.healthScore ?? 0}/100`}.`
-    : "Theo dõi chỉ số tổng hợp và cập nhật khi dữ liệu thay đổi.";
+function priorityDetail(profile: RoleAccountProfile | undefined, row: DashboardRow | undefined, tasks: TaskMetrics, metrics: Metrics) {
+  if (profile?.audience === "EMPLOYEE") return `${tasks.open.length} việc đang mở · ${tasks.overdue.length} việc quá hạn · cập nhật minh chứng khi hoàn thành.`;
+  if (profile?.audience === "DEPARTMENT_HEAD" || profile?.audience === "DEPUTY_DEPARTMENT_HEAD") return `${tasks.open.length} việc mở · ${tasks.dueSoon.length} đến hạn 72 giờ · ${metrics.behind.length} dự án dưới kế hoạch.`;
+  if (row) return `${row.project.name}: thực tế ${row.actual}% / kế hoạch ${row.plan}%${row.gap ? ` · cần bù ${row.gap}%` : ""}.`;
+  return `Theo dõi ${metrics.ongoing.length} dự án đang triển khai và ${metrics.highRisk.length} rủi ro cao.`;
 }
 
-function topCounts(values: string[]) {
-  const map = new Map<string, number>();
-  values.filter(Boolean).forEach((value) => map.set(value, (map.get(value) ?? 0) + 1));
-  return Array.from(map.entries()).map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count).slice(0, 4);
-}
-
-function parseValueRange(range: string) {
-  if (!range) return 0;
-  const lower = range.toLocaleLowerCase("vi");
-  if (lower.includes("trên") || lower.includes("hơn") || lower.includes("hon")) return 500;
-  const numbers = lower.match(/\d+/g)?.map((value) => Number(value)) ?? [];
-  return numbers[numbers.length - 1] || 0;
-}
-
-function normalize(value?: string | null) {
-  return String(value || "").toLocaleLowerCase("vi").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
-}
-
-function formatDate(value: string) {
-  const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(date);
-}
+function parseValueRange(range?: string | null) { if (!range) return 0; const lower = range.toLowerCase(); if (lower.includes("trên") || lower.includes("hơn") || lower.includes("hon")) return 500; const numbers = lower.match(/\d+/g)?.map(Number) ?? []; return numbers[numbers.length-1] || 0; }
+function normalize(value?: string | null) { return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d"); }
+function formatDate(value: string) { const date = new Date(`${value}T00:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(date); }
