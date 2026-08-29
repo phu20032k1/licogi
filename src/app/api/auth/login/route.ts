@@ -1,8 +1,13 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { RoleCode } from "@prisma/client";
+
+import { getRoleAccountProfile } from "../../../../data/roleAccounts";
 import { prisma } from "../../../../lib/prisma";
+import { getRoleAccountPassword, roleAccountProvisioningEnabled } from "../../../../lib/roleAccountCredentials";
 import {
   buildSessionCookie,
+  createPasswordHash,
   DEFAULT_MAX_AGE,
   randomToken,
   sessionCookieOptions,
@@ -13,6 +18,80 @@ import {
 import { publicUser, type AuthUser } from "../../../../lib/authServer";
 import { roleDefaultRoute } from "../../../../lib/rbac";
 
+const accountInclude = {
+  organization: true,
+  department: true,
+  customer: true,
+  role: {
+    include: {
+      rolePermissions: { include: { permission: true } },
+    },
+  },
+} as const;
+
+async function findAccount(email: string) {
+  return prisma.user.findUnique({ where: { email }, include: accountInclude });
+}
+
+async function provisionManagedRoleAccount(email: string, suppliedPassword: string) {
+  const profile = getRoleAccountProfile(email);
+  if (!profile || !roleAccountProvisioningEnabled()) return null;
+
+  const expectedPassword = getRoleAccountPassword(profile);
+  if (suppliedPassword !== expectedPassword) return null;
+
+  const organization = await prisma.organization.findUnique({ where: { code: "LICOGI183" } })
+    ?? await prisma.organization.findFirst({ orderBy: { createdAt: "asc" } });
+  if (!organization) return null;
+
+  const role = await prisma.role.findFirst({
+    where: { organizationId: organization.id, code: profile.roleCode as RoleCode },
+  });
+  if (!role) return null;
+
+  const department = await prisma.department.upsert({
+    where: {
+      organizationId_code: {
+        organizationId: organization.id,
+        code: profile.departmentCode,
+      },
+    },
+    update: { name: profile.departmentName },
+    create: {
+      organizationId: organization.id,
+      code: profile.departmentCode,
+      name: profile.departmentName,
+      description: `Đơn vị dùng cho tài khoản điều hành ${profile.position}.`,
+    },
+  });
+
+  const passwordHash = createPasswordHash(expectedPassword);
+  await prisma.user.upsert({
+    where: { email: profile.email },
+    update: {
+      organizationId: organization.id,
+      departmentId: department.id,
+      roleId: role.id,
+      name: profile.name,
+      passwordHash,
+      status: "ACTIVE",
+      mustChangePassword: false,
+    },
+    create: {
+      organizationId: organization.id,
+      departmentId: department.id,
+      roleId: role.id,
+      email: profile.email,
+      name: profile.name,
+      passwordHash,
+      status: "ACTIVE",
+      mustChangePassword: false,
+    },
+  });
+
+  return findAccount(profile.email);
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as { email?: string; password?: string } | null;
   const email = String(body?.email ?? "").trim().toLowerCase();
@@ -22,19 +101,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "Vui lòng nhập email và mật khẩu." }, { status: 400 });
   }
 
-  const account = await prisma.user.findUnique({
-    where: { email },
-    include: {
-      organization: true,
-      department: true,
-      customer: true,
-      role: {
-        include: {
-          rolePermissions: { include: { permission: true } },
-        },
-      },
-    },
-  });
+  let account = await findAccount(email);
+  const validExisting = Boolean(account && account.status === "ACTIVE" && verifyPassword(password, account.passwordHash));
+
+  if (!validExisting) {
+    account = await provisionManagedRoleAccount(email, password);
+  }
 
   if (!account || account.status !== "ACTIVE" || !verifyPassword(password, account.passwordHash)) {
     return NextResponse.json({ ok: false, message: "Email hoặc mật khẩu không đúng." }, { status: 401 });
