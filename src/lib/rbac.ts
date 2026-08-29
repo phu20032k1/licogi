@@ -6,6 +6,7 @@ export type SessionPermission = { module: ModuleCode; action: PermissionAction }
 export type ClientSessionLike = { permissions?: SessionPermission[]; roleCode?: string } | null | undefined;
 
 export const ADMIN_ROLE_CODES = new Set(["SUPER_ADMIN", "SYSTEM_ADMIN"]);
+const INTERNAL_DASHBOARD_ROLES = new Set(["EXECUTIVE", "PROJECT_MANAGER", "ENGINEER", "DATA_STEWARD"]);
 
 export const ALL_MODULES: ModuleCode[] = [
   "DASHBOARD", "PROJECTS", "DATA_CENTER", "GIS_MAP", "CONSTRUCTION", "TASKS", "DOCUMENTS", "WARRANTY", "PORTAL", "PARTNERS",
@@ -75,9 +76,9 @@ export const roleHomeRoutes: Record<string, string> = {
   SUPER_ADMIN: "/admin",
   SYSTEM_ADMIN: "/admin",
   EXECUTIVE: "/dashboard",
-  PROJECT_MANAGER: "/projects",
-  ENGINEER: "/construction",
-  DATA_STEWARD: "/data",
+  PROJECT_MANAGER: "/dashboard",
+  ENGINEER: "/dashboard",
+  DATA_STEWARD: "/dashboard",
   CUSTOMER: "/portal",
 };
 
@@ -86,8 +87,8 @@ const roleVisibleModules: Record<string, ModuleCode[]> = {
   SYSTEM_ADMIN: ALL_MODULES,
   EXECUTIVE: ["DASHBOARD", "PROJECTS", "GIS_MAP", "REPORTS", "CONTRACTS", "PAYMENTS", "DEBT", "FINANCE", "CRM", "ERP", "AI_PROFILE", "AI_BRAIN", "ACTIVITY"],
   PROJECT_MANAGER: ["DASHBOARD", "PROJECTS", "GIS_MAP", "CONSTRUCTION", "PLANNING", "TASKS", "DOCUMENTS", "STORAGE", "WARRANTY", "REPORTS", "CONTRACTS", "PAYMENTS", "DEBT", "BIM", "AI_BRAIN", "AI_PROFILE"],
-  ENGINEER: ["PROJECTS", "GIS_MAP", "CONSTRUCTION", "PLANNING", "TASKS", "DOCUMENTS", "STORAGE", "WARRANTY", "BIM", "AI_BRAIN"],
-  DATA_STEWARD: ["DATA_CENTER", "DOCUMENTS", "STORAGE", "AI_BRAIN", "ACTIVITY"],
+  ENGINEER: ["DASHBOARD", "PROJECTS", "GIS_MAP", "CONSTRUCTION", "PLANNING", "TASKS", "DOCUMENTS", "STORAGE", "WARRANTY", "BIM", "AI_BRAIN"],
+  DATA_STEWARD: ["DASHBOARD", "DATA_CENTER", "DOCUMENTS", "STORAGE", "AI_BRAIN", "ACTIVITY"],
   CUSTOMER: ["PORTAL", "PROJECTS", "GIS_MAP", "DOCUMENTS", "WARRANTY", "TASKS", "STORAGE"],
 };
 
@@ -104,7 +105,9 @@ export function isModuleInRoleProfile(session: ClientSessionLike, module: Module
 
 export function hasPermission(session: ClientSessionLike, module: ModuleCode, action: PermissionAction = "VIEW") {
   if (!session) return false;
-  if (ADMIN_ROLE_CODES.has(session.roleCode ?? "")) return true;
+  const roleCode = session.roleCode ?? "";
+  if (ADMIN_ROLE_CODES.has(roleCode)) return true;
+  if (module === "DASHBOARD" && action === "VIEW" && INTERNAL_DASHBOARD_ROLES.has(roleCode)) return true;
   if (!isModuleInRoleProfile(session, module)) return false;
   return Boolean(session.permissions?.some((item) => item.module === module && (item.action === action || item.action === "MANAGE")));
 }
