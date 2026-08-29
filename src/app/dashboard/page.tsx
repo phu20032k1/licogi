@@ -280,7 +280,7 @@ export default function DashboardPage() {
       <section className="rounded-[20px] border border-[#17304a] bg-[radial-gradient(circle_at_top,rgba(17,42,70,0.9),rgba(5,21,35,0.98)_60%)] px-4 py-4">
         <div className="grid gap-4 lg:grid-cols-[auto_1fr_auto] lg:items-center">
           <div className="flex items-center gap-3">
-            <div className="grid h-13 w-13 place-items-center rounded-full border border-orange-300/30 bg-orange-400/10 p-3 shadow-[0_0_26px_rgba(251,146,60,0.2)]">
+            <div className="grid h-14 w-14 place-items-center rounded-full border border-orange-300/30 bg-orange-400/10 p-3 shadow-[0_0_26px_rgba(251,146,60,0.2)]">
               <Factory size={25} className="text-orange-300" />
             </div>
             <div>
@@ -655,7 +655,7 @@ function TrendChart({ rows }: { rows: DashboardRow[] }) {
   const bottom = 32;
   const items = rows.length
     ? rows
-    : [{ project: { id: -1, name: "Chưa có dữ liệu", type: "Công nghiệp" as ProjectType, status: "ongoing", investor: "", province: "", valueRange: "", progress: 0, lat: 0, lng: 0 }, plan: 0, actual: 0, gap: 0, delta: 0, tone: "yellow" as Tone, status: "Theo dõi" }];
+    : [{ project: { id: -1, name: "Chưa có dữ liệu", type: "Công nghiệp" as ProjectType, status: "ongoing", investor: "", province: "", valueRange: "", progress: 0, lat: 0, lng: 0 } as Project, plan: 0, actual: 0, gap: 0, delta: 0, tone: "yellow" as Tone, status: "Theo dõi" }];
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const x = (index: number) => left + (items.length === 1 ? plotWidth / 2 : (index * plotWidth) / (items.length - 1));
