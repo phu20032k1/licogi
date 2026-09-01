@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
@@ -37,6 +38,7 @@ import {
 import { readSession, type UserSession } from "../../lib/authSession";
 import { fetchProjectsFromDataCenter } from "../../lib/projectData";
 import { canViewModule } from "../../lib/rbac";
+import styles from "./Dashboard.module.css";
 
 type Tone = "green" | "yellow" | "red" | "blue";
 
@@ -98,13 +100,42 @@ type TaskMetrics = {
   avgProgress: number;
 };
 
-const panel = "overflow-hidden rounded-[12px] border border-slate-300 bg-white shadow-[0_7px_18px_rgba(15,23,42,0.06)]";
+const toneClasses: Record<Tone, string> = {
+  green: styles.toneGreen,
+  yellow: styles.toneYellow,
+  red: styles.toneRed,
+  blue: styles.toneBlue,
+};
 
-const toneStyles: Record<Tone, { text: string; badge: string; dot: string; soft: string; top: string }> = {
-  green: { text: "text-emerald-700", badge: "border-emerald-200 bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", soft: "bg-emerald-50", top: "border-t-emerald-500" },
-  yellow: { text: "text-amber-700", badge: "border-amber-200 bg-amber-50 text-amber-700", dot: "bg-amber-500", soft: "bg-amber-50", top: "border-t-amber-500" },
-  red: { text: "text-red-700", badge: "border-red-200 bg-red-50 text-red-700", dot: "bg-red-500", soft: "bg-red-50", top: "border-t-red-500" },
-  blue: { text: "text-sky-700", badge: "border-sky-200 bg-sky-50 text-sky-700", dot: "bg-sky-500", soft: "bg-sky-50", top: "border-t-sky-600" },
+const roleThemes: Partial<Record<RoleDomain, { accent: string; rgb: string }>> = {
+  BOARD: { accent: "#f1cc78", rgb: "241, 204, 120" },
+  CONTROL: { accent: "#e8b75c", rgb: "232, 183, 92" },
+  CORPORATE: { accent: "#f3c969", rgb: "243, 201, 105" },
+  FINANCE: { accent: "#4fce9a", rgb: "79, 206, 154" },
+  ACCOUNTING: { accent: "#4fce9a", rgb: "79, 206, 154" },
+  BUSINESS_PRODUCTION_DESIGN: { accent: "#4aa8e8", rgb: "74, 168, 232" },
+  PROJECT_DESIGN: { accent: "#50b9de", rgb: "80, 185, 222" },
+  CONSTRUCTION: { accent: "#f0a44c", rgb: "240, 164, 76" },
+  WARRANTY: { accent: "#9f8cf2", rgb: "159, 140, 242" },
+  SAFETY: { accent: "#ef6f67", rgb: "239, 111, 103" },
+  ADMIN: { accent: "#65b9e8", rgb: "101, 185, 232" },
+  TECH_ECON: { accent: "#e5bd61", rgb: "229, 189, 97" },
+  STEEL: { accent: "#9eaec0", rgb: "158, 174, 192" },
+  ELECTROMECHANICAL: { accent: "#e8cc56", rgb: "232, 204, 86" },
+  EQUIPMENT: { accent: "#db9356", rgb: "219, 147, 86" },
+  HANOI_OFFICE: { accent: "#7bb7e5", rgb: "123, 183, 229" },
+  CONCRETE: { accent: "#90a8bc", rgb: "144, 168, 188" },
+};
+
+const operationalLabels: Partial<Record<RoleDomain, { progress: string; attention: string; evidence: string; work: string }>> = {
+  ADMIN: { progress: "Tiến độ công việc phòng", attention: "Hồ sơ cần đôn đốc", evidence: "Hồ sơ / tài liệu", work: "Việc hành chính đang mở" },
+  PROJECT_DESIGN: { progress: "Tiến độ thiết kế & QLDA", attention: "Dự án cần phối hợp", evidence: "Hồ sơ thiết kế", work: "Đầu việc thiết kế đang mở" },
+  TECH_ECON: { progress: "Tiến độ hồ sơ KTKT", attention: "Dự án cần kiểm soát", evidence: "Minh chứng khối lượng", work: "Hồ sơ dự toán đến hạn" },
+  STEEL: { progress: "Tiến độ kết cấu thép", attention: "Dự án cần cung ứng", evidence: "Hồ sơ sản xuất", work: "Lệnh sản xuất đang mở" },
+  ELECTROMECHANICAL: { progress: "Tiến độ cơ điện", attention: "Hạng mục cần phối hợp", evidence: "Hồ sơ cơ điện", work: "Việc cơ điện đang mở" },
+  EQUIPMENT: { progress: "Mức đáp ứng thiết bị", attention: "Dự án cần điều phối", evidence: "Nhật ký thiết bị", work: "Lệnh thiết bị đang mở" },
+  HANOI_OFFICE: { progress: "Tiến độ phối hợp VP Hà Nội", attention: "Dự án cần hỗ trợ", evidence: "Hồ sơ điều phối", work: "Việc văn phòng đang mở" },
+  CONCRETE: { progress: "Tiến độ cung ứng BTTP", attention: "Dự án cần cấp bê tông", evidence: "Phiếu / hồ sơ cấp phối", work: "Lệnh cấp bê tông đang mở" },
 };
 
 export default function DashboardPage() {
@@ -214,81 +245,91 @@ export default function DashboardPage() {
   const actionTasks = [...taskMetrics.overdue, ...taskMetrics.dueSoon, ...taskMetrics.open]
     .filter((item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index)
     .slice(0, roleProfile?.audience === "EMPLOYEE" ? 10 : 7);
+  const theme = roleThemes[roleProfile?.domain || "CORPORATE"] || roleThemes.CORPORATE!;
+  const dashboardStyle = {
+    "--role-accent": theme.accent,
+    "--role-accent-rgb": theme.rgb,
+  } as CSSProperties;
 
   return (
-    <div className="mx-auto w-full max-w-[1900px] space-y-3 bg-[#f2f3f5] text-slate-900">
-      <section className="overflow-hidden rounded-[13px] border border-slate-300 bg-white shadow-[0_8px_22px_rgba(15,23,42,0.06)]">
-        <div className="grid gap-3 bg-[linear-gradient(90deg,#0a5a6a_0%,#0a5a6a_42%,#b8b8b8_42%,#b8b8b8_100%)] px-4 py-3 text-white lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100">LICOGI 18.3 · Enterprise Growth OS</p>
-            <h1 className="mt-1 text-[18px] font-black uppercase tracking-[0.035em] sm:text-[22px]">{roleProfile?.position || "Dashboard điều hành"}</h1>
-            <p className="mt-1 max-w-5xl text-[10px] font-semibold leading-4 text-white/80">{roleDescription(roleProfile)}</p>
+    <div className={styles.dashboard} style={dashboardStyle}>
+      <header className={styles.header}>
+        <div className={styles.headerMain}>
+          <div className={styles.brand} aria-hidden="true">
+            <Image src="/brand/licogi183-logo.svg" alt="" width={44} height={44} priority />
           </div>
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <div className="rounded border border-white/25 bg-black/10 px-3 py-1.5 text-right">
-              <p className="text-[12px] font-black">{today || "--/--/----"}</p>
-              <p className="text-[8px] font-bold uppercase tracking-[0.1em] text-white/75">{session?.name || "LICOGI 18.3"}</p>
-            </div>
-            <span className="rounded border border-yellow-200/40 bg-yellow-300/20 px-2.5 py-1.5 text-[9px] font-black text-yellow-50">{roleProfile?.unitLabel || "Điều hành"}</span>
+          <div className="min-w-0">
+            <p className={styles.eyebrow}>LICOGI 18.3 · Enterprise Growth OS</p>
+            <h1 className={styles.title}>{roleProfile?.position || "Dashboard điều hành"}</h1>
+            <p className={styles.description}>{roleDescription(roleProfile)}</p>
           </div>
         </div>
-        {isAdmin ? (
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2">
-            <span className="text-[9px] font-bold text-slate-500">Admin xem thử đúng từng tài khoản / vị trí:</span>
-            <select value={previewEmail} onChange={(event) => setPreviewEmail(event.target.value)} className="max-w-[420px] rounded border border-slate-300 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-700 outline-none">
-              <option value="">Tự động theo tài khoản đang đăng nhập</option>
-              {roleAccountProfiles.map((item) => <option key={item.email} value={item.email}>{item.position} · {item.email}</option>)}
-            </select>
-          </div>
-        ) : null}
-      </section>
-
-      <OrganizationCommandChart active={roleProfile} />
-
-      <section className="rounded-[12px] border border-slate-300 bg-white px-3 py-2.5 shadow-sm">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">Chuỗi điều hành:</span>
-          {(roleProfile?.focusChain || ["Mục tiêu", "KR/KPI", "Thực thi", "Đo lường", "Cảnh báo", "Quyết định", "Kết quả"]).map((item, index, array) => (
-            <span key={`${item}-${index}`} className="flex items-center gap-1.5">
-              <span className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black text-slate-700">{item}</span>
-              {index < array.length - 1 ? <ChevronRight size={11} className="text-red-500" /> : null}
-            </span>
-          ))}
+        <div className={styles.headerMeta}>
+          <time className={styles.date}>{today || "--/--/----"}</time>
+          <span className={styles.identity}>{session?.name || "LICOGI 18.3"}</span>
+          <span className={styles.roleBadge}>{roleProfile?.unitLabel || "Điều hành"}</span>
         </div>
+      </header>
+
+      {isAdmin ? (
+        <div className={styles.adminBar}>
+          <span className={styles.adminLabel}>Kiểm tra giao diện theo từng tài khoản / vị trí</span>
+          <select
+            value={previewEmail}
+            onChange={(event) => setPreviewEmail(event.target.value)}
+            className={styles.adminSelect}
+            aria-label="Xem dashboard theo vị trí"
+          >
+            <option value="">Tự động theo tài khoản đang đăng nhập</option>
+            {roleAccountProfiles.map((item) => (
+              <option key={item.email} value={item.email}>{item.position} · {item.email}</option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
+      <section className={styles.focusRail} aria-label="Chuỗi điều hành theo vai trò">
+        <span className={styles.focusLabel}>Chuỗi điều hành</span>
+        {(roleProfile?.focusChain || ["Mục tiêu", "KR/KPI", "Thực thi", "Đo lường", "Cảnh báo", "Quyết định", "Kết quả"]).map((item, index, array) => (
+          <span key={`${item}-${index}`} className="contents">
+            <span className={styles.focusItem}>{item}</span>
+            {index < array.length - 1 ? <ChevronRight size={13} className={styles.railArrow} aria-hidden="true" /> : null}
+          </span>
+        ))}
       </section>
 
-      <section className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+      <section className={styles.kpiGrid} aria-label="Chỉ số điều hành trọng yếu">
         {kpis.map((item) => <KpiCard key={item.title} {...item} />)}
       </section>
 
-      <section className="grid gap-2 xl:grid-cols-[1.55fr_0.72fr_0.82fr]">
-        <article className={panel}>
-          <PanelHeader icon={<Trophy size={14} />} title={boardTitle(roleProfile)} note={`${tableRows.length}/${projects.length} dự án`} />
+      <section className={styles.mainGrid}>
+        <article className={styles.panel}>
+          <PanelHeader icon={<Trophy size={15} />} title={boardTitle(roleProfile)} note={`${tableRows.length}/${projects.length} dự án`} />
           <ProjectTable rows={tableRows} />
         </article>
 
-        <article className={panel}>
-          <PanelHeader icon={<BellRing size={14} />} title="Cảnh báo điều hành" note={`${alerts.length} nội dung`} />
-          <div className="space-y-1.5 p-2.5">
+        <article className={styles.panel}>
+          <PanelHeader icon={<BellRing size={15} />} title="Cảnh báo điều hành" note={`${alerts.length} nội dung`} />
+          <div className={styles.stack}>
             {alerts.map((row) => (
-              <Link key={row.project.id} href={`/projects/${row.project.id}`} className="grid grid-cols-[auto_1fr_auto] gap-2 rounded border border-slate-200 bg-slate-50 px-2.5 py-2 transition hover:border-red-200 hover:bg-red-50/40">
-                <span className={`mt-1 h-2 w-2 rounded-full ${toneStyles[row.tone].dot}`} />
+              <Link key={row.project.id} href={`/projects/${row.project.id}`} className={styles.alertRow}>
+                <span className={`${styles.dot} ${toneClasses[row.tone]}`} />
                 <div className="min-w-0">
-                  <p className="line-clamp-2 text-[10px] font-black leading-4 text-slate-800">{row.project.name}</p>
-                  <p className="mt-0.5 text-[8px] font-semibold text-slate-500">{alertReason(row, roleProfile?.domain)}</p>
+                  <p className={styles.rowTitle}>{row.project.name}</p>
+                  <p className={styles.rowMeta}>{alertReason(row, roleProfile?.domain)}</p>
                 </div>
-                <span className="text-[8px] font-black text-red-600">[XEM]</span>
+                <span className={styles.viewLink}>[XEM]</span>
               </Link>
             ))}
             {!alerts.length ? <EmptyBox text="Chưa có cảnh báo ưu tiên theo dữ liệu hiện tại." /> : null}
           </div>
         </article>
 
-        <article className={panel}>
-          <PanelHeader icon={<BarChart3 size={14} />} title="Kế hoạch / thực hiện" note="Tiến độ dự án" />
-          <div className="p-2.5">
+        <article className={styles.panel}>
+          <PanelHeader icon={<BarChart3 size={15} />} title="Diễn biến thực hiện" note="Kế hoạch / thực tế" />
+          <div className={styles.chartBody}>
             <TrendChart rows={chartRows} />
-            <div className="mt-1 grid grid-cols-2 gap-1.5">
+            <div className={styles.miniGrid}>
               <MiniNumber label="Đang chậm" value={metrics.delayed.length} tone={metrics.delayed.length ? "red" : "green"} />
               <MiniNumber label="Rủi ro cao" value={metrics.highRisk.length} tone={metrics.highRisk.length ? "red" : "green"} />
             </div>
@@ -296,50 +337,58 @@ export default function DashboardPage() {
         </article>
       </section>
 
-      <section className="grid gap-2 xl:grid-cols-[1.02fr_1.2fr_0.78fr]">
-        <article className={panel}>
-          <PanelHeader icon={<ListChecks size={14} />} title={workTitle(roleProfile)} note={tasks.length ? "Dữ liệu công việc" : "Theo dữ liệu dự án"} />
+      <section className={styles.actionGrid}>
+        <article className={styles.panel}>
+          <PanelHeader icon={<ListChecks size={15} />} title={workTitle(roleProfile)} note={tasks.length ? "Dữ liệu công việc" : "Theo dữ liệu dự án"} />
           {tasks.length ? <WorkList tasks={actionTasks} /> : <ProjectWorkSummary rows={rows.slice(0, 6)} roleProfile={roleProfile} />}
         </article>
 
-        <article className={panel}>
-          <PanelHeader icon={<Target size={14} />} title="Ưu tiên / chỉ đạo theo vị trí" note={roleProfile?.shortPosition || "Vai trò"} />
-          <div className="grid gap-1.5 p-2.5 sm:grid-cols-2">
+        <article className={styles.panel}>
+          <PanelHeader icon={<Target size={15} />} title="Chỉ đạo / ưu tiên theo vị trí" note={roleProfile?.shortPosition || "Vai trò"} />
+          <div className={styles.priorityGrid}>
             {(roleProfile?.priorities || []).map((priority, index) => (
-              <div key={priority} className="rounded border border-slate-200 bg-[#f8fafc] p-2.5">
-                <div className="flex items-start gap-2">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#073069] text-[8px] font-black text-white">{index + 1}</span>
-                  <div>
-                    <p className="text-[10px] font-black leading-4 text-slate-800">{priority}</p>
-                    <p className="mt-0.5 text-[8px] font-semibold leading-4 text-slate-500">{priorityDetail(roleProfile, alerts[index], taskMetrics, metrics)}</p>
-                  </div>
+              <div key={priority} className={styles.priorityCard}>
+                <span className={styles.priorityIndex}>{index + 1}</span>
+                <div>
+                  <p className={styles.rowTitle}>{priority}</p>
+                  <p className={styles.rowMeta}>{priorityDetail(roleProfile, alerts[index], taskMetrics, metrics)}</p>
                 </div>
               </div>
             ))}
           </div>
         </article>
 
-        <article className={panel}>
-          <PanelHeader icon={<UserCog size={14} />} title="Truy cập nhanh" note={roleProfile?.unitLabel || "LICOGI"} />
-          <div className="space-y-1.5 p-2.5">
+        <article className={styles.panel}>
+          <PanelHeader icon={<UserCog size={15} />} title="Truy cập nhanh" note={roleProfile?.unitLabel || "LICOGI"} />
+          <div className={styles.stack}>
             {(roleProfile?.quickLinks || []).map((item) => (
-              <Link key={`${item.href}-${item.label}`} href={item.href} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-slate-50 px-2.5 py-2 transition hover:border-sky-300 hover:bg-sky-50">
+              <Link key={`${item.href}-${item.label}`} href={item.href} className={styles.quickLink}>
                 <div>
-                  <p className="text-[10px] font-black text-slate-800">{item.label}</p>
-                  <p className="text-[8px] font-semibold text-slate-500">{item.note}</p>
+                  <p className={styles.rowTitle}>{item.label}</p>
+                  <p className={styles.rowMeta}>{item.note}</p>
                 </div>
-                <ChevronRight size={13} className="text-sky-700" />
+                <ChevronRight size={14} className={styles.quickIcon} aria-hidden="true" />
               </Link>
             ))}
           </div>
         </article>
       </section>
 
-      <section className="grid gap-2 lg:grid-cols-[1fr_1fr_1fr]">
-        <ScopeCard icon={<Building2 size={14} />} title="Phạm vi tổ chức" value={roleProfile?.departmentName || "Toàn công ty"} note={`${roleProfile?.levelLabel || "Điều hành"} · ${roleProfile?.roleCode || session?.roleCode || "—"}`} />
-        <ScopeCard icon={<BriefcaseBusiness size={14} />} title="Tài khoản đang xem" value={previewEmail || session?.email || "—"} note={previewEmail ? "Chế độ preview của Admin" : "Tài khoản đăng nhập thực tế"} />
-        <ScopeCard icon={<MapPinned size={14} />} title="Nguyên tắc dữ liệu" value="1 nguồn dữ liệu · nhiều góc nhìn" note="Mục tiêu → trách nhiệm → KPI → action → risk → decision → outcome" />
+      <section className={styles.scopeGrid}>
+        <ScopeCard icon={<Building2 size={15} />} title="Phạm vi tổ chức" value={roleProfile?.departmentName || "Toàn công ty"} note={`${roleProfile?.levelLabel || "Điều hành"} · ${roleProfile?.roleCode || session?.roleCode || "—"}`} />
+        <ScopeCard icon={<BriefcaseBusiness size={15} />} title="Tài khoản đang xem" value={previewEmail || session?.email || "—"} note={previewEmail ? "Chế độ kiểm tra của Admin" : "Tài khoản đăng nhập thực tế"} />
+        <ScopeCard icon={<MapPinned size={15} />} title="Nguyên tắc dữ liệu" value="Một nguồn dữ liệu · nhiều góc nhìn" note="Mục tiêu → trách nhiệm → KPI → action → risk → decision → outcome" />
       </section>
+
+      <details className={styles.organizationDetails}>
+        <summary className={styles.organizationSummary}>
+          <span>Cơ cấu tổ chức và chuỗi trách nhiệm LICOGI 18.3</span>
+          <span>Mở sơ đồ chi tiết</span>
+        </summary>
+        <div className={styles.organizationBody}>
+          <OrganizationCommandChart active={roleProfile} />
+        </div>
+      </details>
     </div>
   );
 }
@@ -365,6 +414,13 @@ function buildKpis(profile: RoleAccountProfile | undefined, metrics: Metrics, ta
     { title: "Sức khỏe danh mục", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.highRisk.length} rủi ro cao · ${metrics.mediumRisk.length} trung bình`, status: healthTone === "green" ? "ỔN ĐỊNH" : "GIÁM SÁT", tone: healthTone, icon: <ShieldCheck size={18} />, href: "/projects" },
     { title: "Dự án chậm trọng điểm", value: String(metrics.delayed.length), subtitle: `Chênh kế hoạch bình quân ${Math.max(0, metrics.averagePlan - metrics.averageActual)}%`, status: delayTone === "green" ? "TỐT" : "CẢNH BÁO", tone: delayTone, icon: <AlertTriangle size={18} />, href: "/reports" },
     { title: "Tỷ lệ hoàn thành", value: `${metrics.completionRate}%`, subtitle: `${metrics.completed.length}/${Math.max(1, metrics.completed.length + metrics.ongoing.length + metrics.warranty.length)} dự án`, status: "OUTCOME", tone: metrics.completionRate >= 50 ? "green" : "yellow", icon: <Trophy size={18} />, href: "/reports" },
+  ];
+
+  if (domain === "CORPORATE") return [
+    { title: "Tiến độ toàn công ty", value: `${metrics.averageActual}%`, subtitle: `Kế hoạch bình quân ${metrics.averagePlan}%`, status: progressTone === "red" ? "CẦN BÙ" : "ĐANG BÁM", tone: progressTone, icon: <TrendingUp size={18} />, href: "/planning" },
+    { title: "Dự án đang vận hành", value: String(metrics.ongoing.length), subtitle: `${metrics.completed.length} hoàn thành · ${metrics.warranty.length} bảo hành`, status: "TOÀN CÔNG TY", tone: "blue", icon: <Building2 size={18} />, href: "/projects" },
+    { title: "Project Health", value: `${metrics.averageHealth}/100`, subtitle: `${metrics.highRisk.length} rủi ro cao · ${metrics.safeCount} an toàn`, status: healthTone === "green" ? "TỐT" : "CAN THIỆP", tone: healthTone, icon: <ShieldCheck size={18} />, href: "/projects" },
+    { title: "Chỉ đạo đến hạn", value: String(tasks.dueSoon.length + tasks.overdue.length), subtitle: `${tasks.overdue.length} việc quá hạn cần xử lý`, status: tasks.overdue.length ? "XỬ LÝ NGAY" : "ĐANG KIỂM SOÁT", tone: taskTone, icon: <ClipboardCheck size={18} />, href: "/tasks" },
   ];
 
   if (domain === "FINANCE" || domain === "ACCOUNTING") return [
@@ -400,6 +456,15 @@ function buildKpis(profile: RoleAccountProfile | undefined, metrics: Metrics, ta
     { title: "Dự án chậm", value: String(metrics.delayed.length), subtitle: "Điểm có khả năng phát sinh áp lực vận hành", status: delayTone === "green" ? "ỔN" : "KIỂM TRA", tone: delayTone, icon: <AlertTriangle size={18} />, href: "/construction" },
     { title: "Minh chứng", value: String(metrics.totalEvidence), subtitle: "Ảnh, video, tài liệu cho kiểm tra", status: "EVIDENCE", tone: "blue", icon: <FileCheck2 size={18} />, href: "/documents" },
     { title: "Hành động cần theo dõi", value: String(tasks.open.length), subtitle: `${tasks.overdue.length} quá hạn`, status: tasks.overdue.length ? "KHẮC PHỤC" : "THEO DÕI", tone: taskTone, icon: <ClipboardCheck size={18} />, href: "/tasks" },
+  ];
+
+  const labels = operationalLabels[domain];
+
+  if (labels) return [
+    { title: profile?.audience === "EMPLOYEE" ? "Tiến độ việc của tôi" : labels.progress, value: `${tasks.avgProgress}%`, subtitle: `${tasks.done.length} việc hoàn thành trong phạm vi`, status: tasks.avgProgress >= 70 ? "TỐT" : "BÁM SÁT", tone: tasks.avgProgress >= 70 ? "green" : "yellow", icon: <Target size={18} />, href: "/tasks" },
+    { title: labels.attention, value: String(metrics.behind.length), subtitle: `Tiến độ dự án bình quân ${metrics.averageActual}%`, status: delayTone === "green" ? "ỔN" : "PHỐI HỢP", tone: delayTone, icon: <Building2 size={18} />, href: "/projects" },
+    { title: labels.evidence, value: String(metrics.totalEvidence), subtitle: "Dữ liệu ảnh, video và tài liệu hiện có", status: "MINH CHỨNG", tone: "blue", icon: <FileCheck2 size={18} />, href: "/documents" },
+    { title: profile?.audience === "EMPLOYEE" ? "Việc của tôi đến hạn" : labels.work, value: String(tasks.open.length), subtitle: `${tasks.dueSoon.length} đến hạn 72 giờ · ${tasks.overdue.length} quá hạn`, status: tasks.overdue.length ? "LÀM NGAY" : "ĐANG KIỂM SOÁT", tone: taskTone, icon: <Clock3 size={18} />, href: "/tasks" },
   ];
 
   return [
@@ -438,25 +503,31 @@ function workTitle(profile?: RoleAccountProfile) {
 
 function ProjectTable({ rows }: { rows: DashboardRow[] }) {
   return (
-    <div className="max-h-[405px] overflow-auto">
-      <table className="w-full min-w-[760px] text-left text-[9px]">
-        <thead className="sticky top-0 z-10 border-b border-slate-300 bg-slate-100 text-[8px] font-black uppercase tracking-[0.05em] text-slate-500">
-          <tr><th className="px-2.5 py-2">STT</th><th className="px-2.5 py-2">Đơn vị / Dự án</th><th className="px-2.5 py-2 text-center">KH</th><th className="px-2.5 py-2 text-center">Thực tế</th><th className="px-2.5 py-2 text-center">Trạng thái</th><th className="px-2.5 py-2 text-right">Chênh</th></tr>
+    <div className={styles.tableWrap}>
+      <table className={styles.projectTable}>
+        <thead>
+          <tr><th>STT</th><th>Đơn vị / Dự án</th><th className={styles.center}>Kế hoạch</th><th className={styles.center}>Thực tế</th><th className={styles.center}>Trạng thái</th><th className={styles.right}>Chênh</th></tr>
         </thead>
-        <tbody className="divide-y divide-slate-200">
+        <tbody>
           {rows.map((row, index) => (
-            <tr key={row.project.id} className="hover:bg-slate-50">
-              <td className="px-2.5 py-2 font-black text-slate-400">{index + 1}</td>
-              <td className="px-2.5 py-2">
-                <div className="flex items-start gap-2"><span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${toneStyles[row.tone].dot}`} /><div className="min-w-0"><Link href={`/projects/${row.project.id}`} className="block max-w-[360px] truncate text-[10px] font-black text-slate-800 hover:text-sky-700">{row.project.name}</Link><p className="mt-0.5 max-w-[360px] truncate text-[8px] font-semibold text-slate-400">{row.project.code || "Chưa có mã"} · {row.project.type} · {row.project.province}</p></div></div>
+            <tr key={row.project.id}>
+              <td className={styles.rowIndex}>{index + 1}</td>
+              <td>
+                <div className={styles.projectCell}>
+                  <span className={`${styles.dot} ${toneClasses[row.tone]}`} />
+                  <div className="min-w-0">
+                    <Link href={`/projects/${row.project.id}`} className={styles.projectName}>{row.project.name}</Link>
+                    <p className={styles.projectMeta}>{row.project.code || "Chưa có mã"} · {row.project.type} · {row.project.province}</p>
+                  </div>
+                </div>
               </td>
-              <td className="px-2.5 py-2 text-center font-black text-slate-600">{row.plan}%</td>
-              <td className="px-2.5 py-2 text-center font-black text-slate-900">{row.actual}%</td>
-              <td className="px-2.5 py-2 text-center"><StatusPill tone={row.tone}>{row.status}</StatusPill></td>
-              <td className={`px-2.5 py-2 text-right font-black ${row.delta < 0 ? "text-red-600" : row.delta > 0 ? "text-emerald-600" : "text-slate-400"}`}>{row.delta > 0 ? "+" : ""}{row.delta}%</td>
+              <td className={`${styles.center} ${styles.numberStrong}`}>{row.plan}%</td>
+              <td className={`${styles.center} ${styles.numberStrong}`}>{row.actual}%</td>
+              <td className={styles.center}><StatusPill tone={row.tone}>{row.status}</StatusPill></td>
+              <td className={`${styles.right} ${toneClasses[row.delta < 0 ? "red" : row.delta > 0 ? "green" : "blue"]}`}>{row.delta > 0 ? "+" : ""}{row.delta}%</td>
             </tr>
           ))}
-          {!rows.length ? <tr><td colSpan={6} className="px-4 py-10 text-center text-[10px] font-semibold text-slate-400">Chưa có dữ liệu dự án phù hợp.</td></tr> : null}
+          {!rows.length ? <tr><td colSpan={6}><EmptyBox text="Chưa có dữ liệu dự án phù hợp." /></td></tr> : null}
         </tbody>
       </table>
     </div>
@@ -464,28 +535,28 @@ function ProjectTable({ rows }: { rows: DashboardRow[] }) {
 }
 
 function WorkList({ tasks }: { tasks: WorkItem[] }) {
-  return <div className="max-h-[360px] space-y-1.5 overflow-auto p-2.5">{tasks.map((item) => { const tone = taskTone(item); return <Link key={item.id} href="/tasks" className="grid gap-2 rounded border border-slate-200 bg-slate-50 px-2.5 py-2 hover:border-sky-300 sm:grid-cols-[1fr_auto] sm:items-center"><div className="min-w-0"><p className="truncate text-[10px] font-black text-slate-800">{item.title}</p><p className="mt-0.5 truncate text-[8px] font-semibold text-slate-500">{item.project} · {item.assignee}</p></div><div className="flex items-center gap-2"><span className="text-[8px] font-bold text-slate-400">{item.due ? `Hạn ${formatDate(item.due)}` : "Chưa có hạn"}</span><StatusPill tone={tone}>{item.progress}%</StatusPill></div></Link>; })}{!tasks.length ? <EmptyBox text="Chưa có công việc ưu tiên trong phạm vi hiện tại." /> : null}</div>;
+  return <div className={styles.stack}>{tasks.map((item) => { const tone = taskTone(item); return <Link key={item.id} href="/tasks" className={styles.workRow}><div className="min-w-0"><p className={styles.rowTitle}>{item.title}</p><p className={styles.rowMeta}>{item.project} · {item.assignee}</p></div><div className={styles.workRight}><span className={styles.due}>{item.due ? `Hạn ${formatDate(item.due)}` : "Chưa có hạn"}</span><StatusPill tone={tone}>{item.progress}%</StatusPill></div></Link>; })}{!tasks.length ? <EmptyBox text="Chưa có công việc ưu tiên trong phạm vi hiện tại." /> : null}</div>;
 }
 
 function ProjectWorkSummary({ rows, roleProfile }: { rows: DashboardRow[]; roleProfile?: RoleAccountProfile }) {
-  return <div className="space-y-1.5 p-2.5">{rows.map((row) => <div key={row.project.id} className="rounded border border-slate-200 bg-slate-50 p-2.5"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-[10px] font-black text-slate-800">{row.project.name}</p><p className="mt-0.5 text-[8px] font-semibold text-slate-500">{roleProfile?.domain === "BOARD" ? `Health ${row.project.healthScore ?? 0}/100 · ${row.project.valueRange}` : `Thực tế ${row.actual}% / kế hoạch ${row.plan}%`}</p></div><StatusPill tone={row.tone}>{row.status}</StatusPill></div></div>)}{!rows.length ? <EmptyBox text="Chưa có dữ liệu thực thi." /> : null}</div>;
+  return <div className={styles.stack}>{rows.map((row) => <div key={row.project.id} className={styles.projectRow}><div className={styles.projectRowInner}><div className="min-w-0"><p className={styles.rowTitle}>{row.project.name}</p><p className={styles.rowMeta}>{roleProfile?.domain === "BOARD" ? `Health ${row.project.healthScore ?? 0}/100 · ${row.project.valueRange}` : `Thực tế ${row.actual}% / kế hoạch ${row.plan}%`}</p></div><StatusPill tone={row.tone}>{row.status}</StatusPill></div></div>)}{!rows.length ? <EmptyBox text="Chưa có dữ liệu thực thi." /> : null}</div>;
 }
 
 function KpiCard(item: KpiItem) {
-  const style = toneStyles[item.tone];
-  return <Link href={item.href} className={`group rounded-[10px] border border-slate-300 border-t-[4px] ${style.top} bg-white p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}><div className="flex items-start justify-between gap-2"><div><p className="text-[8px] font-black uppercase tracking-[0.055em] text-slate-500">{item.title}</p><p className={`mt-1 text-[25px] font-black leading-none ${style.text}`}>{item.value}</p></div><span className={`grid h-8 w-8 place-items-center rounded border ${style.badge}`}>{item.icon}</span></div><div className="mt-2 flex items-end justify-between gap-2"><p className="text-[8px] font-semibold leading-3.5 text-slate-400">{item.subtitle}</p><span className={`shrink-0 rounded border px-1.5 py-0.5 text-[7px] font-black ${style.badge}`}>{item.status}</span></div></Link>;
+  const tone = toneClasses[item.tone];
+  return <Link href={item.href} className={`${styles.kpiCard} ${tone}`}><div className={styles.kpiTop}><div><p className={styles.kpiTitle}>{item.title}</p><p className={`${styles.kpiValue} ${tone}`}>{item.value}</p></div><span className={`${styles.kpiIcon} ${tone}`}>{item.icon}</span></div><div className={styles.kpiBottom}><p className={styles.kpiSubtitle}>{item.subtitle}</p><span className={`${styles.statusPill} ${tone}`}>{item.status}</span></div></Link>;
 }
 
 function PanelHeader({ icon, title, note }: { icon: ReactNode; title: string; note: string }) {
-  return <div className="flex min-h-9 items-center justify-between gap-3 border-b border-slate-300 bg-[#f3f4f6] px-2.5 py-2"><div className="flex items-center gap-1.5"><span className="text-[#ba1821]">{icon}</span><h2 className="text-[9px] font-black uppercase tracking-[0.055em] text-slate-700">{title}</h2></div><span className="text-[8px] font-bold text-slate-400">{note}</span></div>;
+  return <div className={styles.panelHeader}><div className={styles.panelHeading}><span className={styles.panelIcon}>{icon}</span><h2 className={styles.panelTitle}>{title}</h2></div><span className={styles.panelNote}>{note}</span></div>;
 }
 
-function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) { return <span className={`inline-flex rounded border px-1.5 py-0.5 text-[7px] font-black ${toneStyles[tone].badge}`}>{children}</span>; }
-function MiniNumber({ label, value, tone }: { label: string; value: number; tone: Tone }) { return <div className={`rounded border border-slate-200 ${toneStyles[tone].soft} p-2 text-center`}><p className={`text-[18px] font-black ${toneStyles[tone].text}`}>{String(value).padStart(2, "0")}</p><p className="text-[7px] font-black uppercase text-slate-400">{label}</p></div>; }
-function EmptyBox({ text }: { text: string }) { return <div className="rounded border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-[9px] font-semibold text-slate-400">{text}</div>; }
+function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) { return <span className={`${styles.statusPill} ${toneClasses[tone]}`}>{children}</span>; }
+function MiniNumber({ label, value, tone }: { label: string; value: number; tone: Tone }) { return <div className={`${styles.miniNumber} ${toneClasses[tone]}`}><p className={styles.miniValue}>{String(value).padStart(2, "0")}</p><p className={styles.miniLabel}>{label}</p></div>; }
+function EmptyBox({ text }: { text: string }) { return <div className={styles.empty}>{text}</div>; }
 
 function ScopeCard({ icon, title, value, note }: { icon: ReactNode; title: string; value: string; note: string }) {
-  return <div className="rounded-[10px] border border-slate-300 bg-white p-2.5 shadow-sm"><div className="flex items-start gap-2"><span className="mt-0.5 text-[#0a5a6a]">{icon}</span><div className="min-w-0"><p className="text-[8px] font-black uppercase tracking-[0.06em] text-slate-400">{title}</p><p className="mt-1 truncate text-[10px] font-black text-slate-800">{value}</p><p className="mt-0.5 text-[8px] font-semibold leading-3.5 text-slate-500">{note}</p></div></div></div>;
+  return <div className={styles.scopeCard}><span className={styles.scopeIcon}>{icon}</span><div className="min-w-0"><p className={styles.scopeTitle}>{title}</p><p className={styles.scopeValue}>{value}</p><p className={styles.scopeNote}>{note}</p></div></div>;
 }
 
 function TrendChart({ rows }: { rows: DashboardRow[] }) {
@@ -495,7 +566,7 @@ function TrendChart({ rows }: { rows: DashboardRow[] }) {
   const y = (value: number) => top + ((100 - Math.max(0, Math.min(100, value))) / 100) * plotHeight;
   const actual = rows.map((item, index) => `${x(index)},${y(item.actual)}`).join(" ");
   const plan = rows.map((item, index) => `${x(index)},${y(item.plan)}`).join(" ");
-  return <svg viewBox={`0 0 ${width} ${height}`} className="h-[150px] w-full" role="img" aria-label="Biểu đồ kế hoạch và thực hiện">{[0,25,50,75,100].map((tick) => <g key={tick}><line x1={left} x2={width-right} y1={y(tick)} y2={y(tick)} stroke="#e2e8f0" strokeWidth="1" /><text x={left-5} y={y(tick)+3} textAnchor="end" fontSize="7" fill="#94a3b8">{tick}%</text></g>)}<polyline points={plan} fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="5 4" /><polyline points={actual} fill="none" stroke="#dc2626" strokeWidth="2.5" />{rows.map((item,index) => <g key={item.project.id}><circle cx={x(index)} cy={y(item.actual)} r="2.7" fill="#dc2626" /><text x={x(index)} y={height-8} textAnchor="middle" fontSize="6.5" fill="#64748b">{(item.project.code || `DA${index+1}`).slice(0,6)}</text></g>)}</svg>;
+  return <div className={styles.chartWrap}><svg viewBox={`0 0 ${width} ${height}`} className={styles.chart} role="img" aria-label="Biểu đồ kế hoạch và thực hiện">{[0,25,50,75,100].map((tick) => <g key={tick}><line x1={left} x2={width-right} y1={y(tick)} y2={y(tick)} stroke="#1b3a54" strokeWidth="1" /><text x={left-5} y={y(tick)+3} textAnchor="end" fontSize="8" fill="#7890a4">{tick}%</text></g>)}<polyline points={plan} fill="none" stroke="#c5d3de" strokeWidth="1.7" strokeDasharray="5 4" /><polyline points={actual} fill="none" stroke="#42a5f5" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />{rows.map((item,index) => <g key={item.project.id}><circle cx={x(index)} cy={y(item.actual)} r="3" fill="#42a5f5" /><text x={x(index)} y={height-8} textAnchor="middle" fontSize="7" fill="#7890a4">{(item.project.code || `DA${index+1}`).slice(0,6)}</text></g>)}</svg><div className={styles.chartLegend}><span className={styles.legendItem}><span className={styles.legendDash} />Kế hoạch</span><span className={styles.legendItem}><span className={styles.legendLine} />Thực tế</span></div></div>;
 }
 
 function taskTone(item: WorkItem): Tone {
