@@ -25,9 +25,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const sync = (source: SyncSource = "initial") => {
-      // During static/PPR rendering Next can temporarily expose no pathname.
-      // Do not turn that transient state into an auth loading screen: middleware
-      // remains the request-level guard for private URLs.
       if (pathnamePending) {
         setChecked(true);
         return;
@@ -43,10 +40,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       setLoggedIn(Boolean(session));
       setChecked(true);
 
-      // Login/register/logout actions own their navigation. The local auth event is
-      // only for synchronizing visible client state. Redirecting here as well used
-      // to race router.replace/router.refresh and could leave the previous RSC tree
-      // mounted until a manual browser refresh.
       if (source === "local-auth") return;
 
       if (!session && !isAuthPage) {
@@ -79,8 +72,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [isPublicPage, isAuthPage, isChangePasswordPage, pathname, pathnamePending, router]);
 
-  // Public/static content must be renderable before client hydration completes.
-  // This is especially important on iOS Safari and slower Android devices.
   if (pathnamePending || isPublicPage || isAuthPage || isChangePasswordPage) return <>{children}</>;
 
   if (!checked || !loggedIn) {
@@ -97,8 +88,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell relative min-h-screen max-w-full overflow-x-hidden text-slate-900">
       <div className="pointer-events-none fixed inset-0 z-[-1]">
-        <div className="absolute left-[12%] top-24 h-64 w-64 rounded-full bg-stone-300/20 blur-3xl" />
-        <div className="absolute right-[8%] top-10 h-72 w-72 rounded-full bg-orange-200/16 blur-3xl" />
+        <div className="absolute left-[12%] top-24 h-64 w-64 rounded-full bg-stone-300/16 blur-3xl" />
+        <div className="absolute right-[8%] top-10 h-72 w-72 rounded-full bg-orange-200/12 blur-3xl" />
       </div>
       <Sidebar
         mobileOpen={mobileOpen}
@@ -108,8 +99,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       />
       <div className={`min-h-screen max-w-full min-w-0 transition-[padding] duration-300 ${collapsed ? "lg:pl-[76px]" : "lg:pl-[260px]"}`}>
         <Topbar onOpenMobile={() => setMobileOpen(true)} />
-        <main className="max-w-full px-3 pb-10 pt-4 sm:px-4 lg:px-5 xl:px-6">
-          <div className="mx-auto max-w-[1820px] min-w-0">{children}</div>
+        <main className="max-w-full px-3 pb-10 pt-4 sm:px-4 lg:px-6 xl:px-7 2xl:px-8">
+          <div className="mx-auto max-w-[1580px] min-w-0">{children}</div>
         </main>
         <MobileBottomNav onOpenMenu={() => setMobileOpen(true)} />
       </div>
