@@ -241,25 +241,25 @@ export const tailgWorkfronts = [
   },
 ] as const;
 
-export const tailgDirectorAlerts = [
+export const tailgDirectorAlerts: Array<{ title: string; detail: string; tone: TailgTone }> = [
   {
     title: "Móng Xưởng 1 sát mốc 07/09/2026",
     detail: "Ảnh 05/09 cho thấy hai phân khu còn ở 85%; cần chốt sản lượng còn lại theo ca và điều kiện bàn giao.",
-    tone: "red" as TailgTone,
+    tone: "red",
   },
   {
     title: "Xưởng 3 chưa ghi nhận sản lượng",
     detail: "Hai nửa Xưởng 3 của đội Quang và Thọ đang 0% trong khi gói móng Xưởng 2+3 đã bắt đầu từ 29/08/2026.",
-    tone: "red" as TailgTone,
+    tone: "red",
   },
   {
     title: "Đội Quang có nhiều mặt trận song song",
     detail: "1/2 Xưởng 3, nhà ăn, nhà xe, bể ngầm và bể XLNT cần được tách kế hoạch ngày/tuần để tránh mất trọng tâm.",
-    tone: "yellow" as TailgTone,
+    tone: "yellow",
   },
   {
     title: "Hạ tầng chưa có % xác nhận",
     detail: "Đội Thọ phụ trách hạ tầng nhưng ảnh/file hiện tại chưa đủ số liệu định lượng; dashboard phải hiển thị thiếu dữ liệu thay vì tự tạo số.",
-    tone: "blue" as TailgTone,
+    tone: "blue",
   },
-] as const;
+];
