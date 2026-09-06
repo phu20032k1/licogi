@@ -1,0 +1,110 @@
+/* Private app desktop polish for browser zoom 100%.
+   Keep public website styles untouched; all rules are scoped to .app-shell. */
+
+.app-shell,
+.app-shell * {
+  font-family: var(--font-licogi), "Segoe UI", Arial, sans-serif !important;
+}
+
+.app-shell {
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.004em;
+  background:
+    radial-gradient(circle at 86% 4%, rgba(249,115,22,.065), transparent 24rem),
+    linear-gradient(180deg, #f7f8fa 0%, #f3f6fa 100%);
+}
+
+.app-shell .font-black { font-weight: 800 !important; }
+.app-shell .font-extrabold { font-weight: 700 !important; }
+.app-shell .font-bold { font-weight: 600 !important; }
+
+.app-shell .text-\[10px\] { font-size: 12px !important; line-height: 1.4 !important; }
+.app-shell .text-\[11px\] { font-size: 12.5px !important; line-height: 1.45 !important; }
+.app-shell .text-xs { font-size: 13px !important; line-height: 1.5 !important; }
+.app-shell .text-sm { font-size: 14.5px !important; line-height: 1.55 !important; }
+
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell h4 {
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+}
+
+.app-shell p,
+.app-shell li,
+.app-shell td,
+.app-shell th {
+  text-wrap: pretty;
+}
+
+.app-shell .glass-card,
+.app-shell .professional-card,
+.app-shell .enterprise-card {
+  border-color: rgba(203, 213, 225, .82);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .055);
+}
+
+.app-shell .licogi-btn {
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 10px 15px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.app-shell .licogi-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  min-height: 42px;
+  font-size: 14px;
+}
+
+.app-shell table {
+  font-size: 13.5px;
+}
+
+.app-shell table th {
+  font-size: 12px !important;
+  letter-spacing: .035em !important;
+}
+
+.app-shell .licogi-page-header {
+  border-radius: 20px;
+}
+
+.app-shell .licogi-page-header h1 {
+  line-height: 1.2;
+}
+
+@media (min-width: 1024px) {
+  .app-shell .licogi-page-header {
+    padding: 20px 22px;
+  }
+
+  .app-shell main {
+    padding-top: 22px !important;
+    padding-bottom: 48px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-shell main {
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .app-shell main {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+}
