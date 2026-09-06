@@ -1,14 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
-import { ArrowRight, Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
+import { FormEvent, useMemo, useState } from "react";
+import { ArrowRight, ChevronDown, Eye, EyeOff, Loader2, Sparkles, UsersRound } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 import { systemAccounts } from "../../data/dataCenter";
+import { roleAccountProfiles, type RoleAccountProfile } from "../../data/roleAccounts";
 import { refreshServerSession, saveSession, UserSession } from "../../lib/authSession";
 import { roleDefaultRoute } from "../../lib/rbac";
 
-const demoAccount = systemAccounts.find((account) => account.email === "admin@licogi183.vn") ?? systemAccounts[0];
+const executiveDemoPasswords: Record<string, string> = {
+  CHAIRMAN: "L183.Chairman@2026!",
+  CONTROL_BOARD: "L183.Control@2026!",
+  GENERAL_DIRECTOR: "L183.CEO@2026!",
+  DEPUTY_FINANCE: "L183.PGD.Fin@2026!",
+  DEPUTY_BUSINESS: "L183.PGD.Biz@2026!",
+  DEPUTY_CONSTRUCTION: "L183.PGD.Const@2026!",
+  DEPUTY_WARRANTY: "L183.PGD.Warranty@2026!",
+  DEPUTY_SAFETY: "L183.PGD.Safety@2026!",
+};
+
+function managedRoleDefaultPassword(profile: RoleAccountProfile) {
+  const fixed = executiveDemoPasswords[profile.code];
+  if (fixed) return fixed;
+  if (profile.code.startsWith("DEPUTY_HEAD_")) return `L183.Deputy.${profile.code.slice("DEPUTY_HEAD_".length)}@2026!`;
+  if (profile.code.startsWith("HEAD_")) return `L183.Head.${profile.code.slice("HEAD_".length)}@2026!`;
+  if (profile.code.startsWith("STAFF_")) return `L183.Staff.${profile.code.slice("STAFF_".length)}@2026!`;
+  return `L183.${profile.code}@2026!`;
+}
+
+type DemoLoginAccount = {
+  email: string;
+  password: string;
+  title: string;
+  subtitle: string;
+  group: "system" | "organization";
+};
+
+const demoLoginAccounts: DemoLoginAccount[] = [
+  ...systemAccounts.map((account) => ({
+    email: account.email,
+    password: account.defaultPassword,
+    title: account.role,
+    subtitle: account.scope,
+    group: "system" as const,
+  })),
+  ...roleAccountProfiles.map((profile) => ({
+    email: profile.email,
+    password: managedRoleDefaultPassword(profile),
+    title: profile.position,
+    subtitle: `${profile.departmentName} · ${profile.levelLabel}`,
+    group: "organization" as const,
+  })),
+].filter((account, index, all) => all.findIndex((item) => item.email.toLowerCase() === account.email.toLowerCase()) === index);
+
+const defaultDemoAccount = demoLoginAccounts.find((account) => account.email === "admin@licogi183.vn") ?? demoLoginAccounts[0];
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,6 +63,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [selectedDemoEmail, setSelectedDemoEmail] = useState(defaultDemoAccount?.email ?? "");
+
+  const selectedDemoAccount = useMemo(
+    () => demoLoginAccounts.find((account) => account.email === selectedDemoEmail) ?? null,
+    [selectedDemoEmail],
+  );
+
+  const systemDemoAccounts = useMemo(() => demoLoginAccounts.filter((account) => account.group === "system"), []);
+  const organizationDemoAccounts = useMemo(() => demoLoginAccounts.filter((account) => account.group === "organization"), []);
 
   async function authenticate(loginEmail: string, loginPassword: string, demo = false) {
     demo ? setDemoLoading(true) : setLoading(true);
@@ -60,6 +115,25 @@ export default function LoginPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await authenticate(email, password);
+  }
+
+  function chooseDemoAccount(nextEmail: string) {
+    setSelectedDemoEmail(nextEmail);
+    const account = demoLoginAccounts.find((item) => item.email === nextEmail);
+    if (!account) return;
+    setEmail(account.email);
+    setPassword(account.password);
+    setError("");
+  }
+
+  async function loginSelectedDemoAccount() {
+    if (!selectedDemoAccount) {
+      setError("Vui lòng chọn một tài khoản demo.");
+      return;
+    }
+    setEmail(selectedDemoAccount.email);
+    setPassword(selectedDemoAccount.password);
+    await authenticate(selectedDemoAccount.email, selectedDemoAccount.password, true);
   }
 
   return (
@@ -118,17 +192,57 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300"><span className="h-px flex-1 bg-slate-200" /> hoặc <span className="h-px flex-1 bg-slate-200" /></div>
+          <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300"><span className="h-px flex-1 bg-slate-200" /> tài khoản demo <span className="h-px flex-1 bg-slate-200" /></div>
 
-          <button
-            type="button"
-            disabled={loading || demoLoading}
-            onClick={() => void authenticate(demoAccount.email, demoAccount.defaultPassword, true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-5 py-3 text-sm font-extrabold text-orange-700 transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {demoLoading ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
-            {demoLoading ? "Đang mở bản demo" : "Vào bản demo"}
-          </button>
+          <div className="rounded-2xl border border-orange-200 bg-orange-50/70 p-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-700"><UsersRound size={18} /></span>
+              <div>
+                <p className="text-sm font-black text-slate-900">Chọn nhanh tài khoản demo</p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">Có {demoLoginAccounts.length} tài khoản trong danh sách. Chọn tài khoản sẽ tự điền email + mật khẩu; bấm nút bên dưới để đăng nhập ngay.</p>
+              </div>
+            </div>
+
+            <label className="mt-4 block text-xs font-black uppercase tracking-[0.08em] text-slate-500">Tài khoản
+              <span className="relative mt-1.5 block">
+                <select
+                  value={selectedDemoEmail}
+                  onChange={(event) => chooseDemoAccount(event.target.value)}
+                  disabled={loading || demoLoading}
+                  className="w-full appearance-none rounded-xl border border-orange-200 bg-white px-3.5 py-3 pr-10 text-sm font-bold text-slate-800 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:opacity-60"
+                >
+                  <optgroup label="Tài khoản hệ thống">
+                    {systemDemoAccounts.map((account) => <option key={account.email} value={account.email}>{account.title} · {account.email}</option>)}
+                  </optgroup>
+                  <optgroup label="Tài khoản theo cơ cấu tổ chức">
+                    {organizationDemoAccounts.map((account) => <option key={account.email} value={account.email}>{account.title} · {account.email}</option>)}
+                  </optgroup>
+                </select>
+                <ChevronDown size={17} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              </span>
+            </label>
+
+            {selectedDemoAccount ? <div className="mt-3 rounded-xl border border-orange-100 bg-white/80 px-3.5 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-slate-900">{selectedDemoAccount.title}</p>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-orange-700">{selectedDemoAccount.email}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">Demo</span>
+              </div>
+              <p className="mt-2 text-[11px] font-semibold leading-5 text-slate-500">{selectedDemoAccount.subtitle}</p>
+            </div> : null}
+
+            <button
+              type="button"
+              disabled={loading || demoLoading || !selectedDemoAccount}
+              onClick={() => void loginSelectedDemoAccount()}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {demoLoading ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
+              {demoLoading ? "Đang đăng nhập tài khoản demo" : "Tự điền & đăng nhập ngay"}
+            </button>
+          </div>
 
           <p className="mt-6 text-center text-sm text-slate-500">Chưa có tài khoản? <Link href="/register" className="font-extrabold text-orange-600 hover:text-orange-700">Tạo tài khoản</Link></p>
         </section>
