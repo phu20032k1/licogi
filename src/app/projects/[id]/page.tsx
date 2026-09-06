@@ -27,6 +27,7 @@ export default function ProjectDetailPage() {
   }, [params.id]);
 
   const variance = useMemo(() => project ? project.progress - (project.plannedProgress ?? project.progress) : 0, [project]);
+  const isTailg = useMemo(() => /TAILG/i.test(`${project?.code ?? ""} ${project?.name ?? ""}`), [project]);
 
   if (!loaded) return <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center"><HardHat size={34} className="mx-auto text-slate-300" /><p className="mt-4 font-black text-slate-900">Đang tải dữ liệu dự án...</p></div>;
   if (!project) return <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center"><HardHat size={34} className="mx-auto text-slate-300" /><h1 className="mt-4 text-xl font-black text-slate-900">Không tìm thấy dự án</h1><p className="mt-2 text-sm text-slate-500">Dự án chưa có trong Trung tâm dữ liệu hoặc đã bị xóa.</p><button onClick={() => router.push("/projects")} className="mt-5 rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-extrabold text-white">Quay lại danh mục</button></div>;
@@ -34,8 +35,13 @@ export default function ProjectDetailPage() {
   return <div className="space-y-6 animate-fade-up">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <Link href="/projects" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-extrabold text-slate-600 shadow-sm hover:bg-slate-50"><ArrowLeft size={16} /> Danh mục dự án</Link>
-      <Link href="/projects" className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-3.5 py-2.5 text-xs font-extrabold text-white"><Pencil size={16} /> Sửa tại danh mục</Link>
+      <div className="flex flex-wrap items-center gap-2">
+        {isTailg ? <Link href="/projects/tailg" className="inline-flex items-center gap-2 rounded-xl bg-[#0a2f59] px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-[#123f70]"><HardHat size={16} /> TAILG Command Center</Link> : null}
+        <Link href="/projects" className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-3.5 py-2.5 text-xs font-extrabold text-white"><Pencil size={16} /> Sửa tại danh mục</Link>
+      </div>
     </div>
+
+    {isTailg ? <section className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-white px-5 py-4 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-4"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#0a2f59] text-white"><HardHat size={19} /></span><div><p className="text-xs font-black uppercase tracking-[0.1em] text-sky-700">TAILG · Điều hành chuyên biệt</p><p className="mt-1 text-sm font-semibold leading-5 text-slate-600">Dự án này có dashboard riêng cho 6 đội thi công, phân khu Xưởng 1/2/3, nhật ký ngày, cảnh báo và master schedule.</p></div></div><Link href="/projects/tailg/update" className="inline-flex rounded-xl border border-sky-200 bg-white px-3.5 py-2.5 text-xs font-black text-sky-800 shadow-sm hover:bg-sky-50">Cập nhật tiến độ ngày</Link></div></section> : null}
 
     <section className="relative overflow-hidden rounded-[28px] bg-[#071426] p-6 text-white shadow-[0_24px_70px_rgba(7,20,38,0.22)] sm:p-8">
       <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-orange-500/20 blur-3xl" />
