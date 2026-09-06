@@ -7,9 +7,9 @@
 }
 
 .app-shell {
-  font-size: 15px;
-  line-height: 1.55;
-  letter-spacing: -0.004em;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.003em;
   background:
     radial-gradient(circle at 86% 4%, rgba(249,115,22,.065), transparent 24rem),
     linear-gradient(180deg, #f7f8fa 0%, #f3f6fa 100%);
@@ -19,10 +19,13 @@
 .app-shell .font-extrabold { font-weight: 700 !important; }
 .app-shell .font-bold { font-weight: 600 !important; }
 
-.app-shell .text-\[10px\] { font-size: 12px !important; line-height: 1.4 !important; }
-.app-shell .text-\[11px\] { font-size: 12.5px !important; line-height: 1.45 !important; }
-.app-shell .text-xs { font-size: 13px !important; line-height: 1.5 !important; }
-.app-shell .text-sm { font-size: 14.5px !important; line-height: 1.55 !important; }
+/* A slightly farther-out desktop density at browser zoom 100%.
+   This preserves real browser zoom/accessibility while making the workspace
+   feel closer to a comfortable 90-95% visual scale. */
+.app-shell .text-\[10px\] { font-size: 11px !important; line-height: 1.4 !important; }
+.app-shell .text-\[11px\] { font-size: 11.5px !important; line-height: 1.45 !important; }
+.app-shell .text-xs { font-size: 12px !important; line-height: 1.48 !important; }
+.app-shell .text-sm { font-size: 13.5px !important; line-height: 1.5 !important; }
 
 .app-shell h1,
 .app-shell h2,
@@ -47,32 +50,32 @@
 }
 
 .app-shell .licogi-btn {
-  min-height: 42px;
+  min-height: 40px;
   border-radius: 12px;
-  padding: 10px 15px;
-  font-size: 13px;
+  padding: 9px 14px;
+  font-size: 12.5px;
   font-weight: 700;
 }
 
 .app-shell .licogi-icon-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
 }
 
 .app-shell input,
 .app-shell select,
 .app-shell textarea {
-  min-height: 42px;
-  font-size: 14px;
-}
-
-.app-shell table {
+  min-height: 40px;
   font-size: 13.5px;
 }
 
+.app-shell table {
+  font-size: 13px;
+}
+
 .app-shell table th {
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   letter-spacing: .035em !important;
 }
 
@@ -81,30 +84,46 @@
 }
 
 .app-shell .licogi-page-header h1 {
-  line-height: 1.2;
+  line-height: 1.18;
+}
+
+/* Reuse the exact opening photo from the public homepage for every TAILG
+   visual in the private project directory. ProjectManager already renders
+   the TAILG SVG inside a positioned image frame; the frame now receives the
+   homepage hero and the placeholder SVG is made transparent. */
+.app-shell div:has(> img[src*="tailg-site-overview.svg"]),
+.app-shell figure:has(> img[src*="tailg-site-overview.svg"]) {
+  background-image: url("/media/hero-industrial-park.webp?v=20260822-exact-2") !important;
+  background-size: cover !important;
+  background-position: center 52% !important;
+  background-repeat: no-repeat !important;
+}
+
+.app-shell img[src*="tailg-site-overview.svg"] {
+  opacity: 0 !important;
 }
 
 @media (min-width: 1024px) {
   .app-shell .licogi-page-header {
-    padding: 20px 22px;
+    padding: 18px 20px;
   }
 
   .app-shell main {
-    padding-top: 22px !important;
-    padding-bottom: 48px !important;
+    padding-top: 18px !important;
+    padding-bottom: 42px !important;
   }
 }
 
 @media (min-width: 1280px) {
   .app-shell main {
-    padding-left: 28px !important;
-    padding-right: 28px !important;
+    padding-left: 22px !important;
+    padding-right: 22px !important;
   }
 }
 
 @media (min-width: 1536px) {
   .app-shell main {
-    padding-left: 32px !important;
-    padding-right: 32px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
   }
 }
