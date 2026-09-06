@@ -38,6 +38,7 @@ import "./mobile-enterprise.css";
 import "./mobile-premium.css";
 import "./public-ui-reliability.css";
 import "./public-compact-density.css";
+import "./desktop-enterprise-100.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
